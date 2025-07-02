@@ -1,0 +1,216 @@
+---
+title: Project Architecture
+description: Comprehensive analysis of Better SaaS project architecture design and technology stack
+---
+
+# Project Architecture
+
+Better SaaS is a modern full-stack SaaS application built with cutting-edge technology stack, utilizing Next.js 15 and App Router architecture with high scalability and maintainability.
+
+## Technical Architecture Overview
+
+### Core Technology Stack
+
+| Domain | Technology | Version | Description |
+|--------|------------|---------|-------------|
+| **Frontend Framework** | Next.js | 15.x | App Router architecture with SSR/SSG support |
+| **UI Framework** | React | 19.x | Latest version with concurrent features |
+| **Programming Language** | TypeScript | 5.8+ | Strict mode for type safety |
+| **Styling System** | Tailwind CSS | 4.0+ | Atomic CSS with high customization |
+| **UI Component Library** | Radix UI | - | Accessible, high-quality components |
+| **Database** | PostgreSQL | - | Relational database |
+| **ORM** | Drizzle ORM | 0.41+ | Type-safe SQL query builder |
+| **Authentication** | Better Auth | 1.2+ | Modern authentication solution |
+| **Payment System** | Stripe | 18.x | Complete payment processing solution |
+| **State Management** | Zustand | 5.0+ | Lightweight state management |
+| **Internationalization** | next-intl | 4.1+ | Support for English and Chinese |
+| **Documentation** | Fumadocs | 15.x | MDX-based documentation generation |
+| **Code Quality** | Biome | 1.9+ | Code formatting and linting |
+
+### Architectural Design Patterns
+
+#### 1. Layered Architecture
+
+```
+┌─────────────────────────────────────┐
+│        Presentation Layer           │
+│  ┌─────────────┐  ┌─────────────┐   │
+│  │   Pages     │  │ Components  │   │
+│  │ /src/app    │  │/src/components│  │
+│  └─────────────┘  └─────────────┘   │
+├─────────────────────────────────────┤
+│          Business Layer             │
+│  ┌─────────────┐  ┌─────────────┐   │
+│  │  Services   │  │    Hooks    │   │
+│  │/src/db/services│ │ /src/hooks │   │
+│  └─────────────┘  └─────────────┘   │
+├─────────────────────────────────────┤
+│        Data Access Layer            │
+│  ┌─────────────┐  ┌─────────────┐   │
+│  │Repositories │  │   Schema    │   │
+│  │/src/db/repositories│/src/db/schema││
+│  └─────────────┘  └─────────────┘   │
+├─────────────────────────────────────┤
+│       Infrastructure Layer          │
+│  ┌─────────────┐  ┌─────────────┐   │
+│  │  Database   │  │   External  │   │
+│  │ PostgreSQL  │  │   Services  │   │
+│  └─────────────┘  └─────────────┘   │
+└─────────────────────────────────────┘
+```
+
+#### 2. Modular Design
+
+The project adopts a feature-based modular organization where each module handles specific business domains:
+
+- **Authentication Module** (`/src/lib/auth`): User authentication and authorization
+- **Payment Module** (`/src/lib/stripe`): Stripe payment integration
+- **File Management** (`/src/lib/file-service`): File upload and management
+- **Permission System** (`/src/lib/permissions`): Role-based access control
+- **Internationalization** (`/src/i18n`): Multi-language support
+
+#### 3. Component-Based Architecture
+
+```
+src/components/
+├── ui/                 # Base UI components
+│   ├── button.tsx
+│   ├── input.tsx
+│   └── dialog.tsx
+├── blocks/             # Business block components
+│   ├── hero-section.tsx
+│   └── pricing-table.tsx
+├── dashboard/          # Dashboard components
+├── auth-guard.tsx      # Authentication guard
+└── providers/          # Context providers
+    ├── auth-provider.tsx
+    └── swr-provider.tsx
+```
+
+## Code Organization and Modularity
+
+### Directory Structure Design
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── [locale]/          # Internationalized routes
+│   │   ├── (auth)/        # Authentication pages
+│   │   ├── (dashboard)/   # Dashboard pages
+│   │   └── docs/          # Documentation pages
+│   └── api/               # API routes
+│       ├── auth/          # Authentication APIs
+│       ├── stripe/        # Payment APIs
+│       └── files/         # File APIs
+├── components/            # React components
+├── db/                    # Database related
+│   ├── schema.ts         # Database schema
+│   ├── repositories/     # Data access layer
+│   ├── services/         # Business logic layer
+│   └── utils/            # Database utilities
+├── lib/                   # Utility libraries and configs
+├── hooks/                 # Custom React hooks
+├── store/                 # State management
+├── types/                 # TypeScript type definitions
+└── i18n/                  # Internationalization config
+```
+
+### Module Coupling Analysis
+
+#### Low Coupling Design
+
+1. **Interface Segregation**: Modules interact through well-defined interfaces
+2. **Dependency Injection**: External dependencies managed via config files and environment variables
+3. **Event-Driven**: Event system reduces direct dependencies between modules
+
+#### High Cohesion Implementation
+
+1. **Feature Aggregation**: Related functionality grouped within the same module
+2. **Data Encapsulation**: Each module manages its own data state
+3. **Single Responsibility**: Each module handles specific business domains
+
+### Interface Design Rationality
+
+#### API Design Principles
+
+1. **RESTful Style**: Follows REST design principles
+2. **Type Safety**: TypeScript ensures type safety
+3. **Error Handling**: Unified error handling mechanism
+4. **Version Control**: Supports API versioning
+
+#### Component Interface Design
+
+```typescript
+// Component Props interface example
+interface ButtonProps {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  disabled?: boolean;
+  loading?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+```
+
+## Scalability and Maintainability Assessment
+
+### Scalability Advantages
+
+1. **Modular Architecture**: New features can be added as independent modules
+2. **Plugin System**: Supports third-party service integrations
+3. **Configuration-Driven**: Feature toggles controlled via configuration files
+4. **Microservice-Ready**: Architecture supports future microservice decomposition
+
+### Maintainability Features
+
+1. **Code Standards**: Biome ensures code quality
+2. **Type Safety**: TypeScript provides compile-time type checking
+3. **Test-Friendly**: Components and functions are easily unit testable
+4. **Comprehensive Documentation**: Complete code comments and documentation
+
+### Performance Optimization Strategies
+
+1. **Code Splitting**: Automatic code splitting by Next.js
+2. **Image Optimization**: Using Next.js Image component
+3. **Caching Strategy**: Multi-layer caching mechanism
+4. **Lazy Loading**: Component and route lazy loading
+
+## Database Design
+
+### Data Model Design
+
+The project uses relational database design with the following core tables:
+
+- **User Table** (`user`): User basic information and authentication data
+- **Session Table** (`session`): User session management
+- **Subscription Table** (`subscriptions`): Stripe subscription information
+- **Payment Table** (`payments`): Payment records
+- **File Table** (`files`): File management
+- **Article Table** (`articles`): Content management
+
+### ORM Usage Strategy
+
+Advantages of using Drizzle ORM:
+
+1. **Type Safety**: Compile-time type checking
+2. **High Performance**: Near-native SQL performance
+3. **Migration Management**: Automatic database migration generation and management
+4. **Query Builder**: Flexible query builder
+
+## Security Design
+
+### Authentication and Authorization
+
+1. **Multiple Authentication Methods**: Email/password, OAuth (GitHub, Google)
+2. **Session Management**: Secure session token management
+3. **Access Control**: Role-based access control (RBAC)
+4. **API Protection**: Middleware protection for sensitive APIs
+
+### Data Security
+
+1. **Input Validation**: Data validation using Zod
+2. **SQL Injection Protection**: Automatic protection via ORM
+3. **XSS Protection**: Automatic escaping by React
+4. **CSRF Protection**: Built-in CSRF protection
+
+This architectural design ensures high quality, scalability, and maintainability of the project, providing a solid foundation for building modern SaaS applications.

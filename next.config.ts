@@ -3,6 +3,7 @@
  * for Docker builds.
  */
 import type { NextConfig } from 'next';
+import { createMDX } from 'fumadocs-mdx/next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import './src/env';
 
@@ -16,4 +17,5 @@ const config: NextConfig = {
   },
 };
 
-export default withNextIntl(config);
+const withMDX = createMDX();
+export default withNextIntl(withMDX(config));

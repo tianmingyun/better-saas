@@ -5,7 +5,7 @@ import { Geist } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { setRequestLocale } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 
 export const metadata: Metadata = {
   title: 'Create T3 App',
@@ -29,19 +29,16 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  // 确保传入的 `locale` 是有效的
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  // 启用静态渲染
   setRequestLocale(locale);
-
+  const messages = await getMessages();
   return (
-    <html lang={locale} className={`${geist.variable}`}>
+    <html lang={locale} className={`${geist.variable}`} suppressHydrationWarning>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages} locale={locale}>{children}</NextIntlClientProvider>
       </body>
     </html>
   );
