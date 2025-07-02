@@ -1,0 +1,10 @@
+{
+  "HomePage": {
+    "title": "创建 T3 应用",
+    "subtitle": "开始全栈、类型安全 Next.js 应用的最佳方式",
+    "firstSteps": "第一步",
+    "firstStepsDescription": "基础知识 - 设置数据库和身份验证所需了解的一切。",
+    "documentation": "文档",
+    "documentationDescription": "了解更多关于 Create T3 App、它使用的库以及如何部署的信息。"
+  }
+} 

@@ -1,0 +1,10 @@
+{
+  "HomePage": {
+    "title": "Create T3 App",
+    "subtitle": "The best way to start a full-stack, typesafe Next.js app",
+    "firstSteps": "First Steps",
+    "firstStepsDescription": "Just the basics - Everything you need to know to set up your database and authentication.",
+    "documentation": "Documentation",
+    "documentationDescription": "Learn more about Create T3 App, the libraries it uses, and how to deploy it."
+  }
+} 
