@@ -46,5 +46,5 @@ yarn-error.log*
 .idea
 
 .specstory
-/.vscode/
+.vscode
 /.source/
