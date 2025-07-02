@@ -32,15 +32,13 @@ export async function generateStaticParams() {
   const locales = ['en', 'zh'];
   const params: { locale: string; slug?: string[] }[] = [];
 
-  // 为每个语言生成参数
   for (const locale of locales) {
     const pages = getDocsPages(locale);
     for (const page of pages) {
-      // 去掉语言前缀，只保留实际的文档路径
-      const slug = page.slugs.slice(1); // 去掉第一个元素（语言前缀）
+      const slug = page.slugs.slice(1);
       params.push({
         locale,
-        slug: slug.length > 0 ? slug : undefined, // 如果是空数组，设为 undefined
+        slug: slug.length > 0 ? slug : undefined,
       });
     }
   }
