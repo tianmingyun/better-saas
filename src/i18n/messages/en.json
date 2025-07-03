@@ -16,5 +16,29 @@
     "chooseLanguage": "Choose Language",
     "nextPage": "Next Page",
     "previousPage": "Previous Page"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "welcome": "Welcome",
+    "language": "Language",
+    "home": "Home",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "forgotPassword": "Forgot Password",
+    "rememberMe": "Remember Me",
+    "or": "or",
+    "continueWith": "Continue with",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "signInHere": "Sign in here",
+    "signUpHere": "Sign up here"
   }
 }

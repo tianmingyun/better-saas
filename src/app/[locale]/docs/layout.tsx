@@ -1,9 +1,9 @@
+import { locales } from '@/i18n/routing';
 import { getDocsPages } from '@/lib/fumadoc/docs';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { RootProvider } from 'fumadocs-ui/provider';
-import type { ReactNode } from 'react';
 import { getMessages } from 'next-intl/server';
-import { locales } from '@/i18n/routing';
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;
@@ -13,7 +13,7 @@ type Props = {
 export default async function Layout({ children, params }: Props) {
   const { locale } = await params;
   const messages = await getMessages();
-  
+
   const pages = getDocsPages(locale);
 
   const tree = {

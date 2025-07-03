@@ -2,7 +2,6 @@ import { docs } from '@/.source';
 import { loader } from 'fumadocs-core/source';
 import type { InferMetaType, InferPageType } from 'fumadocs-core/source';
 
-
 export const docsSource = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),

@@ -16,5 +16,29 @@
     "chooseLanguage": "选择语言",
     "nextPage": "下一页",
     "previousPage": "上一页"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "loading": "加载中...",
+    "welcome": "欢迎",
+    "language": "语言",
+    "home": "首页",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "email": "邮箱",
+    "password": "密码",
+    "login": "登录",
+    "logout": "退出登录",
+    "register": "注册",
+    "forgotPassword": "忘记密码",
+    "rememberMe": "记住我",
+    "or": "或",
+    "continueWith": "继续使用",
+    "alreadyHaveAccount": "已有账户？",
+    "dontHaveAccount": "没有账户？",
+    "signInHere": "在此登录",
+    "signUpHere": "在此注册"
   }
 }

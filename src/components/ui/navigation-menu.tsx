@@ -1,7 +1,7 @@
-import type * as React from 'react';
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import { cva } from 'class-variance-authority';
 import { ChevronDownIcon } from 'lucide-react';
+import type * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -143,7 +143,7 @@ function NavigationMenuIndicator({
       )}
       {...props}
     >
-      <div className='relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-md' />
+      <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-md" />
     </NavigationMenuPrimitive.Indicator>
   );
 }
