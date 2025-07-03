@@ -1,5 +1,6 @@
 import { getMDXComponents } from '@/components/mdx-components';
 import { getDocsPage, getDocsPages } from '@/lib/fumadoc/docs';
+import { routing } from '@/i18n/routing';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page';
 import { notFound } from 'next/navigation';
 
@@ -29,10 +30,9 @@ export default async function Page({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const locales = ['en', 'zh'];
   const params: { locale: string; slug?: string[] }[] = [];
 
-  for (const locale of locales) {
+  for (const locale of routing.locales) {
     const pages = getDocsPages(locale);
     for (const page of pages) {
       const slug = page.slugs.slice(1);

@@ -6,3 +6,19 @@ export const routing = defineRouting({
   localePrefix: 'as-needed',
   localeDetection: false,
 }); 
+
+const localeConfig = {
+  en: {
+    name: 'English',
+    locale: 'en' as const,
+  },
+  zh: {
+    name: '中文',
+    locale: 'zh' as const,
+  },
+} as const;
+
+export const locales = routing.locales.map(locale => ({
+  name: localeConfig[locale as keyof typeof localeConfig]?.name || locale,
+  locale,
+}));

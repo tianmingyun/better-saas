@@ -2,33 +2,18 @@ import { getDocsPages } from '@/lib/fumadoc/docs';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { RootProvider } from 'fumadocs-ui/provider';
 import type { ReactNode } from 'react';
+import { getMessages } from 'next-intl/server';
+import { locales } from '@/i18n/routing';
 
 type Props = {
   children: ReactNode;
   params: Promise<{ locale: string }>;
 };
 
-const locales = [
-  { name: 'English', locale: 'en' },
-  { name: '中文', locale: 'zh' },
-];
-
-const translations = {
-  zh: {
-    search: '搜索',
-    searchNoResult: '没有找到结果',
-    toc: '目录',
-    tocNoHeadings: '没有标题',
-    lastUpdate: '最后更新',
-    chooseLanguage: '选择语言',
-    nextPage: '下一页',
-    previousPage: '上一页',
-  },
-};
-
 export default async function Layout({ children, params }: Props) {
   const { locale } = await params;
-
+  const messages = await getMessages();
+  
   const pages = getDocsPages(locale);
 
   const tree = {
@@ -46,7 +31,7 @@ export default async function Layout({ children, params }: Props) {
       i18n={{
         locale,
         locales,
-        translations: translations[locale as keyof typeof translations],
+        translations: messages.Docs,
       }}
       theme={{
         enabled: false,

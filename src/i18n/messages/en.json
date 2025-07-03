@@ -6,5 +6,15 @@
     "firstStepsDescription": "Just the basics - Everything you need to know to set up your database and authentication.",
     "documentation": "Documentation",
     "documentationDescription": "Learn more about Create T3 App, the libraries it uses, and how to deploy it."
+  },
+  "Docs": {
+    "search": "Search",
+    "searchNoResult": "No results found",
+    "toc": "Table of Contents",
+    "tocNoHeadings": "No headings",
+    "lastUpdate": "Last updated",
+    "chooseLanguage": "Choose Language",
+    "nextPage": "Next Page",
+    "previousPage": "Previous Page"
   }
 }
