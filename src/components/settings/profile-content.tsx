@@ -12,40 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Camera } from 'lucide-react';
+import type { ProfileContentProps } from '@/types/profile';
+import { Camera, Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-export function ProfileContent() {
+export function ProfileContent({
+  user,
+  formData,
+  setFormData,
+  isUpdatingName,
+  isUpdatingAvatar,
+  handleUpdateName,
+  handleUpdateAvatar,
+  getUserInitials,
+  hasNameChanged,
+}: ProfileContentProps) {
   const t = useTranslations('profile');
   const locale = useLocale();
-  const [name, setName] = useState('btcnoder');
-  const [email, setEmail] = useState('btcnoder@gmail.com');
   const [selectedLanguage, setSelectedLanguage] = useState(locale === 'zh' ? 'zh' : 'en');
 
   const handleAvatarUpload = () => {
-    // 创建文件输入元素
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        // 这里可以处理文件上传逻辑
-        console.log('Selected file:', file);
+        await handleUpdateAvatar(file);
       }
     };
     input.click();
   };
 
-  const handleSaveName = () => {
-    // 保存姓名逻辑
-    console.log('Saving name:', name);
-  };
-
   const handleSaveEmail = () => {
-    // 保存邮箱逻辑
-    console.log('Saving email:', email);
+    
   };
 
   return (
@@ -66,16 +67,21 @@ export function ProfileContent() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="" alt="Avatar" />
-                  <AvatarFallback className="text-lg">BT</AvatarFallback>
+                  <AvatarImage src={user?.image || ''} alt="Avatar" />
+                  <AvatarFallback className="text-lg">{getUserInitials()}</AvatarFallback>
                 </Avatar>
                 <Button
                   size="sm"
                   variant="outline"
                   className="-bottom-2 -right-2 absolute h-8 w-8 rounded-full p-0"
                   onClick={handleAvatarUpload}
+                  disabled={isUpdatingAvatar}
                 >
-                  <Camera className="h-4 w-4" />
+                  {isUpdatingAvatar ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -113,13 +119,24 @@ export function ProfileContent() {
             <div className="flex gap-4">
               <div className="flex-1">
                 <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder={t('name.placeholder')}
                 />
               </div>
-              <Button onClick={handleSaveName} variant="outline">
-                {t('save')}
+              <Button 
+                onClick={handleUpdateName} 
+                variant="outline"
+                disabled={isUpdatingName || !hasNameChanged}
+              >
+                {isUpdatingName ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('saving')}
+                  </>
+                ) : (
+                  t('save')
+                )}
               </Button>
             </div>
           </CardContent>
@@ -136,15 +153,19 @@ export function ProfileContent() {
               <div className="flex-1">
                 <Input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder={t('email.placeholder')}
+                  disabled
                 />
               </div>
-              <Button onClick={handleSaveEmail} variant="outline">
+              <Button onClick={handleSaveEmail} variant="outline" disabled>
                 {t('save')}
               </Button>
             </div>
+            <p className="mt-2 text-muted-foreground text-sm">
+              邮箱更改需要验证，此功能正在开发中
+            </p>
           </CardContent>
         </Card>
       </div>

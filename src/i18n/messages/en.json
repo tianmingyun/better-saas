@@ -28,7 +28,9 @@
       "articleCreated": "Article created successfully",
       "articleUpdated": "Article updated successfully",
       "articleDeleted": "Article deleted successfully",
-      "operationSuccess": "Operation successful"
+      "operationSuccess": "Operation successful",
+      "nameUpdated": "Name updated successfully",
+      "avatarUpdated": "Avatar updated successfully"
     },
     "error": {
       "titleRequired": "Please enter article title",
@@ -37,7 +39,14 @@
       "operationFailed": "Operation failed",
       "deleteFailed": "Delete failed",
       "submitFailed": "Submit failed, please try again",
-      "retryLater": "Please try again later"
+      "retryLater": "Please try again later",
+      "nameEmpty": "Name cannot be empty",
+      "nameUpdateFailed": "Name update failed",
+      "avatarUpdateFailed": "Avatar update failed",
+      "fileUploadFailed": "File upload failed"
+    },
+    "info": {
+      "nameNotChanged": "Name has not changed"
     }
   },
   "nav": {

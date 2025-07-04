@@ -28,7 +28,9 @@
       "articleCreated": "文章创建成功",
       "articleUpdated": "文章更新成功",
       "articleDeleted": "文章删除成功",
-      "operationSuccess": "操作成功"
+      "operationSuccess": "操作成功",
+      "nameUpdated": "姓名更新成功",
+      "avatarUpdated": "头像更新成功"
     },
     "error": {
       "titleRequired": "请输入文章标题",
@@ -37,7 +39,14 @@
       "operationFailed": "操作失败",
       "deleteFailed": "删除失败",
       "submitFailed": "提交失败，请重试",
-      "retryLater": "请稍后重试"
+      "retryLater": "请稍后重试",
+      "nameEmpty": "姓名不能为空",
+      "nameUpdateFailed": "姓名更新失败",
+      "avatarUpdateFailed": "头像更新失败",
+      "fileUploadFailed": "文件上传失败"
+    },
+    "info": {
+      "nameNotChanged": "姓名未发生变化"
     }
   },
   "nav": {

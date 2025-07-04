@@ -35,6 +35,8 @@ interface AuthState {
   signInWithGithub: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
 
+  updateUser: (data: { name?: string; image?: string }) => Promise<{ success: boolean; error?: string }>;
+
   initialize: () => Promise<void>;
   refreshSession: () => Promise<void>;
   clearAuth: () => void;
@@ -215,6 +217,34 @@ export const useAuthStore = create<AuthState>()(
             console.error('signInWithGoogle error:', error);
           }
         },
+
+        updateUser: async (data) => {
+          set({ isLoading: true, error: null });
+
+          try {
+            const result = await authClient.updateUser(data);
+
+            if (result.data?.status) {
+              await get().refreshSession();
+              set({ isLoading: false });
+              return { success: true };
+            }
+
+            set({ isLoading: false });
+            return {
+              success: false,
+              error: result.error?.message || 'updateUser error',
+            };
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'updateUser error';
+            set({ error: errorMessage, isLoading: false });
+            return {
+              success: false,
+              error: errorMessage,
+            };
+          }
+        },
+
         refreshSession: async () => {
           try {
             const session = await authClient.getSession();
@@ -323,3 +353,4 @@ export const useSignOut = () => useAuthStore((state) => state.signOut);
 export const useRefreshSession = () => useAuthStore((state) => state.refreshSession);
 export const useEmailSignup = () => useAuthStore((state) => state.signUp);
 export const useSetError = () => useAuthStore((state) => state.setError);
+export const useUpdateUser = () => useAuthStore((state) => state.updateUser);

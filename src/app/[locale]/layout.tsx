@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import { routing } from '@/i18n/routing';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
@@ -29,6 +30,7 @@ export default async function LocaleLayout({
       <AuthProvider>
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
+          <Toaster />
         </NextIntlClientProvider>
       </AuthProvider>
     </ThemeProvider>
