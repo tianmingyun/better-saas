@@ -84,7 +84,19 @@
     },
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
-    "closeError": "Close"
+    "closeError": "Close",
+    "name": "Name",
+    "namePlaceholder": "John Doe",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match",
+    "signupWithSocial": "Sign up with your GitHub or Google account",
+    "githubSignUp": "Sign up with GitHub",
+    "googleSignUp": "Sign up with Google",
+    "signingUp": "Signing up...",
+    "orContinueWith": "Or continue with",
+    "signUpButton": "Sign Up",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Login"
   },
   "dashboard": {
     "title": "Dashboard",

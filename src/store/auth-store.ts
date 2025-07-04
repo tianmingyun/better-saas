@@ -321,3 +321,5 @@ export const useSignInWithGithub = () => useAuthStore((state) => state.signInWit
 export const useSignInWithGoogle = () => useAuthStore((state) => state.signInWithGoogle);
 export const useSignOut = () => useAuthStore((state) => state.signOut);
 export const useRefreshSession = () => useAuthStore((state) => state.refreshSession);
+export const useEmailSignup = () => useAuthStore((state) => state.signUp);
+export const useSetError = () => useAuthStore((state) => state.setError);

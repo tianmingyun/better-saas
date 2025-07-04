@@ -84,7 +84,19 @@
     },
     "termsOfService": "服务条款",
     "privacyPolicy": "隐私政策",
-    "closeError": "关闭"
+    "closeError": "关闭",
+    "name": "姓名",
+    "namePlaceholder": "张三",
+    "confirmPassword": "确认密码",
+    "passwordMismatch": "密码不匹配",
+    "signupWithSocial": "使用您的GitHub或Google账号注册",
+    "githubSignUp": "GitHub注册",
+    "googleSignUp": "Google注册",
+    "signingUp": "注册中...",
+    "orContinueWith": "或继续使用",
+    "signUpButton": "注册",
+    "alreadyHaveAccount": "已有账号？",
+    "loginLink": "登录"
   },
   "dashboard": {
     "title": "仪表板",
