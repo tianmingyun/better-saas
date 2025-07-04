@@ -320,3 +320,4 @@ export const useClearError = () => useAuthStore((state) => state.clearError);
 export const useSignInWithGithub = () => useAuthStore((state) => state.signInWithGithub);
 export const useSignInWithGoogle = () => useAuthStore((state) => state.signInWithGoogle);
 export const useSignOut = () => useAuthStore((state) => state.signOut);
+export const useRefreshSession = () => useAuthStore((state) => state.refreshSession);
