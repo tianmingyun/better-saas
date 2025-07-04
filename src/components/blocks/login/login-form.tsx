@@ -5,70 +5,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { 
-  useAuthLoading, 
-  useAuthError, 
-  useIsAuthenticated,
-  useEmailLogin,
-  useClearError,
-  useSignInWithGithub,
-  useSignInWithGoogle
-} from '@/store/auth-store';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import type { LoginFormProps } from '@/types/login';
 
-export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export function LoginForm({ 
+  className, 
+  formData,
+  setFormData,
+  isLoading,
+  error,
+  onEmailLogin,
+  onSocialLogin,
+  onClearError,
+  ...props 
+}: LoginFormProps & React.ComponentProps<'div'>) {
   const t = useTranslations('auth');
-  
-  const isLoading = useAuthLoading();
-  const error = useAuthError();
-  const isAuthenticated = useIsAuthenticated();
-  const emailLogin = useEmailLogin();
-  const clearError = useClearError();
-  const signInWithGithub = useSignInWithGithub();
-  const signInWithGoogle = useSignInWithGoogle();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  // 获取回调URL
-  const getRedirectUrl = useCallback(() => {
-    const callbackUrl = searchParams.get('callbackUrl');
-    return callbackUrl || '/settings/profile';
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const redirectUrl = getRedirectUrl();
-      router.push(redirectUrl);
-    }
-  }, [isAuthenticated, router, getRedirectUrl]);
-
-  const handleSocialLogin = async (provider: 'github' | 'google') => {
-    try {
-      clearError();   
-      if (provider === 'github') {
-        await signInWithGithub();
-      } else {
-        await signInWithGoogle();
-      }
-    } catch (error) {
-      console.error('Social login error:', error);
-    }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, email: e.target.value });
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError(); 
-
-    const result = await emailLogin(email, password);
-    if (result.success) {
-      const redirectUrl = getRedirectUrl();
-      router.push(redirectUrl);
-    }
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, password: e.target.value });
   };
 
   return (
@@ -79,7 +37,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
           <CardDescription>{t('loginWithSocial')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleEmailLogin}>
+          <form onSubmit={onEmailLogin}>
             <div className="grid gap-6">
               {/* 错误信息显示 */}
               {error && (
@@ -87,7 +45,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   {error}
                   <button
                     type="button"
-                    onClick={clearError}
+                    onClick={onClearError}
                     className="ml-2 underline hover:no-underline"
                   >
                     {t('closeError')}
@@ -101,7 +59,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => handleSocialLogin('github')}
+                  onClick={() => onSocialLogin('github')}
                   disabled={isLoading}
                 >
                   <svg
@@ -126,7 +84,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => handleSocialLogin('google')}
+                  onClick={() => onSocialLogin('google')}
                   disabled={isLoading}
                 >
                   <svg
@@ -159,8 +117,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     id="email"
                     type="email"
                     placeholder={t('emailPlaceholder')}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={handleEmailChange}
                     required
                     disabled={isLoading}
                     autoComplete="email"
@@ -179,8 +137,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   <Input
                     id="password"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handlePasswordChange}
                     required
                     disabled={isLoading}
                     autoComplete="current-password"
@@ -189,7 +147,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLoading || !email || !password}
+                  disabled={isLoading || !formData.email || !formData.password}
                 >
                   {isLoading ? t('loggingIn') : t('login')}
                 </Button>

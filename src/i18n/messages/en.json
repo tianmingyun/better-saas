@@ -30,7 +30,8 @@
       "articleDeleted": "Article deleted successfully",
       "operationSuccess": "Operation successful",
       "nameUpdated": "Name updated successfully",
-      "avatarUpdated": "Avatar updated successfully"
+      "avatarUpdated": "Avatar updated successfully",
+      "loginSuccess": "Login successful"
     },
     "error": {
       "titleRequired": "Please enter article title",
@@ -43,7 +44,9 @@
       "nameEmpty": "Name cannot be empty",
       "nameUpdateFailed": "Name update failed",
       "avatarUpdateFailed": "Avatar update failed",
-      "fileUploadFailed": "File upload failed"
+      "fileUploadFailed": "File upload failed",
+      "loginFailed": "Login failed",
+      "socialLoginFailed": "Social login failed"
     },
     "info": {
       "nameNotChanged": "Name has not changed"
