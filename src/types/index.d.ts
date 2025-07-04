@@ -20,3 +20,4 @@ export interface ProtectedContainerProps {
   children: React.ReactNode;
   sidebarGroups: SidebarGroup[];
 }
+

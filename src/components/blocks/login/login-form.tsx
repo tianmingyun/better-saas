@@ -37,7 +37,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
   // 获取回调URL
   const getRedirectUrl = useCallback(() => {
     const callbackUrl = searchParams.get('callbackUrl');
-    return callbackUrl || '/';
+    return callbackUrl || '/settings/profile';
   }, [searchParams]);
 
   useEffect(() => {
