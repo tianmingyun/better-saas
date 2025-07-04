@@ -68,7 +68,23 @@
     "accessDenied": "访问受限",
     "loginRequired": "请登录后访问此页面",
     "goToLogin": "前往登录",
-    "retry": "重试"
+    "retry": "重试",
+    "refreshSession": "刷新会话",
+    "welcomeBack": "欢迎回来",
+    "loginWithSocial": "使用您的GitHub或Google账号登录",
+    "loggingIn": "登录中...",
+    "orUseEmail": "或使用邮箱登录",
+    "emailPlaceholder": "m@example.com",
+    "noAccount": "还没有账号？",
+    "signUpLink": "注册",
+    "termsAndPrivacy": {
+      "prefix": "点击继续，即表示您同意我们的",
+      "middle": "和",
+      "suffix": "。"
+    },
+    "termsOfService": "服务条款",
+    "privacyPolicy": "隐私政策",
+    "closeError": "关闭"
   },
   "dashboard": {
     "title": "仪表板",

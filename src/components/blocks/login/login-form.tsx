@@ -14,11 +14,14 @@ import {
   useSignInWithGithub,
   useSignInWithGoogle
 } from '@/store/auth-store';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const t = useTranslations('auth');
   
   const isLoading = useAuthLoading();
   const error = useAuthError();
@@ -31,11 +34,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // 获取回调URL
+  const getRedirectUrl = useCallback(() => {
+    const callbackUrl = searchParams.get('callbackUrl');
+    return callbackUrl || '/';
+  }, [searchParams]);
+
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      const redirectUrl = getRedirectUrl();
+      router.push(redirectUrl);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, getRedirectUrl]);
 
   const handleSocialLogin = async (provider: 'github' | 'google') => {
     try {
@@ -56,7 +66,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
     const result = await emailLogin(email, password);
     if (result.success) {
-      router.push('/');
+      const redirectUrl = getRedirectUrl();
+      router.push(redirectUrl);
     }
   };
 
@@ -64,8 +75,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">欢迎回来</CardTitle>
-          <CardDescription>使用您的GitHub或Google账号登录</CardDescription>
+          <CardTitle className="text-xl">{t('welcomeBack')}</CardTitle>
+          <CardDescription>{t('loginWithSocial')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleEmailLogin}>
@@ -79,7 +90,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     onClick={clearError}
                     className="ml-2 underline hover:no-underline"
                   >
-                    关闭
+                    {t('closeError')}
                   </button>
                 </div>
               )}
@@ -108,7 +119,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                     <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
                     <path d="M9 18c-4.51 2-5-2-7-2" />
                   </svg>
-                  {isLoading ? '登录中...' : '使用 GitHub 登录'}
+                  {isLoading ? t('loggingIn') : t('githubSignIn')}
                 </Button>
 
                 <Button
@@ -130,24 +141,24 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                       fill="currentColor"
                     />
                   </svg>
-                  {isLoading ? '登录中...' : '使用 Google 登录'}
+                  {isLoading ? t('loggingIn') : t('googleSignIn')}
                 </Button>
               </div>
 
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-border after:border-t">
                 <span className="relative z-10 bg-card px-2 text-muted-foreground">
-                  或使用邮箱登录
+                  {t('orUseEmail')}
                 </span>
               </div>
 
               {/* 邮箱密码登录 */}
               <div className="grid gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="email">邮箱</Label>
+                  <Label htmlFor="email">{t('email')}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder={t('emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -157,12 +168,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                 </div>
                 <div className="grid gap-3">
                   <div className="flex items-center">
-                    <Label htmlFor="password">密码</Label>
+                    <Label htmlFor="password">{t('password')}</Label>
                     <a
                       href="/reset-password"
                       className="ml-auto text-sm underline-offset-4 hover:underline"
                     >
-                      忘记密码？
+                      {t('forgotPassword')}
                     </a>
                   </div>
                   <Input
@@ -180,14 +191,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   className="w-full"
                   disabled={isLoading || !email || !password}
                 >
-                  {isLoading ? '登录中...' : '登录'}
+                  {isLoading ? t('loggingIn') : t('login')}
                 </Button>
               </div>
 
               <div className="text-center text-sm">
-                还没有账号？{' '}
+                {t('noAccount')}{' '}
                 <a href="/signup" className="underline underline-offset-4">
-                  注册
+                  {t('signUpLink')}
                 </a>
               </div>
             </div>
@@ -195,8 +206,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
         </CardContent>
       </Card>
       <div className="text-balance text-center text-muted-foreground text-xs [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        点击继续，即表示您同意我们的<a href="/terms">服务条款</a>和 <a href="/privacy">隐私政策</a>
-        。
+        {t('termsAndPrivacy.prefix')}{' '}
+        <a href="/terms" className="underline underline-offset-4 hover:text-primary">
+          {t('termsOfService')}
+        </a>
+        {' '}{t('termsAndPrivacy.middle')}{' '}
+        <a href="/privacy" className="underline underline-offset-4 hover:text-primary">
+          {t('privacyPolicy')}
+        </a>
+        {t('termsAndPrivacy.suffix')}
       </div>
     </div>
   );

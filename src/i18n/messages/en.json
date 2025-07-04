@@ -68,7 +68,23 @@
     "accessDenied": "Access Denied",
     "loginRequired": "Please login to access this page",
     "goToLogin": "Go to Login",
-    "retry": "Retry"
+    "retry": "Retry",
+    "refreshSession": "Refresh Session",
+    "welcomeBack": "Welcome back",
+    "loginWithSocial": "Sign in with your GitHub or Google account",
+    "loggingIn": "Signing in...",
+    "orUseEmail": "Or continue with email",
+    "emailPlaceholder": "m@example.com",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up",
+    "termsAndPrivacy": {
+      "prefix": "By continuing, you agree to our",
+      "middle": "and",
+      "suffix": "."
+    },
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "closeError": "Close"
   },
   "dashboard": {
     "title": "Dashboard",

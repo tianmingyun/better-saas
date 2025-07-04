@@ -7,10 +7,7 @@ import {
   Bell,
   CreditCard,
   Files,
-  Home,
-  LayoutDashboard,
   PenTool,
-  Settings,
   Shield,
   Users,
 } from 'lucide-react';
