@@ -1,17 +1,28 @@
 import { authClient } from '@/lib/auth/auth-client';
 import type { User } from 'better-auth/types';
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, subscribeWithSelector } from 'zustand/middleware';
 
 interface AuthState {
+  // Persistent state
   user: User | null;
   isAuthenticated: boolean;
+  lastUpdated: number;
+
+  // Temporary state
   isLoading: boolean;
+  error: string | null;
   isInitialized: boolean;
 
+  // Cache configuration
+  cacheExpiry: number;
+
+  // Actions
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setError: (error: string) => void;
+  clearError: () => void;
 
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (
@@ -25,213 +36,285 @@ interface AuthState {
   signInWithGoogle: () => Promise<void>;
 
   initialize: () => Promise<void>;
-
+  refreshSession: () => Promise<void>;
   clearAuth: () => void;
+
+  // Cache methods
+  isCacheValid: () => boolean;
+  invalidateCache: () => void;
+  setCacheExpiry: (expiry: number) => void;
 }
 
-// 为 SSR 创建一个 NoOp 存储，避免 hydration 问题
-const createNoopStorage = () => ({
-  getItem: () => null,
-  setItem: () => {},
-  removeItem: () => {},
-});
-
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      isInitialized: false,
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
+        // Persistent state - default values must match server-side
+        user: null,
+        isAuthenticated: false,
+        lastUpdated: 0,
 
-      setUser: (user) => {
-        set({
-          user,
-          isAuthenticated: !!user,
-        });
-      },
+        // Temporary state
+        isLoading: false,
+        error: null,
+        isInitialized: false,
+        cacheExpiry: 10 * 60 * 1000, // 10 minutes
 
-      setLoading: (loading) => {
-        set({ isLoading: loading });
-      },
+        // Cache methods
+        isCacheValid: () => {
+          const { lastUpdated, cacheExpiry } = get();
+          return lastUpdated > 0 && Date.now() - lastUpdated < cacheExpiry;
+        },
 
-      setInitialized: (initialized) => {
-        set({ isInitialized: initialized });
-      },
+        invalidateCache: () => set({ lastUpdated: 0 }),
 
-      signIn: async (email, password) => {
-        set({ isLoading: true });
+        setCacheExpiry: (expiry: number) => set({ cacheExpiry: expiry }),
 
-        try {
-          const result = await authClient.signIn.email({
-            email,
-            password,
-          });
-
-          if (result.data) {
-            set({
-              user: result.data.user,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-            return { success: true };
-          }
-
-          set({ isLoading: false });
-          return {
-            success: false,
-            error: result.error?.message || '登录失败',
-          };
-        } catch (error) {
-          set({ isLoading: false });
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : '登录失败',
-          };
-        }
-      },
-
-      signUp: async (email, password, name) => {
-        set({ isLoading: true });
-
-        try {
-          const result = await authClient.signUp.email({
-            email,
-            password,
-            name: name || '',
-          });
-
-          if (result.data) {
-            set({
-              user: result.data.user,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-            return { success: true };
-          }
-
-          set({ isLoading: false });
-          return {
-            success: false,
-            error: result.error?.message || '注册失败',
-          };
-        } catch (error) {
-          set({ isLoading: false });
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : '注册失败',
-          };
-        }
-      },
-
-      signOut: async () => {
-        set({ isLoading: true });
-
-        try {
-          await authClient.signOut();
+        // Actions
+        setUser: (user) => {
           set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
+            user,
+            isAuthenticated: !!user,
+            lastUpdated: Date.now(),
           });
-        } catch (error) {
-          console.error('退出登录失败:', error);
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      },
+        },
 
-      signInWithGithub: async () => {
-        set({ isLoading: true });
+        setLoading: (loading) => {
+          set({ isLoading: loading });
+        },
 
-        try {
-          await authClient.signIn.social({
-            provider: 'github',
-          });
-        } catch (error) {
-          set({ isLoading: false });
-          console.error('GitHub 登录失败:', error);
-        }
-      },
+        setInitialized: (initialized) => {
+          set({ isInitialized: initialized });
+        },
 
-      signInWithGoogle: async () => {
-        set({ isLoading: true });
+        setError: (error) => {
+          set({ error });
+        },
 
-        try {
-          await authClient.signIn.social({
-            provider: 'google',
-          });
-        } catch (error) {
-          set({ isLoading: false });
-          console.error('Google 登录失败:', error);
-        }
-      },
+        clearError: () => {
+          set({ error: null });
+        },
+        signIn: async (email, password) => {
+          set({ isLoading: true, error: null });
 
-      initialize: async () => {
-        if (get().isInitialized) return;
-
-        set({ isLoading: true });
-
-        try {
-          const session = await authClient.getSession();
-
-          if (session.data) {
-            set({
-              user: session.data.user,
-              isAuthenticated: true,
-              isLoading: false,
-              isInitialized: true,
+          try {
+            const result = await authClient.signIn.email({
+              email,
+              password,
             });
-          } else {
+
+            if (result.data) {
+              const user = result.data.user;
+              set({
+                user,
+                isAuthenticated: true,
+                isLoading: false,
+                lastUpdated: Date.now(),
+              });
+              return { success: true };
+            }
+
+            set({ isLoading: false });
+            return {
+              success: false,
+              error: result.error?.message || 'signIn error',
+            };
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'signIn error';
+            set({ error: errorMessage, isLoading: false });
+            return {
+              success: false,
+              error: errorMessage,
+            };
+          }
+        },
+        signUp: async (email, password, name) => {
+          set({ isLoading: true, error: null });
+
+          try {
+            const result = await authClient.signUp.email({
+              email,
+              password,
+              name: name || '',
+            });
+
+            if (result.data) {
+              const user = result.data.user;
+              set({
+                user,
+                isAuthenticated: true,
+                isLoading: false,
+                lastUpdated: Date.now(),
+              });
+              return { success: true };
+            }
+
+            set({ isLoading: false });
+            return {
+              success: false,
+              error: result.error?.message || 'signUp error',
+            };
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'signUp error';
+            set({ error: errorMessage, isLoading: false });
+            return {
+              success: false,
+              error: errorMessage,
+            };
+          }
+        },
+
+        signOut: async () => {
+          set({ isLoading: true });
+
+          try {
+            await authClient.signOut();
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              lastUpdated: 0,
+            });
+          } catch (error) {
+            console.error('signOut error:', error);
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              lastUpdated: 0,
+            });
+          }
+        },
+
+        signInWithGithub: async () => {
+          set({ isLoading: true, error: null });
+
+          try {
+            await authClient.signIn.social({
+              provider: 'github',
+            });
+            // Clear cache to force refresh
+            set({ lastUpdated: 0 });
+          } catch (error) {
+            set({ isLoading: false });
+            console.error('signInWithGithub error:', error);
+          }
+        },
+
+        signInWithGoogle: async () => {
+          set({ isLoading: true, error: null });
+
+          try {
+            await authClient.signIn.social({
+              provider: 'google',
+            });
+            // Clear cache to force refresh
+            set({ lastUpdated: 0 });
+          } catch (error) {
+            set({ isLoading: false });
+            console.error('signInWithGoogle error:', error);
+          }
+        },
+        refreshSession: async () => {
+          try {
+            const session = await authClient.getSession();
+
+            if (session.data) {
+              const user = session.data.user;
+              set({
+                user,
+                isAuthenticated: true,
+                lastUpdated: Date.now(),
+              });
+            } else {
+              set({
+                user: null,
+                isAuthenticated: false,
+                lastUpdated: Date.now(),
+              });
+            }
+          } catch (error) {
+            console.error('refreshSession error:', error);
+            set({
+              user: null,
+              isAuthenticated: false,
+              lastUpdated: Date.now(),
+            });
+          }
+        },
+
+        initialize: async () => {
+          if (get().isInitialized) return;
+
+          set({ isLoading: true });
+
+          try {
+            if (get().isCacheValid()) {
+              set({ isLoading: false, isInitialized: true });
+              return;
+            }
+            const session = await authClient.getSession();
+            if (session.data) {
+              const user = session.data.user;
+              set({
+                user,
+                isAuthenticated: true,
+                isLoading: false,
+                isInitialized: true,
+                lastUpdated: Date.now(),
+              });
+            } else {
+              set({
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
+                isInitialized: true,
+                lastUpdated: Date.now(),
+              });
+            }
+          } catch (error) {
+            console.error('initialize error:', error);
             set({
               user: null,
               isAuthenticated: false,
               isLoading: false,
               isInitialized: true,
+              lastUpdated: Date.now(),
             });
           }
-        } catch (error) {
-          console.error('初始化认证状态失败:', error);
+        },
+        clearAuth: () => {
           set({
             user: null,
             isAuthenticated: false,
             isLoading: false,
-            isInitialized: true,
+            lastUpdated: 0,
           });
-        }
-      },
-
-      clearAuth: () => {
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-      },
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined' ? localStorage : createNoopStorage()
-      ),
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
+        },
       }),
-      version: 1,
-      skipHydration: true,
-    }
+      {
+        name: 'better-saas-auth',
+        storage: createJSONStorage(() => localStorage),
+        // Only persist safe state fields
+        partialize: (state) => ({
+          user: state.user,
+          isAuthenticated: state.isAuthenticated,
+          lastUpdated: state.lastUpdated,
+          cacheExpiry: state.cacheExpiry,
+        }),
+        skipHydration: false, // Allow automatic hydration
+        version: 1,
+      }
+    )
   )
 );
 
-// SSR 安全的 hooks - 使用 Zustand 的原生 SSR 支持
 export const useUser = () => useAuthStore((state) => state.user);
 export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
 export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 export const useAuthInitialized = () => useAuthStore((state) => state.isInitialized);
+export const useAuthError = () => useAuthStore((state) => state.error);
+export const useInitialize = () => useAuthStore((state) => state.initialize);
 
 export const useAuth = () =>
   useAuthStore((state) => ({
@@ -241,5 +324,8 @@ export const useAuth = () =>
     signInWithGithub: state.signInWithGithub,
     signInWithGoogle: state.signInWithGoogle,
     initialize: state.initialize,
+    refreshSession: state.refreshSession,
     clearAuth: state.clearAuth,
+    clearError: state.clearError,
+    setError: state.setError,
   }));
