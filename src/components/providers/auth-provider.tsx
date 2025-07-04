@@ -9,10 +9,10 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const initialize = useInitialize();
-  
+
   useEffect(() => {
     initialize();
   }, [initialize]);
-  
+
   return <>{children}</>;
 }

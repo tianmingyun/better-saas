@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth, useAuthLoading, useIsAuthenticated, useUser } from '@/store/auth-store';
+import { useAuthLoading, useIsAuthenticated, useUser, useSignOut } from '@/store/auth-store';
 import { Home, LogOut, Settings, Shield, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,7 @@ export function UserAvatarMenu() {
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
   const isLoading = useAuthLoading();
-  const { signOut } = useAuth();
+  const signOut = useSignOut();
   const t = useTranslations('userMenu');
 
   const handleLogout = async () => {

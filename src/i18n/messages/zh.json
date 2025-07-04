@@ -1,22 +1,4 @@
 {
-  "HomePage": {
-    "title": "创建 T3 应用",
-    "subtitle": "开始全栈、类型安全 Next.js 应用的最佳方式",
-    "firstSteps": "第一步",
-    "firstStepsDescription": "基础知识 - 设置数据库和身份验证所需了解的一切。",
-    "documentation": "文档",
-    "documentationDescription": "了解更多关于 Create T3 App、它使用的库以及如何部署的信息。"
-  },
-  "Docs": {
-    "search": "搜索",
-    "searchNoResult": "没有找到结果",
-    "toc": "目录",
-    "tocNoHeadings": "没有标题",
-    "lastUpdate": "最后更新",
-    "chooseLanguage": "选择语言",
-    "nextPage": "下一页",
-    "previousPage": "上一页"
-  },
   "common": {
     "save": "保存",
     "cancel": "取消",
@@ -40,5 +22,23 @@
     "dontHaveAccount": "没有账户？",
     "signInHere": "在此登录",
     "signUpHere": "在此注册"
+  },
+  "Docs": {
+    "search": "搜索",
+    "searchNoResult": "没有找到结果",
+    "toc": "目录",
+    "tocNoHeadings": "没有标题",
+    "lastUpdate": "最后更新",
+    "chooseLanguage": "选择语言",
+    "nextPage": "下一页",
+    "previousPage": "上一页"
+  },
+  "userMenu": {
+    "user": "用户",
+    "security": "安全",
+    "profile": "个人资料",
+    "settings": "设置",
+    "toggleMode": "切换模式",
+    "logout": "退出登录"
   }
 }

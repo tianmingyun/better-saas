@@ -1,22 +1,4 @@
 {
-  "HomePage": {
-    "title": "Create T3 App",
-    "subtitle": "The best way to start a full-stack, typesafe Next.js app",
-    "firstSteps": "First Steps",
-    "firstStepsDescription": "Just the basics - Everything you need to know to set up your database and authentication.",
-    "documentation": "Documentation",
-    "documentationDescription": "Learn more about Create T3 App, the libraries it uses, and how to deploy it."
-  },
-  "Docs": {
-    "search": "Search",
-    "searchNoResult": "No results found",
-    "toc": "Table of Contents",
-    "tocNoHeadings": "No headings",
-    "lastUpdate": "Last updated",
-    "chooseLanguage": "Choose Language",
-    "nextPage": "Next Page",
-    "previousPage": "Previous Page"
-  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -40,5 +22,24 @@
     "dontHaveAccount": "Don't have an account?",
     "signInHere": "Sign in here",
     "signUpHere": "Sign up here"
+  },
+  "Docs": {
+    "search": "Search",
+    "searchNoResult": "No results found",
+    "toc": "Table of Contents",
+    "tocNoHeadings": "No headings",
+    "lastUpdate": "Last updated",
+    "chooseLanguage": "Choose Language",
+    "nextPage": "Next Page",
+    "previousPage": "Previous Page"
+  },
+  "userMenu": {
+    "user": "User",
+    "security": "Security",
+    "profile": "Profile",
+    "billing": "Billing",
+    "settings": "Settings",
+    "toggleMode": "Toggle mode",
+    "logout": "Log out"
   }
 }

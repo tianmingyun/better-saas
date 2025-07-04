@@ -1,7 +1,7 @@
 import { authClient } from '@/lib/auth/auth-client';
 import type { User } from 'better-auth/types';
 import { create } from 'zustand';
-import { persist, createJSONStorage, subscribeWithSelector } from 'zustand/middleware';
+import { createJSONStorage, persist, subscribeWithSelector } from 'zustand/middleware';
 
 interface AuthState {
   // Persistent state
@@ -48,7 +48,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   subscribeWithSelector(
     persist(
-      (set, get) => ({
+      (set, get): AuthState => ({
         // Persistent state - default values must match server-side
         user: null,
         isAuthenticated: false,
@@ -315,17 +315,8 @@ export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 export const useAuthInitialized = () => useAuthStore((state) => state.isInitialized);
 export const useAuthError = () => useAuthStore((state) => state.error);
 export const useInitialize = () => useAuthStore((state) => state.initialize);
-
-export const useAuth = () =>
-  useAuthStore((state) => ({
-    signIn: state.signIn,
-    signUp: state.signUp,
-    signOut: state.signOut,
-    signInWithGithub: state.signInWithGithub,
-    signInWithGoogle: state.signInWithGoogle,
-    initialize: state.initialize,
-    refreshSession: state.refreshSession,
-    clearAuth: state.clearAuth,
-    clearError: state.clearError,
-    setError: state.setError,
-  }));
+export const useEmailLogin = () => useAuthStore((state) => state.signIn);
+export const useClearError = () => useAuthStore((state) => state.clearError);
+export const useSignInWithGithub = () => useAuthStore((state) => state.signInWithGithub);
+export const useSignInWithGoogle = () => useAuthStore((state) => state.signInWithGoogle);
+export const useSignOut = () => useAuthStore((state) => state.signOut);

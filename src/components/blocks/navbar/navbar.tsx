@@ -1,7 +1,5 @@
 'use client';
 
-import { LanguageSwitcher } from '@/components/widget/language-switcher';
-import { ThemeToggle } from '@/components/widget/theme-toggle';
 import {
   Accordion,
   AccordionContent,
@@ -18,6 +16,8 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { LanguageSwitcher } from '@/components/widget/language-switcher';
+import { ThemeToggle } from '@/components/widget/theme-toggle';
 import { UserAvatarMenu } from '@/components/widget/user-avatar-menu';
 import { useAuthInitialized, useAuthLoading, useIsAuthenticated } from '@/store/auth-store';
 import { Book, Menu, Sunset, Trees, Zap } from 'lucide-react';
