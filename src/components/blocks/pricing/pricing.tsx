@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { useIsAuthenticated } from '@/store/auth-store';
+import { useRouter } from '@/i18n/navigation';
 
 interface PricingFeature {
   text: string;
@@ -89,6 +91,19 @@ const Pricing = ({
   ],
 }: Pricing2Props) => {
   const [isYearly, setIsYearly] = useState(false);
+  const isAuthenticated = useIsAuthenticated();
+  const router = useRouter();
+
+  const handlePurchaseClick = (planUrl: string) => {
+    if (!isAuthenticated) {
+      // 如果用户未登录，跳转到登录页面
+      router.push('/login');
+      return;
+    }
+    // 如果用户已登录，打开购买链接
+    window.open(planUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <section id="pricing" className="py-16">
       <div className="container">
@@ -134,11 +149,12 @@ const Pricing = ({
                   </ul>
                 </CardContent>
                 <CardFooter className="mt-auto">
-                  <Button asChild className="w-full">
-                    <a href={plan.button.url} target="_blank" rel="noreferrer">
-                      {plan.button.text}
-                      <ArrowRight className="ml-2 size-4" />
-                    </a>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handlePurchaseClick(plan.button.url)}
+                  >
+                    {plan.button.text}
+                    <ArrowRight className="ml-2 size-4" />
                   </Button>
                 </CardFooter>
               </Card>
