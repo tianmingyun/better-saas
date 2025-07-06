@@ -30,7 +30,7 @@ interface PricingPlan {
   };
   button: {
     text: string;
-    url?: string; // 可选，用于回退
+    url?: string; // Optional, for fallback
   };
 }
 
@@ -73,8 +73,8 @@ const Pricing = ({
         { text: '10GB storage space' },
       ],
       stripePriceIds: {
-        monthly: 'price_1RhQp003mW7BWfTB7jdha4iy', // 替换为真实的 Stripe 价格 ID
-        yearly: 'price_1RhQqJ03mW7BWfTB2IPGIh0g',   // 替换为真实的 Stripe 价格 ID
+              monthly: 'price_1RhQp003mW7BWfTB7jdha4iy', // Replace with real Stripe price ID
+      yearly: 'price_1RhQqJ03mW7BWfTB2IPGIh0g',   // Replace with real Stripe price ID
       },
       button: {
         text: 'Purchase',
@@ -93,8 +93,8 @@ const Pricing = ({
         { text: 'Unlimited storage' },
       ],
       stripePriceIds: {
-        monthly: 'price_1RhQup03mW7BWfTBxYA7nySq', // 替换为真实的 Stripe 价格 ID
-        yearly: 'price_1RhQvL03mW7BWfTBZNQjSZjR',   // 替换为真实的 Stripe 价格 ID
+              monthly: 'price_1RhQup03mW7BWfTBxYA7nySq', // Replace with real Stripe price ID
+      yearly: 'price_1RhQvL03mW7BWfTBZNQjSZjR',   // Replace with real Stripe price ID
       },
       button: {
         text: 'Purchase',
@@ -109,18 +109,18 @@ const Pricing = ({
 
   const handlePurchaseClick = (plan: PricingPlan) => {
     if (!isAuthenticated) {
-      // 如果用户未登录，跳转到登录页面
+      // If user is not logged in, redirect to login page
       router.push('/login');
       return;
     }
 
-    // 免费计划直接跳转到仪表板
+    // Free plan redirects directly to dashboard
     if (plan.id === 'Free') {
       router.push('/dashboard');
       return;
     }
 
-    // 获取对应的价格 ID
+    // Get corresponding price ID
     const priceId = isYearly 
       ? plan.stripePriceIds?.yearly 
       : plan.stripePriceIds?.monthly;
@@ -130,13 +130,13 @@ const Pricing = ({
       return;
     }
 
-    // 创建支付会话
+    // Create payment session
     startTransition(async () => {
       try {
         const result = await createCheckoutSession({
           priceId,
           successUrl: `${window.location.origin}/settings/billing?success=true`,
-          // 用户取消支付时跳转到billing页面，显示取消提示
+          // Redirect to billing page when user cancels payment, showing cancellation notice
           cancelUrl: `${window.location.origin}/settings/billing?canceled=true`,
         });
 

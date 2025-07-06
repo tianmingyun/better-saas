@@ -109,7 +109,7 @@ export function FileGrid({
       {files.map((file) => (
         <Card key={file.id} className="group overflow-hidden">
           <CardContent className="p-0">
-            {/* 图片预览 */}
+                          {/* Image preview */}
             <div className="relative aspect-square overflow-hidden">
               {imageErrors.has(file.id) ? (
                 <div className="flex h-full items-center justify-center bg-muted">
@@ -125,7 +125,7 @@ export function FileGrid({
                 />
               )}
 
-              {/* 悬停操作按钮 */}
+                              {/* Hover action buttons */}
               <div className="absolute inset-0 flex items-center justify-center space-x-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button size="sm" variant="secondary" onClick={() => onPreview?.(file)}>
                   <Eye className="h-4 w-4" />
@@ -136,7 +136,7 @@ export function FileGrid({
               </div>
             </div>
 
-            {/* 文件信息 */}
+                          {/* File info */}
             <div className="p-3">
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
@@ -156,7 +156,7 @@ export function FileGrid({
                   <p className="mt-1 text-muted-foreground text-xs">{formatDate(file.createdAt)}</p>
                 </div>
 
-                {/* 操作菜单 */}
+                                  {/* Action menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

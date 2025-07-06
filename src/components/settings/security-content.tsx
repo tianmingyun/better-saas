@@ -14,9 +14,9 @@ export function SecurityContent() {
   const handleResetPassword = async () => {
     setIsResettingPassword(true);
     try {
-      // TODO: 实现重置密码逻辑
+      // TODO: Implement reset password logic
       console.log('Reset password');
-      // 模拟 API 调用
+      // Mock API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       console.error('Failed to reset password:', error);
@@ -28,9 +28,9 @@ export function SecurityContent() {
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
     try {
-      // TODO: 实现删除账户逻辑
+      // TODO: Implement delete account logic
       console.log('Delete account');
-      // 模拟 API 调用
+      // Mock API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       console.error('Failed to delete account:', error);

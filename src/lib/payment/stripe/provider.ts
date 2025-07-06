@@ -13,7 +13,7 @@ import type Stripe from 'stripe';
 
 export class StripeProvider implements PaymentProvider {
   /**
-   * 创建客户
+   * Create customer
    */
   async createCustomer(userId: string, email: string, name?: string): Promise<string> {
     try {
@@ -32,7 +32,7 @@ export class StripeProvider implements PaymentProvider {
   }
 
   /**
-   * 创建一次性支付
+   * Create one-time payment
    */
   async createPayment(params: CreatePaymentParams): Promise<PaymentResult> {
     try {
@@ -42,8 +42,8 @@ export class StripeProvider implements PaymentProvider {
         throw new Error('需要提供客户ID');
       }
 
-      // 创建 Checkout Session
-      const session = await stripe.checkout.sessions.create({
+          // Create Checkout Session
+    const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
         line_items: [
@@ -75,7 +75,7 @@ export class StripeProvider implements PaymentProvider {
   }
 
   /**
-   * 创建订阅支付会话
+   * Create subscription payment session
    */
   async createSubscriptionCheckout(params: CreateSubscriptionCheckoutParams): Promise<PaymentResult> {
     try {
@@ -85,8 +85,8 @@ export class StripeProvider implements PaymentProvider {
         throw new Error('需要提供客户ID');
       }
 
-      // 创建订阅 Checkout Session
-      const session = await stripe.checkout.sessions.create({
+          // Create subscription Checkout Session
+    const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
         line_items: [

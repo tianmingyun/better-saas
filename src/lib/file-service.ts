@@ -23,7 +23,7 @@ export interface FileInfo {
 }
 
 /**
- * 生成文件存储路径
+ * Generate file storage path
  */
 export function generateR2Key(
   filename: string,
@@ -38,7 +38,7 @@ export function generateR2Key(
 }
 
 /**
- * 生成唯一文件名
+ * Generate unique filename
  */
 export function generateUniqueFilename(originalName: string): string {
   const ext = originalName.split('.').pop() || '';
@@ -48,7 +48,7 @@ export function generateUniqueFilename(originalName: string): string {
 }
 
 /**
- * 验证图片文件
+ * Validate image file
  */
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -66,7 +66,7 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 }
 
 /**
- * 生成缩略图
+ * Generate thumbnail
  */
 export async function generateThumbnail(buffer: Buffer): Promise<Buffer> {
   return sharp(buffer)
@@ -79,7 +79,7 @@ export async function generateThumbnail(buffer: Buffer): Promise<Buffer> {
 }
 
 /**
- * 获取图片元数据
+ * Get image metadata
  */
 export async function getImageMetadata(buffer: Buffer) {
   const metadata = await sharp(buffer).metadata();
@@ -90,7 +90,7 @@ export async function getImageMetadata(buffer: Buffer) {
 }
 
 /**
- * 上传文件到 R2
+ * Upload file to R2
  */
 export async function uploadToR2(key: string, buffer: Buffer, mimeType: string): Promise<void> {
   const command = new PutObjectCommand({
@@ -104,7 +104,7 @@ export async function uploadToR2(key: string, buffer: Buffer, mimeType: string):
 }
 
 /**
- * 从 R2 删除文件
+ * Delete file from R2
  */
 export async function deleteFromR2(key: string): Promise<void> {
   const command = new DeleteObjectCommand({
@@ -116,14 +116,14 @@ export async function deleteFromR2(key: string): Promise<void> {
 }
 
 /**
- * 生成文件访问 URL
+ * Generate file access URL
  */
 export function getFileUrl(r2Key: string): string {
   return `${R2_PUBLIC_URL}/${r2Key}`;
 }
 
 /**
- * 生成预签名 URL（用于私有访问）
+ * Generate presigned URL (for private access)
  */
 export async function getSignedUrl(r2Key: string, expiresIn = 3600): Promise<string> {
   const command = new GetObjectCommand({
@@ -135,37 +135,37 @@ export async function getSignedUrl(r2Key: string, expiresIn = 3600): Promise<str
 }
 
 /**
- * 完整的文件上传流程（包括数据库操作）
+ * Complete file upload process (including database operations)
  */
 export async function uploadFile(file: File, userId: string): Promise<FileInfo> {
-  // 验证文件
-  const validation = validateImageFile(file);
+      // Validate file
+    const validation = validateImageFile(file);
   if (!validation.valid) {
     throw new Error(validation.error);
   }
 
-  // 读取文件内容
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+      // Read file content
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-  // 获取图片元数据
-  const { width, height } = await getImageMetadata(buffer);
+      // Get image metadata
+    const { width, height } = await getImageMetadata(buffer);
 
-  // 生成文件名和路径
-  const filename = generateUniqueFilename(file.name);
-  const r2Key = generateR2Key(filename);
-  const thumbnailKey = generateR2Key(filename, 'thumbnail');
+      // Generate filename and path
+    const filename = generateUniqueFilename(file.name);
+    const r2Key = generateR2Key(filename);
+    const thumbnailKey = generateR2Key(filename, 'thumbnail');
 
-  // 生成缩略图
-  const thumbnailBuffer = await generateThumbnail(buffer);
+      // Generate thumbnail
+    const thumbnailBuffer = await generateThumbnail(buffer);
 
-  // 上传原图到 R2
-  await uploadToR2(r2Key, buffer, file.type);
+      // Upload original image to R2
+    await uploadToR2(r2Key, buffer, file.type);
 
-  // 上传缩略图到 R2
-  await uploadToR2(thumbnailKey, thumbnailBuffer, 'image/jpeg');
+      // Upload thumbnail to R2
+    await uploadToR2(thumbnailKey, thumbnailBuffer, 'image/jpeg');
 
-  // 保存文件信息到数据库
+  // Save file info to database
   const fileData: CreateFileData = {
     id: crypto.randomUUID(),
     filename,
@@ -181,7 +181,7 @@ export async function uploadFile(file: File, userId: string): Promise<FileInfo> 
 
   const fileInfo = await fileRepository.create(fileData);
 
-  // 添加访问 URL
+  // Add access URL
   return {
     ...fileInfo,
     url: getFileUrl(r2Key),
@@ -190,43 +190,43 @@ export async function uploadFile(file: File, userId: string): Promise<FileInfo> 
 }
 
 /**
- * 删除文件（包括 R2 和数据库）
+ * Delete file (including R2 and database)
  */
 export async function deleteFile(fileId: string, userId?: string): Promise<boolean> {
-  // 从数据库获取文件信息
+  // Get file info from database
   const fileInfo = await fileRepository.findById(fileId);
   if (!fileInfo) {
     return false;
   }
 
-  // 如果指定了用户ID，验证权限
+  // If user ID is specified, verify permissions
   if (userId && fileInfo.uploadUserId !== userId) {
-    throw new Error('无权删除此文件');
+    throw new Error('No permission to delete this file');
   }
 
   try {
-    // 删除 R2 中的文件
+    // Delete file from R2
     await deleteFromR2(fileInfo.r2Key);
     
-    // 删除缩略图
+    // Delete thumbnail
     if (fileInfo.thumbnailKey) {
       await deleteFromR2(fileInfo.thumbnailKey);
     }
 
-    // 从数据库删除记录
+    // Delete record from database
     const deleted = userId 
       ? await fileRepository.deleteByUserId(userId, fileId)
       : await fileRepository.delete(fileId);
 
     return deleted;
   } catch (error) {
-    console.error('删除文件失败:', error);
+    console.error('Failed to delete file:', error);
     return false;
   }
 }
 
 /**
- * 获取文件列表（带分页）
+ * Get file list (with pagination)
  */
 export async function getFileList(options: {
   page?: number;
@@ -268,7 +268,7 @@ export async function getFileList(options: {
 }
 
 /**
- * 获取单个文件信息
+ * Get single file info
  */
 export async function getFileInfo(fileId: string): Promise<FileInfo | null> {
   const fileInfo = await fileRepository.findById(fileId);

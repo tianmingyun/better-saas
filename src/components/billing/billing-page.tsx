@@ -39,7 +39,7 @@ export function BillingPage() {
     loadBillingInfo();
   }, [loadBillingInfo]);
 
-  // 处理URL参数，显示支付结果提示
+  // Handle URL parameters to show payment result notifications
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
@@ -48,13 +48,13 @@ export function BillingPage() {
       toast.success('支付成功！您的订阅已激活。', {
         duration: 5000,
       });
-      // 清理URL参数
+      // Clean up URL parameters
       window.history.replaceState({}, '', window.location.pathname);
     } else if (canceled === 'true') {
       toast.info('支付已取消。您可以随时重新订阅。', {
         duration: 5000,
       });
-      // 清理URL参数
+      // Clean up URL parameters
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [searchParams]);
@@ -121,7 +121,7 @@ export function BillingPage() {
         <p className="text-muted-foreground">管理您的订阅和查看支付历史</p>
       </div>
 
-      {/* 当前订阅 */}
+      {/* Current subscription */}
       {billingInfo?.activeSubscription ? (
         <SubscriptionCard 
           subscription={billingInfo.activeSubscription} 
@@ -141,7 +141,7 @@ export function BillingPage() {
         </Card>
       )}
 
-      {/* 支付历史 */}
+      {/* Payment history */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

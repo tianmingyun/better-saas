@@ -1,6 +1,6 @@
 import { DatabaseError } from '../types';
 
-// 基础 Repository 接口
+// Base Repository interface
 export interface IBaseRepository<TSelect, TInsert> {
   findById(id: string): Promise<TSelect | undefined>;
   findAll(): Promise<TSelect[]>;
@@ -11,7 +11,7 @@ export interface IBaseRepository<TSelect, TInsert> {
   count(): Promise<number>;
 }
 
-// 基础 Repository 抽象类
+// Base Repository abstract class
 export abstract class BaseRepository<TSelect, TInsert>
   implements IBaseRepository<TSelect, TInsert>
 {

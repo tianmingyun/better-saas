@@ -44,7 +44,7 @@ export function useFiles(options: UseFilesOptions = {}) {
     dedupingInterval: 5000,
   });
 
-  // 上传文件
+  // Upload file
   const { trigger: uploadFile, isMutating: isUploading } = useSWRMutation(
     '/api/files/upload',
     async (url: string, { arg }: { arg: File }) => {
@@ -65,17 +65,17 @@ export function useFiles(options: UseFilesOptions = {}) {
     },
     {
       onSuccess: () => {
-        // 上传成功后重新获取文件列表
+        // Refetch file list after successful upload
         mutate();
       },
     }
   );
 
-  // 删除文件
+  // Delete file
   const { trigger: deleteFile, isMutating: isDeleting } = useSWRMutation(
     '/api/files',
     async (url: string, { arg }: { arg: string }) => {
-      // 乐观删除
+      // Optimistic delete
       if (data) {
         const optimisticData = {
           ...data,
@@ -89,7 +89,7 @@ export function useFiles(options: UseFilesOptions = {}) {
       });
 
       if (!response.ok) {
-        // 删除失败时恢复数据
+        // Restore data on deletion failure
         mutate();
         const error = await response.json();
         throw new Error(error.error || 'Delete failed');
@@ -99,11 +99,11 @@ export function useFiles(options: UseFilesOptions = {}) {
     },
     {
       onSuccess: () => {
-        // 删除成功后重新获取数据
+        // Refetch data after successful deletion
         mutate();
       },
       onError: () => {
-        // 删除失败时恢复数据
+        // Restore data on deletion failure
         mutate();
       },
     }

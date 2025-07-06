@@ -39,7 +39,7 @@ export interface CreatePaymentEventData {
 
 export class PaymentRepository {
   /**
-   * 创建支付记录
+   * Create payment record
    */
   async create(data: CreatePaymentData): Promise<PaymentRecord> {
     const paymentId = data.id || uuidv4();
@@ -67,7 +67,7 @@ export class PaymentRepository {
   }
 
   /**
-   * 根据 ID 获取支付记录
+   * Get payment record by ID
    */
   async findById(id: string): Promise<PaymentRecord | null> {
     const result = await db
@@ -80,7 +80,7 @@ export class PaymentRepository {
   }
 
   /**
-   * 根据用户 ID 获取支付记录
+   * Get payment records by user ID
    */
   async findByUserId(userId: string): Promise<PaymentRecord[]> {
     const results = await db
@@ -224,5 +224,5 @@ export class PaymentRepository {
   }
 }
 
-// 导出单例实例
+// Export singleton instance
 export const paymentRepository = new PaymentRepository(); 

@@ -39,7 +39,7 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={onEmailLogin}>
             <div className="grid gap-6">
-              {/* 错误信息显示 */}
+              {/* Error message display */}
               {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-600 text-sm">
                   {error}
@@ -53,7 +53,7 @@ export function LoginForm({
                 </div>
               )}
 
-              {/* 社交登录按钮 */}
+                              {/* Social login buttons */}
               <div className="flex flex-col gap-4">
                 <Button
                   type="button"
@@ -109,7 +109,7 @@ export function LoginForm({
                 </span>
               </div>
 
-              {/* 邮箱密码登录 */}
+                              {/* Email password login */}
               <div className="grid gap-6">
                 <div className="grid gap-3">
                   <Label htmlFor="email">{t('email')}</Label>

@@ -1,9 +1,9 @@
 import type Stripe from 'stripe';
 
-// 支付类型
+// Payment type
 export type PaymentType = 'one_time' | 'subscription';
 
-// 支付状态
+// Payment status
 export type PaymentStatus = 
   | 'active' 
   | 'canceled' 
@@ -14,10 +14,10 @@ export type PaymentStatus =
   | 'unpaid'
   | 'paused';
 
-// 支付间隔
+// Payment interval
 export type PaymentInterval = 'month' | 'year' | null;
 
-// 支付事件类型
+// Payment event type
 export type PaymentEventType = 
   | 'created' 
   | 'succeeded' 

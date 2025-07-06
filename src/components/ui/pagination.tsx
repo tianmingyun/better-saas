@@ -94,7 +94,7 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<'span'
   );
 }
 
-// 自定义分页组件，包含完整的分页逻辑
+// Custom pagination component with complete pagination logic
 interface PaginationControlsProps {
   currentPage: number;
   totalPages: number;
@@ -113,12 +113,12 @@ function PaginationControls({
     const maxVisiblePages = 5;
 
     if (totalPages <= maxVisiblePages) {
-      // 如果总页数少于等于最大可见页数，显示所有页数
+      // If total pages is less than or equal to max visible pages, show all pages
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // 否则显示部分页数
+      // Otherwise show partial pages
       if (currentPage <= 3) {
         pages.push(1, 2, 3, 4, '...', totalPages);
       } else if (currentPage >= totalPages - 2) {

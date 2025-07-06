@@ -119,7 +119,7 @@ const Navbar = ({
   isInitialized,
   onPricingClick,
 }: NavbarProps) => {
-  // 为Resources菜单项添加图标
+                  // Add icon for Resources menu item
   const menuWithIcons: MenuItem[] = menu.map(item => {
     if (item.title === 'Resources' && item.items) {
       return {
@@ -151,7 +151,7 @@ const Navbar = ({
 
   const menuItems = menuWithIcons;
 
-  // 渲染桌面菜单项
+      // Render desktop menu items
   const renderMenuItem = (item: MenuItem) => {
     if (item.items && item.items.length > 0) {
       return (

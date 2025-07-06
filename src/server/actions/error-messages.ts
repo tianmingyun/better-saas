@@ -1,6 +1,6 @@
 import { getLocale } from 'next-intl/server';
 
-// Server Action中的错误消息多语言支持
+// Multi-language support for error messages in Server Actions
 export async function getErrorMessage(key: string): Promise<string> {
   const locale = await getLocale();
   

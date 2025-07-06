@@ -57,7 +57,7 @@ export function ProfileContent({
       </div>
 
       <div className="grid gap-6">
-        {/* 头像设置 */}
+        {/* Avatar settings */}
         <Card>
           <CardHeader>
             <CardTitle>{t('avatar.title')}</CardTitle>
@@ -88,7 +88,7 @@ export function ProfileContent({
           </CardContent>
         </Card>
 
-        {/* 语言设置 */}
+                  {/* Language settings */}
         <Card>
           <CardHeader>
             <CardTitle>{t('language.title')}</CardTitle>
@@ -110,7 +110,7 @@ export function ProfileContent({
           </CardContent>
         </Card>
 
-        {/* 姓名设置 */}
+                  {/* Name settings */}
         <Card>
           <CardHeader>
             <CardTitle>{t('name.title')}</CardTitle>
@@ -142,7 +142,7 @@ export function ProfileContent({
           </CardContent>
         </Card>
 
-        {/* 邮箱设置 */}
+                  {/* Email settings */}
         <Card>
           <CardHeader>
             <CardTitle>{t('email.title')}</CardTitle>

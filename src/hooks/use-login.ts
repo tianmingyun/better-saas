@@ -30,13 +30,13 @@ export function useLogin(): UseLoginReturn {
     password: '',
   });
 
-  // 获取回调URL
+  // Get callback URL
   const getRedirectUrl = useCallback(() => {
     const callbackUrl = searchParams.get('callbackUrl');
     return callbackUrl || '/settings/profile';
   }, [searchParams]);
 
-  // 登录成功后自动跳转
+  // Auto redirect after successful login
   useEffect(() => {
     if (isAuthenticated) {
       const redirectUrl = getRedirectUrl();
@@ -44,7 +44,7 @@ export function useLogin(): UseLoginReturn {
     }
   }, [isAuthenticated, router, getRedirectUrl]);
 
-  // 处理社交登录
+  // Handle social login
   const handleSocialLogin = async (provider: 'github' | 'google') => {
     try {
       clearError();   
@@ -59,7 +59,7 @@ export function useLogin(): UseLoginReturn {
     }
   };
 
-  // 处理邮箱登录
+  // Handle email login
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError(); 
@@ -74,7 +74,7 @@ export function useLogin(): UseLoginReturn {
     }
   };
 
-  // 清除错误
+  // Clear error
   const handleClearError = () => {
     clearError();
   };

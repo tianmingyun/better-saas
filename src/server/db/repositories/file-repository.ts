@@ -153,7 +153,7 @@ export class FileRepository {
       uploadUserId: fileRecord.uploadUserId,
       createdAt: fileRecord.createdAt.toISOString(),
       updatedAt: fileRecord.updatedAt.toISOString(),
-      url: '', // 这里暂时设置为空字符串，实际URL会在service层添加
+      url: '', // Temporarily set to empty string, actual URL will be added in service layer
       thumbnailUrl: undefined,
     };
   }

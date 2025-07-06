@@ -20,7 +20,7 @@ export async function cancelSubscription(
       };
     }
 
-    // 验证订阅是否属于当前用户
+    // Verify subscription belongs to current user
     const paymentRecord = await paymentRepository.findBySubscriptionId(subscriptionId);
     if (!paymentRecord || paymentRecord.userId !== session.user.id) {
       return {
@@ -31,7 +31,7 @@ export async function cancelSubscription(
 
     const stripeProvider = new StripeProvider();
 
-    // 取消 Stripe 订阅
+    // Cancel Stripe subscription
     const canceled = await stripeProvider.cancelSubscription(subscriptionId);
     if (!canceled) {
       return {
@@ -40,12 +40,12 @@ export async function cancelSubscription(
       };
     }
 
-    // 更新数据库记录
+    // Update database record
     await paymentRepository.update(paymentRecord.id, {
       cancelAtPeriodEnd: true,
     });
 
-    // 记录事件
+    // Record event
     await paymentRepository.createEvent({
       paymentId: paymentRecord.id,
       eventType: 'canceled',

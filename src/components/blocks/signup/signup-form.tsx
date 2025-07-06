@@ -33,13 +33,13 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
   const signInWithGoogle = useSignInWithGoogle();
   const setError = useSetError();
 
-  // 表单状态
+          // Form state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // 获取回调URL
+      // Get callback URL
   const getRedirectUrl = useCallback(() => {
     const callbackUrl = searchParams.get('callbackUrl');
     return callbackUrl || '/settings/profile';
@@ -65,12 +65,12 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
     }
   };
 
-  // 邮箱注册处理
+      // Email registration handling
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError(); // 清除之前的错误
+          clearError(); // Clear previous errors
 
-    // 验证密码匹配
+          // Validate password match
     if (password !== confirmPassword) {
       setError(t('passwordMismatch'));
       return;
@@ -93,7 +93,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
         <CardContent>
           <form onSubmit={handleEmailSignup}>
             <div className="grid gap-6">
-              {/* 错误信息显示 */}
+              {/* Error message display */}
               {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-600 text-sm">
                   {error}
@@ -107,7 +107,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
                 </div>
               )}
 
-              {/* 社交登录按钮 */}
+                              {/* Social login buttons */}
               <div className="flex flex-col gap-4">
                 <Button
                   type="button"
@@ -163,7 +163,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
                 </span>
               </div>
 
-              {/* 邮箱密码注册 */}
+                              {/* Email password registration */}
               <div className="grid gap-6">
                 <div className="grid gap-3">
                   <Label htmlFor="name">{t('name')}</Label>

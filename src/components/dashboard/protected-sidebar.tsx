@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-// 图标映射
+// Icon mapping
 const iconMap = {
   Users,
   Bell,
@@ -57,10 +57,10 @@ export function ProtectedSidebar({ collapsed, onToggle, sidebarGroups }: Protect
     setExpandedGroups(newExpanded);
   };
 
-  // 获取图标组件
+  // Get icon component
   const getIcon = (icon: React.ComponentType<{ className?: string }> | string) => {
     if (typeof icon === 'string') {
-      return iconMap[icon as keyof typeof iconMap] || Users; // 默认使用 Users 图标
+      return iconMap[icon as keyof typeof iconMap] || Users; // Default to Users icon
     }
     return icon;
   };

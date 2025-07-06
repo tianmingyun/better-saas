@@ -18,7 +18,7 @@ export function useProfile(): UseProfileReturn {
   const [isUpdatingName, setIsUpdatingName] = useState(false);
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
 
-  // 从用户数据初始化表单
+  // Initialize form from user data
   useEffect(() => {
     if (user) {
       setFormData({

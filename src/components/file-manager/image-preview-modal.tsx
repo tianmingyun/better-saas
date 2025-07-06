@@ -67,7 +67,7 @@ export function ImagePreviewModal({ file, isOpen, onClose }: ImagePreviewModalPr
           }
         }}
       >
-        {/* 头部 */}
+        {/* Header */}
         <div className="flex items-center justify-between border-b p-4">
           <div className="min-w-0 flex-1">
             <h2 className="truncate font-semibold text-lg" title={file.originalName}>
@@ -89,7 +89,7 @@ export function ImagePreviewModal({ file, isOpen, onClose }: ImagePreviewModalPr
           </div>
         </div>
 
-        {/* 图片内容 */}
+                  {/* Image content */}
         <div className="flex min-h-0 flex-1 items-center justify-center p-4">
           <div className="relative max-h-full max-w-full">
             <Image

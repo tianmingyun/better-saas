@@ -81,7 +81,7 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
         </CardContent>
       </Card>
 
-      {/* 文件错误提示 */}
+      {/* File error notifications */}
       {fileRejections.length > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">

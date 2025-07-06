@@ -11,7 +11,7 @@ export function useNavbar(): UseNavbarReturn {
   const isLoading = useAuthLoading();
   const isInitialized = useAuthInitialized();
 
-  // Logo配置
+  // Logo configuration
   const logo: LogoConfig = {
     url: '/',
     src: '/icons/apple-touch-icon.png',
@@ -19,13 +19,13 @@ export function useNavbar(): UseNavbarReturn {
     title: 'Better SaaS',
   };
 
-  // 认证配置
+  // Auth configuration
   const auth: AuthConfig = {
     login: { text: 'Log in', url: '/login' },
     signup: { text: 'Sign up', url: '/signup' },
   };
 
-  // 平滑滚动到指定元素的函数
+  // Function to smooth scroll to specified element
   const scrollToElement = (elementId: string) => {
     const element = document.getElementById(elementId);
     if (element) {
@@ -36,7 +36,7 @@ export function useNavbar(): UseNavbarReturn {
     }
   };
 
-  // 处理定价点击事件
+  // Handle pricing click event
   const handlePricingClick = () => {
     const currentPath = window.location.pathname;
     const homePath = `/${locale}`;
@@ -51,7 +51,7 @@ export function useNavbar(): UseNavbarReturn {
     }
   };
 
-  // 菜单配置 (图标将在组件中创建)
+  // Menu configuration (icons will be created in components)
   const menu: MenuItem[] = [
     { title: 'Blog', url: `/${locale}/blog` },
     {

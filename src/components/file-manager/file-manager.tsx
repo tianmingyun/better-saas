@@ -28,13 +28,13 @@ export function FileManager() {
 
   return (
     <div className="space-y-6">
-      {/* 页面标题和描述 */}
+      {/* Page title and description */}
       <div className="flex flex-col space-y-2">
         <h1 className="font-bold text-2xl">R2 Image/Video Management</h1>
         <p className="text-muted-foreground">Browse files stored in Cloudflare R2 (Admin only).</p>
       </div>
 
-      {/* 上传区域 */}
+              {/* Upload area */}
       {showUpload ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -73,14 +73,14 @@ export function FileManager() {
         </div>
       )}
 
-      {/* 错误提示 */}
+              {/* Error message */}
       {error && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4">
           <p className="text-destructive text-sm">{error}</p>
         </div>
       )}
 
-      {/* 文件表格 */}
+              {/* File table */}
       <FileTable
         files={files}
         loading={isLoading}
@@ -88,7 +88,7 @@ export function FileManager() {
         onPreview={handlePreview}
       />
 
-      {/* 分页 */}
+              {/* Pagination */}
       {pagination && pagination.total > 0 && (
         <div className="flex items-center justify-between">
           <div className="text-muted-foreground text-sm">
@@ -105,7 +105,7 @@ export function FileManager() {
         </div>
       )}
 
-      {/* 图片预览模态框 */}
+              {/* Image preview modal */}
       <ImagePreviewModal
         file={previewFile}
         isOpen={!!previewFile}
