@@ -2,8 +2,9 @@
 
 import { LoginForm } from '@/components/blocks/login/login-form';
 import { useLogin } from '@/hooks/use-login';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const loginData = useLogin();
 
   return (
@@ -20,5 +21,13 @@ export default function LoginPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

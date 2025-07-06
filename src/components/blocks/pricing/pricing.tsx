@@ -9,6 +9,9 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useIsAuthenticated } from '@/store/auth-store';
 import { useRouter } from '@/i18n/navigation';
+import { createCheckoutSession } from '@/server/actions/payment/create-subscription';
+import { toast } from 'sonner';
+import { useTransition } from 'react';
 
 interface PricingFeature {
   text: string;
@@ -21,9 +24,13 @@ interface PricingPlan {
   monthlyPrice: string;
   yearlyPrice: string;
   features: PricingFeature[];
+  stripePriceIds?: {
+    monthly?: string;
+    yearly?: string;
+  };
   button: {
     text: string;
-    url: string;
+    url?: string; // 可选，用于回退
   };
 }
 
@@ -50,8 +57,7 @@ const Pricing = ({
         { text: '1GB storage space' },
       ],
       button: {
-        text: 'Purchase',
-        url: 'https://www.shadcnblocks.com',
+        text: 'Get Started',
       },
     },
     {
@@ -66,9 +72,12 @@ const Pricing = ({
         { text: 'Community support' },
         { text: '10GB storage space' },
       ],
+      stripePriceIds: {
+        monthly: 'price_1RhQp003mW7BWfTB7jdha4iy', // 替换为真实的 Stripe 价格 ID
+        yearly: 'price_1RhQqJ03mW7BWfTB2IPGIh0g',   // 替换为真实的 Stripe 价格 ID
+      },
       button: {
         text: 'Purchase',
-        url: 'https://www.shadcnblocks.com',
       },
     },
     {
@@ -83,25 +92,64 @@ const Pricing = ({
         { text: 'Priority support' },
         { text: 'Unlimited storage' },
       ],
+      stripePriceIds: {
+        monthly: 'price_1RhQup03mW7BWfTBxYA7nySq', // 替换为真实的 Stripe 价格 ID
+        yearly: 'price_1RhQvL03mW7BWfTBZNQjSZjR',   // 替换为真实的 Stripe 价格 ID
+      },
       button: {
         text: 'Purchase',
-        url: 'https://www.shadcnblocks.com',
       },
     },
   ],
 }: Pricing2Props) => {
   const [isYearly, setIsYearly] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const isAuthenticated = useIsAuthenticated();
   const router = useRouter();
 
-  const handlePurchaseClick = (planUrl: string) => {
+  const handlePurchaseClick = (plan: PricingPlan) => {
     if (!isAuthenticated) {
       // 如果用户未登录，跳转到登录页面
       router.push('/login');
       return;
     }
-    // 如果用户已登录，打开购买链接
-    window.open(planUrl, '_blank', 'noopener,noreferrer');
+
+    // 免费计划直接跳转到仪表板
+    if (plan.id === 'Free') {
+      router.push('/dashboard');
+      return;
+    }
+
+    // 获取对应的价格 ID
+    const priceId = isYearly 
+      ? plan.stripePriceIds?.yearly 
+      : plan.stripePriceIds?.monthly;
+
+    if (!priceId) {
+      toast.error('价格配置错误，请联系客服');
+      return;
+    }
+
+    // 创建支付会话
+    startTransition(async () => {
+      try {
+        const result = await createCheckoutSession({
+          priceId,
+          successUrl: `${window.location.origin}/settings/billing?success=true`,
+          // 用户取消支付时跳转到billing页面，显示取消提示
+          cancelUrl: `${window.location.origin}/settings/billing?canceled=true`,
+        });
+
+        if (result.success && result.data?.url) {
+          window.location.href = result.data.url;
+        } else {
+          toast.error(result.error || '创建支付会话失败');
+        }
+      } catch (error) {
+        toast.error('创建支付会话失败');
+        console.error('Create checkout session error:', error);
+      }
+    });
   };
 
   return (
@@ -151,9 +199,10 @@ const Pricing = ({
                 <CardFooter className="mt-auto">
                   <Button 
                     className="w-full" 
-                    onClick={() => handlePurchaseClick(plan.button.url)}
+                    onClick={() => handlePurchaseClick(plan)}
+                    disabled={isPending}
                   >
-                    {plan.button.text}
+                    {isPending ? '处理中...' : plan.button.text}
                     <ArrowRight className="ml-2 size-4" />
                   </Button>
                 </CardFooter>

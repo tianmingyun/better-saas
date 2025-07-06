@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import { Suspense } from 'react';
 
 type Props = {
   children: ReactNode;
@@ -72,8 +73,10 @@ export default function ProtectedLayout({ children }: Props) {
   ];
 
   return (
-    <AuthGuard useSkeletonFallback>
-      <ProtectedContainer sidebarGroups={sidebarGroups}>{children}</ProtectedContainer>
-    </AuthGuard>
+    <Suspense fallback={<div>loading...</div>}>
+      <AuthGuard useSkeletonFallback>
+        <ProtectedContainer sidebarGroups={sidebarGroups}>{children}</ProtectedContainer>
+      </AuthGuard>
+    </Suspense>
   );
 }

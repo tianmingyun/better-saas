@@ -81,3 +81,40 @@ export const file = pgTable('file', {
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const payment = pgTable('payment', {
+  id: text('id').primaryKey(),
+  priceId: text('price_id').notNull(),
+  type: text('type').notNull(),
+  interval: text('interval'),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  customerId: text('customer_id').notNull(),
+  subscriptionId: text('subscription_id'),
+  status: text('status').notNull(),
+  periodStart: timestamp('period_start'),
+  periodEnd: timestamp('period_end'),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end'),
+  trialStart: timestamp('trial_start'),
+  trialEnd: timestamp('trial_end'),
+  createdAt: timestamp('created_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp('updated_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const paymentEvent = pgTable('payment_event', {
+  id: text('id').primaryKey(),
+  paymentId: text('payment_id')
+    .notNull()
+    .references(() => payment.id, { onDelete: 'cascade' }),
+  eventType: text('event_type').notNull(),
+  stripeEventId: text('stripe_event_id').unique(),
+  eventData: text('event_data'), // JSON string
+  createdAt: timestamp('created_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
