@@ -31,23 +31,23 @@ const Hero = ({
     count: 200,
     avatars: [
       {
-        src: 'https://www.shadcnblocks.com/images/block/avatar-1.webp',
+        src: '/avatar/1.png',
         alt: 'Avatar 1',
       },
       {
-        src: 'https://www.shadcnblocks.com/images/block/avatar-2.webp',
+        src: '/avatar/2.png',
         alt: 'Avatar 2',
       },
       {
-        src: 'https://www.shadcnblocks.com/images/block/avatar-3.webp',
+        src: '/avatar/3.png',
         alt: 'Avatar 3',
       },
       {
-        src: 'https://www.shadcnblocks.com/images/block/avatar-4.webp',
+        src: '/avatar/4.png',
         alt: 'Avatar 4',
       },
       {
-        src: 'https://www.shadcnblocks.com/images/block/avatar-5.webp',
+        src: '/avatar/5.png',
         alt: 'Avatar 5',
       },
     ],
@@ -64,10 +64,9 @@ const Hero = ({
           <a href={button.url}>{button.text}</a>
         </Button>
         <div className="mx-auto mt-10 flex w-fit flex-col items-center gap-4 sm:flex-row">
-          <span className="-space-x-4 mx-4 inline-flex items-center">
-            {reviews.avatars.map((avatar, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-              <Avatar key={index} className="size-14 border">
+          <span className="-space-x-3 mx-4 inline-flex items-center">
+            {reviews.avatars.map((avatar) => (
+              <Avatar key={avatar.src} className="size-14 border bg-white">
                 <AvatarImage src={avatar.src} alt={avatar.alt} />
               </Avatar>
             ))}
