@@ -376,6 +376,10 @@
     "publishedOn": "Published on",
     "tags": "Tags"
   },
+  "blocks": {
+    "title": "Components Library",
+    "description": "Explore our carefully crafted component collection to boost your development efficiency"
+  },
   "articles": {
     "title": "Tech Articles",
     "description": "Explore the latest technical insights and in-depth analysis",

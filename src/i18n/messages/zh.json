@@ -375,6 +375,10 @@
     "publishedOn": "发布于",
     "tags": "标签"
   },
+  "blocks": {
+    "title": "组件库",
+    "description": "探索精心设计的组件集合，提升您的开发效率"
+  },
   "articles": {
     "title": "技术文章",
     "description": "探索最新的技术见解和深度分析",
