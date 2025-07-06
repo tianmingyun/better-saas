@@ -4,6 +4,7 @@ import { Hero } from '@/components/blocks/hero/hero';
 import { Navbar } from '@/components/blocks/navbar/navbar';
 import { TechStack } from '@/components/blocks/tech-stack';
 import { Pricing } from '@/components/blocks/pricing/pricing';
+import { Footer } from '@/components/blocks/footer/footer';
 import { useNavbar } from '@/hooks/use-navbar';
 import React from 'react';
 
@@ -25,6 +26,7 @@ export default function HomePage() {
       <Hero />
       <TechStack />
       <Pricing />
+      <Footer />
     </main>
   );
 }
