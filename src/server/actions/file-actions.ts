@@ -10,6 +10,9 @@ import {
 } from '@/lib/file-service';
 import { headers } from 'next/headers';
 import { getErrorMessage } from './error-messages';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const fileErrorLogger = new ErrorLogger('file-actions');
 
 export interface FileListResponse {
   files: FileInfo[];
@@ -33,8 +36,11 @@ export interface FileDeleteResponse {
  * 上传文件 Server Action
  */
 export async function uploadFileAction(formData: FormData): Promise<FileUploadResponse> {
+  let session: { user?: { id: string } } | null = null;
+  let file: File | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
 
@@ -42,7 +48,7 @@ export async function uploadFileAction(formData: FormData): Promise<FileUploadRe
       throw new Error(await getErrorMessage('unauthorizedAccess'));
     }
 
-    const file = formData.get('file') as File;
+    file = formData.get('file') as File;
 
     if (!file) {
       throw new Error(await getErrorMessage('noFileSelected'));
@@ -55,7 +61,11 @@ export async function uploadFileAction(formData: FormData): Promise<FileUploadRe
       file: fileInfo,
     };
   } catch (error) {
-    console.error('文件上传失败:', error);
+    fileErrorLogger.logError(error as Error, {
+      operation: 'uploadFile',
+      userId: session?.user?.id,
+      fileName: file?.name,
+    });
 
     const errorMessage =
       error instanceof Error ? error.message : await getErrorMessage('fileUploadFailed');
@@ -67,8 +77,10 @@ export async function uploadFileAction(formData: FormData): Promise<FileUploadRe
  * 删除文件 Server Action
  */
 export async function deleteFileAction(fileId: string): Promise<FileDeleteResponse> {
+  let session: { user?: { id: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
 
@@ -84,7 +96,11 @@ export async function deleteFileAction(fileId: string): Promise<FileDeleteRespon
 
     return { success: true };
   } catch (error) {
-    console.error('删除文件失败:', error);
+    fileErrorLogger.logError(error as Error, {
+      operation: 'deleteFile',
+      userId: session?.user?.id,
+      fileId,
+    });
 
     const errorMessage =
       error instanceof Error ? error.message : await getErrorMessage('fileDeleteFailed');
@@ -102,8 +118,10 @@ export async function getFileListAction(
     search?: string;
   } = {}
 ): Promise<FileListResponse> {
+  let session: { user?: { id: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
 
@@ -122,7 +140,13 @@ export async function getFileListAction(
 
     return result;
   } catch (error) {
-    console.error('获取文件列表失败:', error);
+    fileErrorLogger.logError(error as Error, {
+      operation: 'getFileList',
+      userId: session?.user?.id,
+      page: options.page,
+      limit: options.limit,
+      search: options.search,
+    });
 
     const errorMessage =
       error instanceof Error ? error.message : await getErrorMessage('fileListFailed');
@@ -134,8 +158,10 @@ export async function getFileListAction(
  * 获取文件信息 Server Action
  */
 export async function getFileInfoAction(fileId: string): Promise<FileInfo> {
+  let session: { user?: { id: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
 
@@ -155,7 +181,11 @@ export async function getFileInfoAction(fileId: string): Promise<FileInfo> {
     }
     return fileInfo;
   } catch (error) {
-    console.error('获取文件信息失败:', error);
+    fileErrorLogger.logError(error as Error, {
+      operation: 'getFileInfo',
+      userId: session?.user?.id,
+      fileId,
+    });
     const errorMessage =
       error instanceof Error ? error.message : await getErrorMessage('fileInfoFailed');
     throw new Error(errorMessage);

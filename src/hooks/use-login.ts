@@ -11,6 +11,9 @@ import {
 } from '@/store/auth-store';
 import type { LoginFormData, UseLoginReturn } from '@/types/login';
 import { useToastMessages } from './use-toast-messages';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const loginErrorLogger = new ErrorLogger('use-login');
 
 export function useLogin(): UseLoginReturn {
   const router = useRouter();
@@ -54,7 +57,10 @@ export function useLogin(): UseLoginReturn {
         await signInWithGoogle();
       }
     } catch (error) {
-      console.error('Social login error:', error);
+      loginErrorLogger.logError(error as Error, {
+        operation: 'socialLogin',
+        provider,
+      });
       toastMessages.error.socialLoginFailed();
     }
   };

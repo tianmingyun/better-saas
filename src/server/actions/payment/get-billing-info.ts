@@ -4,6 +4,9 @@ import { auth } from '@/lib/auth/auth';
 import { paymentRepository } from '@/server/db/repositories/payment-repository';
 import type { ActionResult, PaymentRecord } from '@/types/payment';
 import { headers } from 'next/headers';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const billingErrorLogger = new ErrorLogger('billing-info');
 
 export interface BillingInfo {
   activeSubscription?: PaymentRecord;
@@ -11,8 +14,10 @@ export interface BillingInfo {
 }
 
 export async function getBillingInfo(): Promise<ActionResult<BillingInfo>> {
+  let session: { user?: { id: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
     if (!session?.user) {
@@ -37,7 +42,10 @@ export async function getBillingInfo(): Promise<ActionResult<BillingInfo>> {
     };
 
   } catch (error) {
-    console.error('获取账单信息失败:', error);
+    billingErrorLogger.logError(error as Error, {
+      operation: 'getBillingInfo',
+      userId: session?.user?.id,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : '获取账单信息失败',
@@ -46,8 +54,10 @@ export async function getBillingInfo(): Promise<ActionResult<BillingInfo>> {
 }
 
 export async function getUserSubscription(): Promise<ActionResult<PaymentRecord | null>> {
+  let session: { user?: { id: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
     if (!session?.user) {
@@ -65,7 +75,10 @@ export async function getUserSubscription(): Promise<ActionResult<PaymentRecord 
     };
 
   } catch (error) {
-    console.error('获取用户订阅失败:', error);
+    billingErrorLogger.logError(error as Error, {
+      operation: 'getUserSubscription',
+      userId: session?.user?.id,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : '获取用户订阅失败',

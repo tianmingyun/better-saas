@@ -1,7 +1,12 @@
 import { authClient } from '@/lib/auth/auth-client';
+import { isAdmin, getUserRole, hasPermission } from '@/lib/auth/permissions';
+import type { Permission, UserRole } from '@/lib/auth/permissions';
 import type { User } from 'better-auth/types';
 import { create } from 'zustand';
 import { createJSONStorage, persist, subscribeWithSelector } from 'zustand/middleware';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const authErrorLogger = new ErrorLogger('auth-store');
 
 interface AuthState {
   // Persistent state
@@ -45,6 +50,11 @@ interface AuthState {
   isCacheValid: () => boolean;
   invalidateCache: () => void;
   setCacheExpiry: (expiry: number) => void;
+
+  // Permission methods
+  isAdmin: () => boolean;
+  getUserRole: () => UserRole;
+  hasPermission: (permission: Permission) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -178,7 +188,9 @@ export const useAuthStore = create<AuthState>()(
               lastUpdated: 0,
             });
           } catch (error) {
-            console.error('signOut error:', error);
+            authErrorLogger.logError(error as Error, {
+              operation: 'signOut',
+            });
             set({
               user: null,
               isAuthenticated: false,
@@ -198,8 +210,10 @@ export const useAuthStore = create<AuthState>()(
             // Clear cache to force refresh
             set({ lastUpdated: 0 });
           } catch (error) {
+            authErrorLogger.logError(error as Error, {
+              operation: 'signInWithGithub',
+            });
             set({ isLoading: false });
-            console.error('signInWithGithub error:', error);
           }
         },
 
@@ -213,8 +227,10 @@ export const useAuthStore = create<AuthState>()(
             // Clear cache to force refresh
             set({ lastUpdated: 0 });
           } catch (error) {
+            authErrorLogger.logError(error as Error, {
+              operation: 'signInWithGoogle',
+            });
             set({ isLoading: false });
-            console.error('signInWithGoogle error:', error);
           }
         },
 
@@ -264,7 +280,9 @@ export const useAuthStore = create<AuthState>()(
               });
             }
           } catch (error) {
-            console.error('refreshSession error:', error);
+            authErrorLogger.logError(error as Error, {
+              operation: 'refreshSession',
+            });
             set({
               user: null,
               isAuthenticated: false,
@@ -303,7 +321,9 @@ export const useAuthStore = create<AuthState>()(
               });
             }
           } catch (error) {
-            console.error('initialize error:', error);
+            authErrorLogger.logError(error as Error, {
+              operation: 'initialize',
+            });
             set({
               user: null,
               isAuthenticated: false,
@@ -321,6 +341,11 @@ export const useAuthStore = create<AuthState>()(
             lastUpdated: 0,
           });
         },
+
+        // Permission methods
+        isAdmin: () => isAdmin(get().user),
+        getUserRole: () => getUserRole(get().user),
+        hasPermission: (permission: Permission) => hasPermission(get().user, permission),
       }),
       {
         name: 'better-saas-auth',
@@ -354,3 +379,8 @@ export const useRefreshSession = () => useAuthStore((state) => state.refreshSess
 export const useEmailSignup = () => useAuthStore((state) => state.signUp);
 export const useSetError = () => useAuthStore((state) => state.setError);
 export const useUpdateUser = () => useAuthStore((state) => state.updateUser);
+
+// Permission hooks
+export const useIsAdmin = () => useAuthStore((state) => state.isAdmin());
+export const useUserRole = () => useAuthStore((state) => state.getUserRole());
+export const useHasPermission = () => useAuthStore((state) => state.hasPermission);

@@ -4,6 +4,9 @@ import { lookup } from 'mime-types';
 import sharp from 'sharp';
 import { R2_BUCKET_NAME, R2_PUBLIC_URL, r2Client } from './r2-client';
 import { fileRepository, type CreateFileData } from '@/server/db/repositories';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const fileServiceErrorLogger = new ErrorLogger('file-service');
 
 export interface FileInfo {
   id: string;
@@ -220,7 +223,12 @@ export async function deleteFile(fileId: string, userId?: string): Promise<boole
 
     return deleted;
   } catch (error) {
-    console.error('Failed to delete file:', error);
+    fileServiceErrorLogger.logError(error as Error, {
+      operation: 'deleteFile',
+      fileId,
+      userId,
+      r2Key: fileInfo.r2Key,
+    });
     return false;
   }
 }

@@ -18,6 +18,9 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const signupErrorLogger = new ErrorLogger('signup-form');
 
 export function SignupForm({ className, ...props }: React.ComponentProps<'div'>) {
   const router = useRouter();
@@ -61,7 +64,10 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
         await signInWithGoogle();
       }
     } catch (error) {
-      console.error('Social login error:', error);
+      signupErrorLogger.logError(error as Error, {
+        operation: 'socialLogin',
+        provider,
+      });
     }
   };
 

@@ -10,6 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, CreditCard } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const billingErrorLogger = new ErrorLogger('billing-page');
 
 export function BillingPage() {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
@@ -29,7 +32,9 @@ export function BillingPage() {
       }
     } catch (err) {
       setError('获取账单信息失败');
-      console.error('Load billing info error:', err);
+      billingErrorLogger.logError(err as Error, {
+        operation: 'loadBillingInfo',
+      });
     } finally {
       setIsLoading(false);
     }

@@ -8,6 +8,9 @@ import type { PaymentRecord } from '@/types/payment';
 import { Calendar, CreditCard, AlertCircle } from 'lucide-react';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const subscriptionErrorLogger = new ErrorLogger('subscription-card');
 
 interface SubscriptionCardProps {
   subscription: PaymentRecord;
@@ -70,7 +73,10 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
         }
       } catch (error) {
         toast.error('取消订阅失败');
-        console.error('Cancel subscription error:', error);
+        subscriptionErrorLogger.logError(error as Error, {
+          operation: 'cancelSubscription',
+          subscriptionId: subscription.subscriptionId,
+        });
       }
     });
   };

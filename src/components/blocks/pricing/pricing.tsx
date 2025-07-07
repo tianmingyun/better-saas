@@ -12,6 +12,9 @@ import { useRouter } from '@/i18n/navigation';
 import { createCheckoutSession } from '@/server/actions/payment/create-subscription';
 import { toast } from 'sonner';
 import { useTransition } from 'react';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const pricingErrorLogger = new ErrorLogger('pricing');
 
 interface PricingFeature {
   text: string;
@@ -147,7 +150,11 @@ const Pricing = ({
         }
       } catch (error) {
         toast.error('创建支付会话失败');
-        console.error('Create checkout session error:', error);
+        pricingErrorLogger.logError(error as Error, {
+          operation: 'createCheckoutSession',
+          priceId,
+          planId: plan.id,
+        });
       }
     });
   };

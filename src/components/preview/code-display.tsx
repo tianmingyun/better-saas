@@ -5,6 +5,9 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const codeDisplayErrorLogger = new ErrorLogger('code-display');
 
 interface CodeDisplayProps {
   code: string;
@@ -20,7 +23,10 @@ export function CodeDisplay({ code, language = 'tsx' }: CodeDisplayProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      codeDisplayErrorLogger.logError(err as Error, {
+        operation: 'copyToClipboard',
+        code: `${code.substring(0, 100)}...`,
+      });
     }
   };
 

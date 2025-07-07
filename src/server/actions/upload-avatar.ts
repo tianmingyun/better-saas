@@ -1,14 +1,20 @@
 'use server';
 
 import { auth } from '@/lib/auth/auth';
-import { writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
 import { headers } from 'next/headers';
 import { getErrorMessage } from './error-messages';
+import { uploadToR2, getFileUrl } from '@/lib/file-service';
+import { generateUniqueFilename } from '@/lib/file-service';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const avatarErrorLogger = new ErrorLogger('upload-avatar');
 
 export async function uploadAvatarAction(formData: FormData) {
+  let session: { user?: { id: string } } | null = null;
+  let file: File | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
 
@@ -16,7 +22,7 @@ export async function uploadAvatarAction(formData: FormData) {
       throw new Error(await getErrorMessage('unauthorizedAccess'));
     }
 
-    const file = formData.get('avatar') as File;
+    file = formData.get('avatar') as File;
 
     if (!file) {
       throw new Error(await getErrorMessage('fileNotFound'));
@@ -30,31 +36,34 @@ export async function uploadAvatarAction(formData: FormData) {
       throw new Error(await getErrorMessage('fileSizeLimit'));
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // 读取文件内容
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    const timestamp = Date.now();
-    const extension = file.name.split('.').pop();
-    const filename = `avatar_${session.user.id}_${timestamp}.${extension}`;
+    // 生成唯一文件名
+    const filename = generateUniqueFilename(file.name);
+    
+    // 为头像创建专门的R2路径
+    const r2Key = `avatars/${session.user.id}/${filename}`;
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'avatars');
-    const filePath = join(uploadDir, filename);
+    // 上传到R2
+    await uploadToR2(r2Key, buffer, file.type);
 
-    try {
-      await writeFile(filePath, buffer);
-    } catch (error) {
-      await mkdir(uploadDir, { recursive: true });
-      await writeFile(filePath, buffer);
-    }
-
-    const fileUrl = `/uploads/avatars/${filename}`;
+    // 生成访问URL
+    const fileUrl = getFileUrl(r2Key);
 
     return {
       success: true,
       url: fileUrl,
     };
   } catch (error) {
-    console.error('Avatar upload error:', error);
+    avatarErrorLogger.logError(error as Error, {
+      operation: 'uploadAvatar',
+      userId: session?.user?.id,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+    });
     
     throw new Error(
       error instanceof Error ? error.message : await getErrorMessage('fileUploadFailed')

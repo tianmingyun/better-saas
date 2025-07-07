@@ -10,6 +10,9 @@ import type {
   PaymentStatus,
 } from '@/types/payment';
 import type Stripe from 'stripe';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const stripeErrorLogger = new ErrorLogger('stripe-provider');
 
 export class StripeProvider implements PaymentProvider {
   /**
@@ -26,7 +29,11 @@ export class StripeProvider implements PaymentProvider {
       });
       return customer.id;
     } catch (error) {
-      console.error('创建 Stripe 客户失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'createCustomer',
+        userId,
+        email,
+      });
       throw new Error('创建客户失败');
     }
   }
@@ -69,7 +76,12 @@ export class StripeProvider implements PaymentProvider {
         clientSecret: session.client_secret || undefined,
       };
     } catch (error) {
-      console.error('创建支付失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'createPayment',
+        userId: params.userId,
+        priceId: params.priceId,
+        customerId: params.customerId,
+      });
       throw new Error('创建支付失败');
     }
   }
@@ -119,7 +131,12 @@ export class StripeProvider implements PaymentProvider {
         clientSecret: session.client_secret || undefined,
       };
     } catch (error) {
-      console.error('创建订阅支付会话失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'createSubscriptionCheckout',
+        userId: params.userId,
+        priceId: params.priceId,
+        customerId: params.customerId,
+      });
       throw new Error('创建订阅支付会话失败');
     }
   }
@@ -174,7 +191,12 @@ export class StripeProvider implements PaymentProvider {
         clientSecret: (subscription.latest_invoice as any)?.payment_intent?.client_secret,
       };
     } catch (error) {
-      console.error('创建订阅失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'createSubscription',
+        userId: params.userId,
+        priceId: params.priceId,
+        customerId: params.customerId,
+      });
       throw new Error('创建订阅失败');
     }
   }
@@ -240,7 +262,11 @@ export class StripeProvider implements PaymentProvider {
         currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
       };
     } catch (error) {
-      console.error('更新订阅失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'updateSubscription',
+        subscriptionId,
+        priceId: params.priceId,
+      });
       throw new Error('更新订阅失败');
     }
   }
@@ -255,7 +281,10 @@ export class StripeProvider implements PaymentProvider {
       });
       return true;
     } catch (error) {
-      console.error('取消订阅失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'cancelSubscription',
+        subscriptionId,
+      });
       return false;
     }
   }
@@ -293,7 +322,10 @@ export class StripeProvider implements PaymentProvider {
         currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
       };
     } catch (error) {
-      console.error('获取订阅失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'getSubscription',
+        subscriptionId,
+      });
       return null;
     }
   }
@@ -311,7 +343,10 @@ export class StripeProvider implements PaymentProvider {
         return (session.payment_status || 'incomplete') as PaymentStatus;
       }
     } catch (error) {
-      console.error('获取支付状态失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'getPaymentStatus',
+        paymentId,
+      });
       throw new Error('获取支付状态失败');
     }
   }
@@ -324,7 +359,9 @@ export class StripeProvider implements PaymentProvider {
       stripe.webhooks.constructEvent(payload, signature, stripeConfig.webhookSecret);
       return true;
     } catch (error) {
-      console.error('Webhook 验证失败:', error);
+      stripeErrorLogger.logError(error as Error, {
+        operation: 'verifyWebhook',
+      });
       return false;
     }
   }

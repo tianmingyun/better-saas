@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const securityErrorLogger = new ErrorLogger('security-content');
 
 export function SecurityContent() {
   const t = useTranslations('security');
@@ -15,11 +18,12 @@ export function SecurityContent() {
     setIsResettingPassword(true);
     try {
       // TODO: Implement reset password logic
-      console.log('Reset password');
       // Mock API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      console.error('Failed to reset password:', error);
+      securityErrorLogger.logError(error as Error, {
+        operation: 'resetPassword',
+      });
     } finally {
       setIsResettingPassword(false);
     }
@@ -29,11 +33,12 @@ export function SecurityContent() {
     setIsDeletingAccount(true);
     try {
       // TODO: Implement delete account logic
-      console.log('Delete account');
       // Mock API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      console.error('Failed to delete account:', error);
+      securityErrorLogger.logError(error as Error, {
+        operation: 'deleteAccount',
+      });
     } finally {
       setIsDeletingAccount(false);
     }

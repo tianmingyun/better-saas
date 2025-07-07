@@ -1,3 +1,6 @@
+'use client';
+
+import { AdminGuard } from '@/components/admin-guard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,84 +57,86 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 font-bold text-3xl tracking-tight">
-            <Bell className="h-8 w-8" />
-            {t('notifications')}
-          </h1>
-          <p className="text-muted-foreground">查看和管理您的通知</p>
-        </div>
-        <Button variant="outline">全部标记为已读</Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">未读通知</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl">2</div>
-            <p className="text-muted-foreground text-xs">需要您的关注</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">今日通知</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl">3</div>
-            <p className="text-muted-foreground text-xs">较昨日减少 2 条</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">总通知</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl">24</div>
-            <p className="text-muted-foreground text-xs">本月收到的通知</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>通知列表</CardTitle>
-          <CardDescription>最近的通知消息</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`flex items-start space-x-4 rounded-lg border p-4 ${
-                  notification.read ? 'bg-muted/50' : 'bg-background'
-                }`}
-              >
-                <div className="mt-1 flex-shrink-0">{getIcon(notification.type)}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-foreground text-sm">{notification.title}</p>
-                    <div className="flex items-center space-x-2">
-                      {!notification.read && (
-                        <Badge variant="secondary" className="text-xs">
-                          未读
-                        </Badge>
-                      )}
-                      <span className="text-muted-foreground text-xs">{notification.time}</span>
-                    </div>
-                  </div>
-                  <p className="mt-1 text-muted-foreground text-sm">{notification.message}</p>
-                </div>
-              </div>
-            ))}
+    <AdminGuard>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 font-bold text-3xl tracking-tight">
+              <Bell className="h-8 w-8" />
+              {t('notifications')}
+            </h1>
+            <p className="text-muted-foreground">查看和管理您的通知</p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <Button variant="outline">全部标记为已读</Button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-medium text-sm">未读通知</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="font-bold text-2xl">2</div>
+              <p className="text-muted-foreground text-xs">需要您的关注</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-medium text-sm">今日通知</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="font-bold text-2xl">3</div>
+              <p className="text-muted-foreground text-xs">较昨日减少 2 条</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-medium text-sm">总通知</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="font-bold text-2xl">24</div>
+              <p className="text-muted-foreground text-xs">本月收到的通知</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>通知列表</CardTitle>
+            <CardDescription>最近的通知消息</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`flex items-start space-x-4 rounded-lg border p-4 ${
+                    notification.read ? 'bg-muted/50' : 'bg-background'
+                  }`}
+                >
+                  <div className="mt-1 flex-shrink-0">{getIcon(notification.type)}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-foreground text-sm">{notification.title}</p>
+                      <div className="flex items-center space-x-2">
+                        {!notification.read && (
+                          <Badge variant="secondary" className="text-xs">
+                            未读
+                          </Badge>
+                        )}
+                        <span className="text-muted-foreground text-xs">{notification.time}</span>
+                      </div>
+                    </div>
+                    <p className="mt-1 text-muted-foreground text-sm">{notification.message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AdminGuard>
   );
 }

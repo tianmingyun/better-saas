@@ -6,6 +6,9 @@ import { paymentRepository } from '@/server/db/repositories/payment-repository';
 import type { ActionResult } from '@/types/payment';
 import { headers } from 'next/headers';
 import { env } from '@/env';
+import { ErrorLogger } from '@/lib/logger/logger-utils';
+
+const paymentErrorLogger = new ErrorLogger('payment-subscription');
 
 export interface CreateSubscriptionParams {
   priceId: string;
@@ -17,8 +20,10 @@ export interface CreateSubscriptionParams {
 export async function createSubscription(
   params: CreateSubscriptionParams
 ): Promise<ActionResult<{ url?: string; subscriptionId?: string }>> {
+  let session: { user?: { id: string; email: string; name?: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
     if (!session?.user) {
@@ -116,7 +121,12 @@ export async function createSubscription(
       message: '订阅创建成功',
     };
   } catch (error) {
-    console.error('创建订阅失败:', error);
+    paymentErrorLogger.logError(error as Error, {
+      operation: 'createSubscription',
+      userId: session?.user?.id,
+      priceId: params.priceId,
+      trialDays: params.trialDays,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : '创建订阅失败',
@@ -127,8 +137,10 @@ export async function createSubscription(
 export async function createCheckoutSession(
   params: CreateSubscriptionParams
 ): Promise<ActionResult<{ url?: string; subscriptionId?: string; clientSecret?: string }>> {
+  let session: { user?: { id: string; email: string; name?: string } } | null = null;
+  
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: await headers(),
     });
     if (!session?.user) {
@@ -230,7 +242,11 @@ export async function createCheckoutSession(
     };
 
   } catch (error) {
-    console.error('创建支付会话失败:', error);
+    paymentErrorLogger.logError(error as Error, {
+      operation: 'createCheckoutSession',
+      userId: session?.user?.id,
+      priceId: params.priceId,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : '创建支付会话失败',
