@@ -1,17 +1,14 @@
 'use client';
 
 import type { FileInfo } from '@/lib/file-service';
+import { 
+  uploadFileAction, 
+  deleteFileAction, 
+  getFileListAction,
+  type FileListResponse 
+} from '@/server/actions/file-actions';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
-
-interface FilesResponse {
-  files: FileInfo[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-}
 
 interface UseFilesOptions {
   page?: number;
@@ -19,24 +16,24 @@ interface UseFilesOptions {
   search?: string;
 }
 
-const fetcher = async (url: string): Promise<FilesResponse> => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch files');
+const fetcher = async (key: string): Promise<FileListResponse> => {
+  const [, page, limit, search] = key.split('|');
+  try {
+    return await getFileListAction({
+      page: Number(page),
+      limit: Number(limit),
+      search: search || '',
+    });
+  } catch (error) {
+    console.error('Error fetching files:', error);
+    throw error;
   }
-  return response.json();
 };
 
 export function useFiles(options: UseFilesOptions = {}) {
   const { page = 1, limit = 20, search = '' } = options;
 
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    ...(search && { search }),
-  });
-
-  const key = `/api/files?${params.toString()}`;
+  const key = `files|${page}|${limit}|${search}`;
 
   const { data, error, isLoading, mutate } = useSWR(key, fetcher, {
     revalidateOnFocus: false,
@@ -46,22 +43,12 @@ export function useFiles(options: UseFilesOptions = {}) {
 
   // Upload file
   const { trigger: uploadFile, isMutating: isUploading } = useSWRMutation(
-    '/api/files/upload',
-    async (url: string, { arg }: { arg: File }) => {
+    'upload-file',
+    async (_, { arg }: { arg: File }) => {
       const formData = new FormData();
       formData.append('file', arg);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Upload failed');
-      }
-
-      return response.json();
+      return await uploadFileAction(formData);
     },
     {
       onSuccess: () => {
@@ -73,8 +60,8 @@ export function useFiles(options: UseFilesOptions = {}) {
 
   // Delete file
   const { trigger: deleteFile, isMutating: isDeleting } = useSWRMutation(
-    '/api/files',
-    async (url: string, { arg }: { arg: string }) => {
+    'delete-file',
+    async (_, { arg }: { arg: string }) => {
       // Optimistic delete
       if (data) {
         const optimisticData = {
@@ -84,18 +71,13 @@ export function useFiles(options: UseFilesOptions = {}) {
         mutate(optimisticData, false);
       }
 
-      const response = await fetch(`${url}/${arg}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
+      try {
+        return await deleteFileAction(arg);
+      } catch (error) {
         // Restore data on deletion failure
         mutate();
-        const error = await response.json();
-        throw new Error(error.error || 'Delete failed');
+        throw error;
       }
-
-      return response.json();
     },
     {
       onSuccess: () => {

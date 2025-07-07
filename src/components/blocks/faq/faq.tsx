@@ -77,7 +77,7 @@ const Faq = ({
   supportButtonUrl = 'https://www.shadcnblocks.com',
 }: FaqProps) => {
   return (
-    <section className="py-32">
+    <section className="py-16">
       <div className="container space-y-16">
         <div className="mx-auto flex max-w-3xl flex-col text-left md:text-center">
           <h2 className="mb-3 font-semibold text-3xl md:mb-4 lg:mb-6 lg:text-4xl">{heading}</h2>
@@ -97,16 +97,16 @@ const Faq = ({
         </Accordion>
         <div className="mx-auto flex max-w-4xl flex-col items-center rounded-lg bg-accent p-4 text-center md:rounded-xl md:p-6 lg:p-8">
           <div className="relative">
-            <Avatar className="-translate-x-[60%] absolute mb-4 size-16 origin-bottom scale-[80%] border md:mb-5">
-              <AvatarImage src="https://shadcnblocks.com/images/block/avatar-2.webp" />
+            <Avatar className="-translate-x-[60%] absolute mb-4 size-16 origin-bottom scale-[80%] border bg-white md:mb-5">
+              <AvatarImage src="/avatar/2.png" />
               <AvatarFallback>SU</AvatarFallback>
             </Avatar>
-            <Avatar className="absolute mb-4 size-16 origin-bottom translate-x-[60%] scale-[80%] border md:mb-5">
-              <AvatarImage src="https://shadcnblocks.com/images/block/avatar-3.webp" />
+            <Avatar className="absolute mb-4 size-16 origin-bottom translate-x-[60%] scale-[80%] border bg-white md:mb-5">
+              <AvatarImage src="/avatar/4.png" />
               <AvatarFallback>SU</AvatarFallback>
             </Avatar>
-            <Avatar className="mb-4 size-16 border md:mb-5">
-              <AvatarImage src="https://shadcnblocks.com/images/block/avatar-1.webp" />
+            <Avatar className="mb-4 size-16 border bg-white md:mb-5">
+              <AvatarImage src="/avatar/5.png" />
               <AvatarFallback>SU</AvatarFallback>
             </Avatar>
           </div>
