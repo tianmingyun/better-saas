@@ -5,7 +5,6 @@ import { SubscriptionCard } from '@/components/payment/subscription-card';
 import { getBillingInfo } from '@/server/actions/payment/get-billing-info';
 import type { BillingInfo } from '@/server/actions/payment/get-billing-info';
 import { useEffect, useState, useCallback } from 'react';
-import { LoadingSkeleton } from '@/components/loading-skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CreditCard } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -16,13 +15,11 @@ const billingErrorLogger = new ErrorLogger('billing-page');
 
 export function BillingPage() {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   const loadBillingInfo = useCallback(async () => {
     try {
-      setIsLoading(true);
       setError(null);
       const result = await getBillingInfo();
       if (result.success && result.data) {
@@ -35,8 +32,6 @@ export function BillingPage() {
       billingErrorLogger.logError(err as Error, {
         operation: 'loadBillingInfo',
       });
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -101,9 +96,7 @@ export function BillingPage() {
     }
   };
 
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+
 
   if (error) {
     return (
