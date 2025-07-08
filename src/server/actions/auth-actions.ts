@@ -1,69 +1,26 @@
-'use server';
+'use server'
 
-import { auth } from '@/lib/auth/auth';
-import { isAdmin, getUserRole, hasPermission } from '@/lib/auth/permissions';
-import type { Permission, UserRole } from '@/lib/auth/permissions';
-import { headers } from 'next/headers';
-
-export interface UserPermissions {
-  isAdmin: boolean;
-  role: UserRole;
-  permissions: {
-    [key in Permission]: boolean;
-  };
-}
+import { auth } from '@/lib/auth/auth'
+import { isAdmin } from '@/lib/auth/permissions'
+import { headers } from 'next/headers'
 
 /**
- * 获取当前用户的权限信息
+ * Get user admin status on server side
+ * Only checks if user is admin, no complex permission calculations needed
  */
-export async function getUserPermissions(): Promise<UserPermissions> {
+export async function getUserAdminStatus(): Promise<boolean> {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
-    });
+    })
+    
+    if (!session?.user) {
+      return false
+    }
 
-    const user = session?.user || null;
-    const adminStatus = isAdmin(user);
-    const role = getUserRole(user);
-
-    // 预计算所有权限
-    const permissions: { [key in Permission]: boolean } = {
-      'dashboard.view': hasPermission(user, 'dashboard.view'),
-      'users.manage': hasPermission(user, 'users.manage'),
-      'files.manage': hasPermission(user, 'files.manage'),
-      'admin.access': hasPermission(user, 'admin.access'),
-      'settings.view': hasPermission(user, 'settings.view'),
-      'profile.edit': hasPermission(user, 'profile.edit'),
-      'billing.view': hasPermission(user, 'billing.view'),
-    };
-
-    return {
-      isAdmin: adminStatus,
-      role,
-      permissions,
-    };
+    return isAdmin(session.user)
   } catch (error) {
-    console.error('Error getting user permissions:', error);
-    return {
-      isAdmin: false,
-      role: 'user' as UserRole,
-      permissions: {
-        'dashboard.view': false,
-        'users.manage': false,
-        'files.manage': false,
-        'admin.access': false,
-        'settings.view': false,
-        'profile.edit': false,
-        'billing.view': false,
-      },
-    };
+    console.error('Error getting user admin status:', error)
+    return false
   }
-}
-
-/**
- * 检查用户是否为管理员
- */
-export async function checkIsAdmin(): Promise<boolean> {
-  const permissions = await getUserPermissions();
-  return permissions.isAdmin;
 }

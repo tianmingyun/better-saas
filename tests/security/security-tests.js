@@ -1,15 +1,15 @@
 const { test, expect } = require('@playwright/test')
 
-test.describe('安全测试', () => {
+test.describe('Security Tests', () => {
   const baseURL = 'http://localhost:3000'
 
-  test.describe('认证和授权', () => {
-    test('应该拒绝未认证的API请求', async ({ request }) => {
+  test.describe('Authentication and Authorization', () => {
+    test('should reject unauthenticated API requests', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/dashboard/stats`)
       expect(response.status()).toBe(401)
     })
 
-    test('应该拒绝无效的JWT令牌', async ({ request }) => {
+    test('should reject invalid JWT tokens', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/dashboard/stats`, {
         headers: {
           'Authorization': 'Bearer invalid-token'
@@ -18,10 +18,10 @@ test.describe('安全测试', () => {
       expect(response.status()).toBe(401)
     })
 
-    test('应该拒绝过期的JWT令牌', async ({ request }) => {
-      // 使用过期的令牌
+    test('should reject expired JWT tokens', async ({ request }) => {
+      // Use expired token
       const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.invalid'
-      
+
       const response = await request.get(`${baseURL}/api/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${expiredToken}`
@@ -30,7 +30,7 @@ test.describe('安全测试', () => {
       expect(response.status()).toBe(401)
     })
 
-    test('应该拒绝普通用户访问管理员API', async ({ request }) => {
+    test('should reject regular user access to admin API', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/admin/users`, {
         headers: {
           'Authorization': 'Bearer user-token'
@@ -40,8 +40,8 @@ test.describe('安全测试', () => {
     })
   })
 
-  test.describe('输入验证', () => {
-    test('应该防止SQL注入攻击', async ({ request }) => {
+  test.describe('Input Validation', () => {
+    test('should prevent SQL injection attacks', async ({ request }) => {
       const maliciousPayload = {
         email: "admin@example.com'; DROP TABLE users; --",
         password: 'password123'
@@ -51,29 +51,29 @@ test.describe('安全测试', () => {
         data: maliciousPayload
       })
 
-      // 应该返回验证错误，而不是服务器错误
+      // Should return validation error, not server error
       expect(response.status()).toBe(400)
     })
 
-    test('应该防止XSS攻击', async ({ page }) => {
+    test('should prevent XSS attacks', async ({ page }) => {
       await page.goto(`${baseURL}/auth/sign-in`)
 
-      // 尝试注入恶意脚本
+      // Try to inject malicious script
       const maliciousScript = '<script>alert("XSS")</script>'
-      
+
       await page.fill('input[type="email"]', maliciousScript)
       await page.fill('input[type="password"]', 'password123')
       await page.click('button[type="submit"]')
 
-      // 检查脚本是否被正确转义
+      // Check if script is properly escaped
       const emailValue = await page.inputValue('input[type="email"]')
       expect(emailValue).not.toContain('<script>')
     })
 
-    test('应该验证文件上传类型', async ({ request }) => {
-      // 尝试上传恶意文件
+    test('should validate file upload types', async ({ request }) => {
+      // Try to upload malicious file
       const maliciousFile = Buffer.from('<?php echo "Hacked!"; ?>')
-      
+
       const response = await request.post(`${baseURL}/api/files/upload`, {
         multipart: {
           file: {
@@ -89,13 +89,13 @@ test.describe('安全测试', () => {
 
       expect(response.status()).toBe(400)
       const body = await response.json()
-      expect(body.error).toContain('不支持的文件类型')
+      expect(body.error).toContain('Unsupported file type')
     })
 
-    test('应该限制文件上传大小', async ({ request }) => {
-      // 创建超大文件
+    test('should limit file upload size', async ({ request }) => {
+      // Create oversized file
       const largeFile = Buffer.alloc(15 * 1024 * 1024) // 15MB
-      
+
       const response = await request.post(`${baseURL}/api/files/upload`, {
         multipart: {
           file: {
@@ -111,23 +111,23 @@ test.describe('安全测试', () => {
 
       expect(response.status()).toBe(400)
       const body = await response.json()
-      expect(body.error).toContain('文件大小不能超过')
+      expect(body.error).toContain('File size cannot exceed')
     })
   })
 
-  test.describe('CSRF防护', () => {
-    test('应该要求CSRF令牌', async ({ request }) => {
+  test.describe('CSRF Protection', () => {
+    test('should require CSRF token', async ({ request }) => {
       const response = await request.post(`${baseURL}/api/auth/sign-out`, {
         headers: {
           'Authorization': 'Bearer valid-token'
         }
       })
 
-      // 如果没有CSRF令牌，应该被拒绝
+      // Should be rejected if no CSRF token
       expect([403, 422]).toContain(response.status())
     })
 
-    test('应该验证CSRF令牌', async ({ request }) => {
+    test('should validate CSRF token', async ({ request }) => {
       const response = await request.post(`${baseURL}/api/auth/sign-out`, {
         headers: {
           'Authorization': 'Bearer valid-token',
@@ -139,45 +139,45 @@ test.describe('安全测试', () => {
     })
   })
 
-  test.describe('速率限制', () => {
-    test('应该限制登录尝试次数', async ({ request }) => {
+  test.describe('Rate Limiting', () => {
+    test('should limit login attempt frequency', async ({ request }) => {
       const loginData = {
         email: 'test@example.com',
         password: 'wrong-password'
       }
 
-      // 快速发送多个失败的登录请求
-      const promises = Array(10).fill().map(() => 
+      // Rapidly send multiple failed login requests
+      const promises = Array(10).fill(null).map(() =>
         request.post(`${baseURL}/api/auth/sign-in`, { data: loginData })
       )
 
       const responses = await Promise.all(promises)
-      
-      // 应该有一些请求被速率限制
+
+      // Some requests should be rate limited
       const rateLimitedResponses = responses.filter(r => r.status() === 429)
       expect(rateLimitedResponses.length).toBeGreaterThan(0)
     })
 
-    test('应该限制API请求频率', async ({ request }) => {
-      // 快速发送多个API请求
-      const promises = Array(50).fill().map(() => 
+    test('should limit API request frequency', async ({ request }) => {
+      // Rapidly send multiple API requests
+      const promises = Array(50).fill(null).map(() =>
         request.get(`${baseURL}/api/health`)
       )
 
       const responses = await Promise.all(promises)
-      
-      // 检查是否有速率限制响应
+
+      // Check for rate limit responses
       const rateLimitedResponses = responses.filter(r => r.status() === 429)
       expect(rateLimitedResponses.length).toBeGreaterThan(0)
     })
   })
 
-  test.describe('HTTP安全头', () => {
-    test('应该设置安全HTTP头', async ({ request }) => {
+  test.describe('HTTP Security Headers', () => {
+    test('should set security HTTP headers', async ({ request }) => {
       const response = await request.get(`${baseURL}/`)
       const headers = response.headers()
 
-      // 检查重要的安全头
+      // Check important security headers
       expect(headers['x-frame-options']).toBeDefined()
       expect(headers['x-content-type-options']).toBe('nosniff')
       expect(headers['x-xss-protection']).toBeDefined()
@@ -185,7 +185,7 @@ test.describe('安全测试', () => {
       expect(headers['content-security-policy']).toBeDefined()
     })
 
-    test('应该设置正确的CSP策略', async ({ request }) => {
+    test('should set correct CSP policy', async ({ request }) => {
       const response = await request.get(`${baseURL}/`)
       const csp = response.headers()['content-security-policy']
 
@@ -196,12 +196,12 @@ test.describe('安全测试', () => {
     })
   })
 
-  test.describe('敏感信息泄露', () => {
-    test('不应该在错误响应中泄露敏感信息', async ({ request }) => {
+  test.describe('Sensitive Information Disclosure', () => {
+    test('should not leak sensitive information in error responses', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/non-existent-endpoint`)
       const body = await response.text()
 
-      // 检查是否泄露了敏感信息
+      // Check for sensitive information leakage
       expect(body).not.toContain('password')
       expect(body).not.toContain('secret')
       expect(body).not.toContain('token')
@@ -209,19 +209,19 @@ test.describe('安全测试', () => {
       expect(body).not.toContain('stack trace')
     })
 
-    test('不应该在响应头中泄露服务器信息', async ({ request }) => {
+    test('should not leak server information in response headers', async ({ request }) => {
       const response = await request.get(`${baseURL}/`)
       const headers = response.headers()
 
-      // 检查是否泄露了服务器信息
-      expect(headers['server']).toBeUndefined()
+      // Check for server information leakage
+      expect(headers.server).toBeUndefined()
       expect(headers['x-powered-by']).toBeUndefined()
     })
   })
 
-  test.describe('会话安全', () => {
-    test('应该在登出后使会话无效', async ({ request }) => {
-      // 模拟登录获取令牌
+  test.describe('Session Security', () => {
+    test('should invalidate session after logout', async ({ request }) => {
+      // Simulate login to get token
       const loginResponse = await request.post(`${baseURL}/api/auth/sign-in`, {
         data: {
           email: 'test@example.com',
@@ -231,39 +231,39 @@ test.describe('安全测试', () => {
 
       const { token } = await loginResponse.json()
 
-      // 使用令牌访问受保护的资源
+      // Use token to access protected resource
       let protectedResponse = await request.get(`${baseURL}/api/dashboard/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       expect(protectedResponse.status()).toBe(200)
 
-      // 登出
+      // Logout
       await request.post(`${baseURL}/api/auth/sign-out`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
-      // 再次尝试访问受保护的资源
+      // Try to access protected resource again
       protectedResponse = await request.get(`${baseURL}/api/dashboard/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       expect(protectedResponse.status()).toBe(401)
     })
 
-    test('应该设置安全的Cookie属性', async ({ page }) => {
+    test('should set secure Cookie attributes', async ({ page }) => {
       await page.goto(`${baseURL}/auth/sign-in`)
-      
-      // 模拟登录
+
+      // Simulate login
       await page.fill('input[type="email"]', 'test@example.com')
       await page.fill('input[type="password"]', 'password123')
       await page.click('button[type="submit"]')
 
-      // 检查Cookie属性
+      // Check Cookie attributes
       const cookies = await page.context().cookies()
       const authCookie = cookies.find(c => c.name.includes('auth') || c.name.includes('session'))
 
       if (authCookie) {
         expect(authCookie.httpOnly).toBe(true)
-        expect(authCookie.secure).toBe(true) // 在HTTPS环境中
+        expect(authCookie.secure).toBe(true) // In HTTPS environment
         expect(authCookie.sameSite).toBe('Strict')
       }
     })

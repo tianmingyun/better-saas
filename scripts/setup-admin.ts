@@ -5,14 +5,44 @@
  * example: pnpm tsx scripts/setup-admin.ts admin@example.com
  */
 
+// Load environment variables from .env file
+import { config } from 'dotenv';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Get current directory in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env file
+config({ path: resolve(__dirname, '../.env') });
+
 import { eq } from 'drizzle-orm';
-import db from '../src/server/db';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 import { user } from '../src/server/db/schema';
-import { getAdminEmails, isAdminEmail } from '../src/lib/auth/permissions';
 import { createChildLogger } from '@/lib/logger/logger';
 
 const setupAdminLogger = createChildLogger('setup-admin');
 
+// Create database connection
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error('❌ Error: DATABASE_URL is not set');
+  process.exit(1);
+}
+const sql = neon(databaseUrl);
+const db = drizzle(sql);
+
+function getAdminEmails(): string[] {
+  const adminEmails = process.env.ADMIN_EMAILS || '';
+  return adminEmails.split(',').map(email => email.trim()).filter(Boolean);
+}
+
+function isAdminEmail(email: string): boolean {
+  const adminEmails = getAdminEmails();
+  return adminEmails.includes(email);
+}
 
 async function setupAdmin(email: string) {
   try {

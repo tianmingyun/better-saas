@@ -1,7 +1,7 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
-import { act, renderHook } from '@testing-library/react'
-import { useAuthStore } from '@/store/auth-store'
-import type { User } from 'better-auth/types'
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { act, renderHook } from '@testing-library/react';
+import { useAuthStore } from '@/store/auth-store';
+import type { User } from 'better-auth/types';
 
 // Mock auth client
 jest.mock('@/lib/auth/auth-client', () => ({
@@ -17,7 +17,7 @@ jest.mock('@/lib/auth/auth-client', () => ({
     getSession: jest.fn(),
     updateUser: jest.fn(),
   },
-}))
+}));
 
 // Mock permissions
 jest.mock('@/lib/auth/permissions', () => ({
@@ -31,14 +31,14 @@ jest.mock('@/lib/auth/permissions', () => ({
   PERMISSIONS: {
     DASHBOARD_VIEW: 'dashboard.view',
   },
-}))
+}));
 
 // Mock logger
 jest.mock('@/lib/logger/logger-utils', () => ({
   ErrorLogger: jest.fn().mockImplementation(() => ({
     logError: jest.fn(),
   })),
-}))
+}));
 
 const mockUser: User = {
   id: 'user-1',
@@ -48,199 +48,199 @@ const mockUser: User = {
   image: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-}
+};
 
-describe('认证状态管理测试', () => {
+describe('Authentication State Management Tests', () => {
   beforeEach(() => {
     // Clear localStorage
-    localStorage.clear()
-    
+    localStorage.clear();
+
     // Reset store to initial state
-    useAuthStore.getState().clearAuth()
-    useAuthStore.getState().setInitialized(false)
-    
-    jest.clearAllMocks()
-  })
+    useAuthStore.getState().clearAuth();
+    useAuthStore.getState().setInitialized(false);
+
+    jest.clearAllMocks();
+  });
 
   afterEach(() => {
-    localStorage.clear()
-  })
+    localStorage.clear();
+  });
 
-  describe('初始状态', () => {
-    it('应该有正确的初始状态', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
-      expect(result.current.user).toBeNull()
-      expect(result.current.isAuthenticated).toBe(false)
-      expect(result.current.isLoading).toBe(false)
-      expect(result.current.error).toBeNull()
-      expect(result.current.isInitialized).toBe(false)
-      expect(result.current.lastUpdated).toBe(0)
-    })
-  })
+  describe('Initial State', () => {
+    it('should have correct initial state', () => {
+      const { result } = renderHook(() => useAuthStore());
 
-  describe('用户设置', () => {
-    it('应该正确设置用户', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.isInitialized).toBe(false);
+      expect(result.current.lastUpdated).toBe(0);
+    });
+  });
+
+  describe('User Management', () => {
+    it('should correctly set user', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       act(() => {
-        result.current.setUser(mockUser)
-      })
-      
-      expect(result.current.user).toEqual(mockUser)
-      expect(result.current.isAuthenticated).toBe(true)
-      expect(result.current.lastUpdated).toBeGreaterThan(0)
-    })
+        result.current.setUser(mockUser);
+      });
 
-    it('应该正确清除用户', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.lastUpdated).toBeGreaterThan(0);
+    });
+
+    it('should correctly clear user', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       // First set a user
       act(() => {
-        result.current.setUser(mockUser)
-      })
-      
+        result.current.setUser(mockUser);
+      });
+
       // Then clear
       act(() => {
-        result.current.setUser(null)
-      })
-      
-      expect(result.current.user).toBeNull()
-      expect(result.current.isAuthenticated).toBe(false)
-    })
-  })
+        result.current.setUser(null);
+      });
 
-  describe('加载状态', () => {
-    it('应该正确设置加载状态', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
-      act(() => {
-        result.current.setLoading(true)
-      })
-      
-      expect(result.current.isLoading).toBe(true)
-      
-      act(() => {
-        result.current.setLoading(false)
-      })
-      
-      expect(result.current.isLoading).toBe(false)
-    })
-  })
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+  });
 
-  describe('错误处理', () => {
-    it('应该正确设置和清除错误', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
-      act(() => {
-        result.current.setError('Test error')
-      })
-      
-      expect(result.current.error).toBe('Test error')
-      
-      act(() => {
-        result.current.clearError()
-      })
-      
-      expect(result.current.error).toBeNull()
-    })
-  })
+  describe('Loading State', () => {
+    it('should correctly set loading state', () => {
+      const { result } = renderHook(() => useAuthStore());
 
-  describe('缓存管理', () => {
-    it('应该正确检查缓存有效性', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      act(() => {
+        result.current.setLoading(true);
+      });
+
+      expect(result.current.isLoading).toBe(true);
+
+      act(() => {
+        result.current.setLoading(false);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should correctly set and clear errors', () => {
+      const { result } = renderHook(() => useAuthStore());
+
+      act(() => {
+        result.current.setError('Test error');
+      });
+
+      expect(result.current.error).toBe('Test error');
+
+      act(() => {
+        result.current.clearError();
+      });
+
+      expect(result.current.error).toBeNull();
+    });
+  });
+
+  describe('Cache Management', () => {
+    it('should correctly check cache validity', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       // Initially cache is invalid
-      expect(result.current.isCacheValid()).toBe(false)
-      
+      expect(result.current.isCacheValid()).toBe(false);
+
       // Set user (which updates lastUpdated)
       act(() => {
-        result.current.setUser(mockUser)
-      })
-      
-      // Now cache should be valid
-      expect(result.current.isCacheValid()).toBe(true)
-    })
+        result.current.setUser(mockUser);
+      });
 
-    it('应该正确使缓存失效', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      // Now cache should be valid
+      expect(result.current.isCacheValid()).toBe(true);
+    });
+
+    it('should correctly invalidate cache', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       // Set user first
       act(() => {
-        result.current.setUser(mockUser)
-      })
-      
-      expect(result.current.isCacheValid()).toBe(true)
-      
+        result.current.setUser(mockUser);
+      });
+
+      expect(result.current.isCacheValid()).toBe(true);
+
       // Invalidate cache
       act(() => {
-        result.current.invalidateCache()
-      })
-      
-      expect(result.current.isCacheValid()).toBe(false)
-    })
+        result.current.invalidateCache();
+      });
 
-    it('应该正确设置缓存过期时间', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      expect(result.current.isCacheValid()).toBe(false);
+    });
+
+    it('should correctly set cache expiry time', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       act(() => {
-        result.current.setCacheExpiry(5000) // 5 seconds
-      })
-      
-      expect(result.current.cacheExpiry).toBe(5000)
-    })
-  })
+        result.current.setCacheExpiry(5000); // 5 seconds
+      });
 
-  describe('认证清理', () => {
-    it('应该正确清理认证状态', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      expect(result.current.cacheExpiry).toBe(5000);
+    });
+  });
+
+  describe('Authentication Cleanup', () => {
+    it('should correctly clear authentication state', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       // Set some state first
       act(() => {
-        result.current.setUser(mockUser)
-        result.current.setError('Some error')
-        result.current.setLoading(true)
-      })
-      
+        result.current.setUser(mockUser);
+        result.current.setError('Some error');
+        result.current.setLoading(true);
+      });
+
       // Clear auth
       act(() => {
-        result.current.clearAuth()
-      })
-      
-      expect(result.current.user).toBeNull()
-      expect(result.current.isAuthenticated).toBe(false)
-      expect(result.current.isLoading).toBe(false)
-      expect(result.current.lastUpdated).toBe(0)
-      // Error should not be cleared by clearAuth
-      expect(result.current.error).toBe('Some error')
-    })
-  })
+        result.current.clearAuth();
+      });
 
-  describe('持久化', () => {
-    it('应该持久化正确的状态字段', () => {
-      const { result } = renderHook(() => useAuthStore())
-      
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.lastUpdated).toBe(0);
+      // Error should not be cleared by clearAuth
+      expect(result.current.error).toBe('Some error');
+    });
+  });
+
+  describe('Persistence', () => {
+    it('should persist correct state fields', () => {
+      const { result } = renderHook(() => useAuthStore());
+
       act(() => {
-        result.current.setUser(mockUser)
-        result.current.setError('Test error')
-        result.current.setLoading(true)
-      })
-      
+        result.current.setUser(mockUser);
+        result.current.setError('Test error');
+        result.current.setLoading(true);
+      });
+
       // Check localStorage
-      const stored = localStorage.getItem('better-saas-auth')
-      expect(stored).toBeTruthy()
-      
+      const stored = localStorage.getItem('better-saas-auth');
+      expect(stored).toBeTruthy();
+
       if (stored) {
-        const parsedStored = JSON.parse(stored)
-        expect(parsedStored.state.user).toEqual(mockUser)
-        expect(parsedStored.state.isAuthenticated).toBe(true)
-        expect(parsedStored.state.lastUpdated).toBeGreaterThan(0)
-        
+        const parsedStored = JSON.parse(stored);
+        expect(parsedStored.state.user).toEqual(mockUser);
+        expect(parsedStored.state.isAuthenticated).toBe(true);
+        expect(parsedStored.state.lastUpdated).toBeGreaterThan(0);
+
         // These should not be persisted
-        expect(parsedStored.state.error).toBeUndefined()
-        expect(parsedStored.state.isLoading).toBeUndefined()
-        expect(parsedStored.state.isInitialized).toBeUndefined()
+        expect(parsedStored.state.error).toBeUndefined();
+        expect(parsedStored.state.isLoading).toBeUndefined();
+        expect(parsedStored.state.isInitialized).toBeUndefined();
       }
-    })
-  })
-})
+    });
+  });
+});

@@ -1,20 +1,20 @@
-import { getUserPermissions } from '@/server/actions/auth-actions';
-import { PermissionProvider } from './permission-provider';
-import type { ReactNode } from 'react';
+import type { ReactNode } from 'react'
+import { PermissionProvider } from './permission-provider'
+import { getUserAdminStatus } from '@/server/actions/auth-actions'
 
 interface PermissionWrapperProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 /**
- * 服务器组件：获取权限信息并传递给客户端组件
+ * Server component that fetches user admin status and provides it to client components
  */
-export async function PermissionWrapper({ children }: PermissionWrapperProps) {
-  const permissions = await getUserPermissions();
+export default async function PermissionWrapper({ children }: PermissionWrapperProps) {
+  const isAdmin = await getUserAdminStatus()
 
   return (
-    <PermissionProvider permissions={permissions}>
+    <PermissionProvider isAdmin={isAdmin}>
       {children}
     </PermissionProvider>
-  );
+  )
 }

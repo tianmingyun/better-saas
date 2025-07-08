@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   useAuthLoading,
   useIsAuthenticated,
-  useAuthInitialized,
-  useIsAdmin
+  useAuthInitialized
 } from '@/store/auth-store';
+import { useIsAdmin } from '@/components/auth/permission-provider';
 import { Shield, ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';

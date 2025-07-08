@@ -1,59 +1,48 @@
-'use client';
+'use client'
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react'
 
-export interface UserPermissions {
-  isAdmin: boolean;
-  role: 'admin' | 'user';
-  permissions: {
-    'dashboard.view': boolean;
-    'users.manage': boolean;
-    'files.manage': boolean;
-    'admin.access': boolean;
-    'settings.view': boolean;
-    'profile.edit': boolean;
-    'billing.view': boolean;
-  };
+interface PermissionContextType {
+  isAdmin: boolean
 }
 
-const PermissionContext = createContext<UserPermissions | null>(null);
+const PermissionContext = createContext<PermissionContextType | undefined>(undefined)
 
 interface PermissionProviderProps {
-  children: ReactNode;
-  permissions: UserPermissions;
+  children: ReactNode
+  isAdmin: boolean
 }
 
-export function PermissionProvider({ children, permissions }: PermissionProviderProps) {
+export function PermissionProvider({ children, isAdmin }: PermissionProviderProps) {
   return (
-    <PermissionContext.Provider value={permissions}>
+    <PermissionContext.Provider value={{ isAdmin }}>
       {children}
     </PermissionContext.Provider>
-  );
+  )
 }
 
-export function usePermissions() {
-  const context = useContext(PermissionContext);
-  if (context === null) {
-    // 返回默认的空权限，避免错误
-    return {
-      isAdmin: false,
-      role: 'user' as const,
-      permissions: {
-        'dashboard.view': false,
-        'users.manage': false,
-        'files.manage': false,
-        'admin.access': false,
-        'settings.view': false,
-        'profile.edit': false,
-        'billing.view': false,
-      },
-    };
+export function useIsAdmin(): boolean {
+  const context = useContext(PermissionContext)
+  if (context === undefined) {
+    throw new Error('useIsAdmin must be used within a PermissionProvider')
   }
-  return context;
+  return context.isAdmin
 }
 
-// 便捷的 hooks
-export const useIsAdmin = () => usePermissions().isAdmin;
-export const useUserRole = () => usePermissions().role;
-export const useHasPermission = (permission: keyof UserPermissions['permissions']) => 
-  usePermissions().permissions[permission];
+// For backward compatibility, but should be removed eventually
+export function useUserRole() {
+  const isAdmin = useIsAdmin()
+  return isAdmin ? 'admin' : 'user'
+}
+
+export function useHasPermission() {
+  const isAdmin = useIsAdmin()
+  return (permission: string) => {
+    // Admin has all permissions, regular users have basic permissions
+    if (isAdmin) return true
+    
+    // Basic permissions for all users
+    const basicPermissions = ['settings.view', 'profile.edit', 'billing.view']
+    return basicPermissions.includes(permission)
+  }
+}

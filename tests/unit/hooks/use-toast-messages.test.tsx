@@ -32,7 +32,7 @@ jest.mock('next-intl', () => ({
   useTranslations: jest.fn(() => (key: string) => mockTranslations[key as keyof typeof mockTranslations] || key),
 }))
 
-describe('useToastMessages Hook测试', () => {
+describe('useToastMessages Hook Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -43,128 +43,128 @@ describe('useToastMessages Hook测试', () => {
     })
   }
 
-  describe('成功消息', () => {
-    it('应该显示名称更新成功消息', () => {
+  describe('Success Messages', () => {
+    it('should display name update success message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.success.nameUpdated()
-      
+
       expect(mockToast.success).toHaveBeenCalledWith('Name updated successfully')
     })
 
-    it('应该显示头像更新成功消息', () => {
+    it('should display avatar update success message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.success.avatarUpdated()
-      
+
       expect(mockToast.success).toHaveBeenCalledWith('Avatar updated successfully')
     })
 
-    it('应该显示登录成功消息', () => {
+    it('should display login success message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.success.loginSuccess()
-      
+
       expect(mockToast.success).toHaveBeenCalledWith('Login successful')
     })
   })
 
-  describe('错误消息', () => {
-    it('应该显示名称为空错误消息', () => {
+  describe('Error Messages', () => {
+    it('should display name empty error message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.nameEmpty()
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Name cannot be empty')
     })
 
-    it('应该显示名称更新失败消息', () => {
+    it('should display name update failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.nameUpdateFailed()
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Failed to update name')
     })
 
-    it('应该显示自定义名称更新失败消息', () => {
+    it('should display custom name update failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.nameUpdateFailed('Custom error message')
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Custom error message')
     })
 
-    it('应该显示头像更新失败消息', () => {
+    it('should display avatar update failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.avatarUpdateFailed()
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Failed to update avatar')
     })
 
-    it('应该显示自定义头像更新失败消息', () => {
+    it('should display custom avatar update failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.avatarUpdateFailed('Avatar too large')
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Avatar too large')
     })
 
-    it('应该显示文件上传失败消息', () => {
+    it('should display file upload failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.fileUploadFailed()
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Failed to upload file')
     })
 
-    it('应该显示自定义文件上传失败消息', () => {
+    it('should display custom file upload failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.fileUploadFailed('File too large')
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('File too large')
     })
 
-    it('应该显示登录失败消息', () => {
+    it('should display login failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.loginFailed()
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Login failed')
     })
 
-    it('应该显示自定义登录失败消息', () => {
+    it('should display custom login failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.loginFailed('Invalid credentials')
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Invalid credentials')
     })
 
-    it('应该显示社交登录失败消息', () => {
+    it('should display social login failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.socialLoginFailed()
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('Social login failed')
     })
 
-    it('应该显示自定义社交登录失败消息', () => {
+    it('should display custom social login failed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.error.socialLoginFailed('GitHub login failed')
-      
+
       expect(mockToast.error).toHaveBeenCalledWith('GitHub login failed')
     })
   })
 
-  describe('信息消息', () => {
-    it('应该显示名称未更改消息', () => {
+  describe('Info Messages', () => {
+    it('should display name not changed message', () => {
       const { result } = renderUseToastMessages()
-      
+
       result.current.info.nameNotChanged()
-      
+
       expect(mockToast.info).toHaveBeenCalledWith('Name was not changed')
     })
   })

@@ -73,15 +73,15 @@ class MockUserRepository {
   }
 }
 
-describe('用户数据库操作集成测试', () => {
+describe('User Database Operations Integration Tests', () => {
   let userRepo: MockUserRepository;
 
   beforeEach(() => {
     userRepo = new MockUserRepository();
   });
 
-  describe('创建用户', () => {
-    it('应该成功创建新用户', async () => {
+  describe('Create User', () => {
+    it('should successfully create new user', async () => {
       const userData = {
         email: 'test@example.com',
         name: 'Test User',
@@ -97,7 +97,7 @@ describe('用户数据库操作集成测试', () => {
       expect(user.updatedAt).toBeInstanceOf(Date);
     });
 
-    it('应该为每个用户生成唯一ID', async () => {
+    it('should generate unique ID for each user', async () => {
       const user1 = await userRepo.create({
         email: 'user1@example.com',
         name: 'User 1',
@@ -116,8 +116,8 @@ describe('用户数据库操作集成测试', () => {
     });
   });
 
-  describe('查找用户', () => {
-    it('应该通过ID找到用户', async () => {
+  describe('Find User', () => {
+    it('should find user by ID', async () => {
       const userData = {
         email: 'test@example.com',
         name: 'Test User',
@@ -131,7 +131,7 @@ describe('用户数据库操作集成测试', () => {
       expect(foundUser).toEqual(createdUser);
     });
 
-    it('应该通过邮箱找到用户', async () => {
+    it('should find user by email', async () => {
       const userData = {
         email: 'test@example.com',
         name: 'Test User',
@@ -145,7 +145,7 @@ describe('用户数据库操作集成测试', () => {
       expect(foundUser).toEqual(createdUser);
     });
 
-    it('应该在用户不存在时返回null', async () => {
+    it('should return null when user does not exist', async () => {
       const foundUser = await userRepo.findById('non-existent-id');
       expect(foundUser).toBeNull();
 
@@ -154,8 +154,8 @@ describe('用户数据库操作集成测试', () => {
     });
   });
 
-  describe('更新用户', () => {
-    it('应该成功更新用户信息', async () => {
+  describe('Update User', () => {
+    it('should successfully update user information', async () => {
       const user = await userRepo.create({
         email: 'test@example.com',
         name: 'Test User',
@@ -177,14 +177,14 @@ describe('用户数据库操作集成测试', () => {
       expect(updatedUser?.updatedAt.getTime()).toBeGreaterThan(user.updatedAt.getTime());
     });
 
-    it('应该在用户不存在时返回null', async () => {
+    it('should return null when user does not exist', async () => {
       const result = await userRepo.update('non-existent-id', { name: 'New Name' });
       expect(result).toBeNull();
     });
   });
 
-  describe('删除用户', () => {
-    it('应该成功删除用户', async () => {
+  describe('Delete User', () => {
+    it('should successfully delete user', async () => {
       const user = await userRepo.create({
         email: 'test@example.com',
         name: 'Test User',
@@ -199,14 +199,14 @@ describe('用户数据库操作集成测试', () => {
       expect(foundUser).toBeNull();
     });
 
-    it('应该在用户不存在时返回false', async () => {
+    it('should return false when user does not exist', async () => {
       const deleted = await userRepo.delete('non-existent-id');
       expect(deleted).toBe(false);
     });
   });
 
-  describe('批量操作', () => {
-    it('应该正确返回所有用户', async () => {
+  describe('Batch Operations', () => {
+    it('should correctly return all users', async () => {
       await userRepo.create({
         email: 'user1@example.com',
         name: 'User 1',
@@ -225,7 +225,7 @@ describe('用户数据库操作集成测试', () => {
       expect(allUsers).toHaveLength(2);
     });
 
-    it('应该正确返回用户数量', async () => {
+    it('should correctly return user count', async () => {
       expect(await userRepo.count()).toBe(0);
 
       await userRepo.create({
@@ -248,8 +248,8 @@ describe('用户数据库操作集成测试', () => {
     });
   });
 
-  describe('复杂场景', () => {
-    it('应该处理用户封禁操作', async () => {
+  describe('Complex Scenarios', () => {
+    it('should handle user ban operations', async () => {
       const user = await userRepo.create({
         email: 'test@example.com',
         name: 'Test User',
@@ -269,7 +269,7 @@ describe('用户数据库操作集成测试', () => {
       expect(bannedUser?.banExpires).toEqual(banExpires);
     });
 
-    it('应该处理邮箱验证流程', async () => {
+    it('should handle email verification process', async () => {
       const user = await userRepo.create({
         email: 'test@example.com',
         name: 'Test User',
