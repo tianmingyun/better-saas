@@ -18,9 +18,6 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-// Force dynamic rendering for admin-only pages
-export const dynamic = 'force-dynamic';
-
 export default function NotificationsPage() {
   const t = useTranslations('sidebar');
 

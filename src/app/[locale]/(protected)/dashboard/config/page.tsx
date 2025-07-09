@@ -13,9 +13,6 @@ import {
 import { Settings, Palette, Globe, CreditCard, Zap, Shield } from 'lucide-react';
 import type { PaymentPlan } from '@/config/payment.config';
 
-// Force dynamic rendering for admin-only pages
-export const dynamic = 'force-dynamic';
-
 export default function ConfigPage() {
   const appConfig = useAppConfig();
   const featuresConfig = useFeaturesConfig();
