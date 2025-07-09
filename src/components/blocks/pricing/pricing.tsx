@@ -57,10 +57,11 @@ const Pricing = ({
   
   // Use configured plans if not provided as props
   // Convert payment plans to pricing plans format if needed
-  const pricingPlans = plans || paymentPlans.map((plan: any) => ({
+  const pricingPlans = plans || paymentPlans.map((plan) => ({
     ...plan,
     monthlyPrice: plan.interval === 'month' ? `$${plan.price}` : `$${Math.round(plan.price / 12)}`,
     yearlyPrice: plan.interval === 'year' ? `$${Math.round(plan.price / 12)}` : `$${plan.price * 12}`,
+    features: plan.features.map((feature: string) => ({ text: feature })),
     stripePriceIds: {
       monthly: plan.stripePriceId,
       yearly: plan.stripePriceId,
@@ -156,7 +157,7 @@ const Pricing = ({
                   )}
                   <ul className="space-y-4">
                     {plan.features.map((feature: PricingFeature, index: number) => (
-                      <li key={feature.text} className="flex items-center gap-2">
+                      <li key={`${plan.id}-feature-${index}`} className="flex items-center gap-2">
                         <CircleCheck className="size-4" />
                         <span>{feature.text}</span>
                       </li>

@@ -13,6 +13,15 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEnabledLanguages } from '@/hooks/use-config';
 
+interface EnabledLanguage {
+  locale: string;
+  name?: string;
+  nativeName?: string;
+  flag?: string;
+  dir?: 'ltr' | 'rtl';
+  enabled?: boolean;
+}
+
 export function LanguageSwitcher() {
   const t = useTranslations('common');
   const locale = useLocale();
@@ -38,7 +47,7 @@ export function LanguageSwitcher() {
     window.location.href = targetUrl;
   };
 
-  const currentLanguage = locales.find((lang: any) => lang.locale === locale);
+  const currentLanguage = locales.find((lang: EnabledLanguage) => lang.locale === locale);
 
   return (
     <DropdownMenu>
@@ -49,7 +58,7 @@ export function LanguageSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {locales.map((lang: any) => (
+        {locales.map((lang: EnabledLanguage) => (
           <DropdownMenuItem
             key={lang.locale}
             onClick={() => handleLanguageChange(lang.locale)}

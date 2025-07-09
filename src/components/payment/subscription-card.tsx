@@ -23,7 +23,7 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
   const i18nConfig = useI18nConfig();
 
   const formatDate = (date: Date | null | undefined) => {
-    if (!date) return '未知';
+    if (!date) return 'unknown';
     return new Date(date).toLocaleDateString(i18nConfig.defaultLocale);
   };
 
@@ -63,18 +63,18 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
     startTransition(async () => {
       try {
         if (!subscription.subscriptionId) {
-          toast.error('订阅ID不存在');
+          toast.error('Subscription ID does not exist');
           return;
         }
         const result = await cancelSubscription(subscription.subscriptionId);
         if (result.success) {
-          toast.success(result.message || '订阅取消成功');
+          toast.success(result.message || 'Subscription cancelled successfully');
           onUpdate?.();
         } else {
-          toast.error(result.error || '取消订阅失败');
+          toast.error(result.error || 'Subscription cancellation failed');
         }
       } catch (error) {
-        toast.error('取消订阅失败');
+        toast.error('Subscription cancellation failed');
         subscriptionErrorLogger.logError(error as Error, {
           operation: 'cancelSubscription',
           subscriptionId: subscription.subscriptionId,
@@ -93,10 +93,10 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
           <div>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              当前订阅
+              Current Subscription
             </CardTitle>
             <CardDescription>
-              您的订阅计划详情
+              Your subscription plan details
             </CardDescription>
           </div>
           <Badge className={getStatusColor(subscription.status)}>
@@ -108,15 +108,15 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-sm text-muted-foreground">计费周期</div>
+            <div className="text-sm text-muted-foreground">Billing Cycle</div>
             <div className="font-medium">
-              {subscription.interval === 'month' ? '月付' : subscription.interval === 'year' ? '年付' : '一次性'}
+              {subscription.interval === 'month' ? 'Monthly' : subscription.interval === 'year' ? 'Yearly' : 'One-time'}
             </div>
           </div>
           
           {subscription.periodStart && subscription.periodEnd && (
             <div>
-              <div className="text-sm text-muted-foreground">当前周期</div>
+              <div className="text-sm text-muted-foreground">Current Period</div>
               <div className="font-medium text-sm">
                 {formatDate(subscription.periodStart)} - {formatDate(subscription.periodEnd)}
               </div>
@@ -128,7 +128,7 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
           <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
             <AlertCircle className="h-4 w-4 text-blue-500" />
             <div className="text-sm">
-              <span className="font-medium text-blue-500">试用期至：</span>
+              <span className="font-medium text-blue-500">Trial End:</span>
               <span className="ml-1">{formatDate(subscription.trialEnd)}</span>
             </div>
           </div>
@@ -138,7 +138,7 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
           <div className="flex items-center gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
             <AlertCircle className="h-4 w-4 text-yellow-500" />
             <div className="text-sm">
-              <span className="font-medium text-yellow-500">将在周期结束时取消：</span>
+              <span className="font-medium text-yellow-500">Will be cancelled at the end of the period:</span>
               <span className="ml-1">{formatDate(subscription.periodEnd)}</span>
             </div>
           </div>
@@ -146,7 +146,7 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>订阅开始时间：{formatDate(subscription.createdAt)}</span>
+          <span>Subscription start time: {formatDate(subscription.createdAt)}</span>
         </div>
       </CardContent>
 
@@ -158,7 +158,7 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
             disabled={isPending}
             className="w-full"
           >
-            {isPending ? '处理中...' : '取消订阅'}
+            {isPending ? 'Processing...' : 'Cancel Subscription'}
           </Button>
         </CardFooter>
       )}
