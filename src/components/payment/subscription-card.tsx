@@ -9,6 +9,7 @@ import { Calendar, CreditCard, AlertCircle } from 'lucide-react';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
+import { useI18nConfig } from '@/hooks/use-config';
 
 const subscriptionErrorLogger = new ErrorLogger('subscription-card');
 
@@ -19,10 +20,11 @@ interface SubscriptionCardProps {
 
 export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardProps) {
   const [isPending, startTransition] = useTransition();
+  const i18nConfig = useI18nConfig();
 
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '未知';
-    return new Date(date).toLocaleDateString('zh-CN');
+    return new Date(date).toLocaleDateString(i18nConfig.defaultLocale);
   };
 
   const getStatusColor = (status: string) => {

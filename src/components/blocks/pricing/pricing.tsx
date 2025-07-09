@@ -13,6 +13,7 @@ import { createCheckoutSession } from '@/server/actions/payment/create-subscript
 import { toast } from 'sonner';
 import { useTransition } from 'react';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
+import { usePaymentPlans } from '@/hooks/use-config';
 
 const pricingErrorLogger = new ErrorLogger('pricing');
 
@@ -46,69 +47,28 @@ interface Pricing2Props {
 const Pricing = ({
   heading = 'Pricing',
   description = 'Check out our affordable pricing plans',
-  plans = [
-    {
-      id: 'Free',
-      name: 'Free',
-      description: 'For personal use',
-      monthlyPrice: '$0',
-      yearlyPrice: '$0',
-      features: [
-        { text: 'Up to 3 team members' },
-        { text: 'Basic components library' },
-        { text: 'Community support' },
-        { text: '1GB storage space' },
-      ],
-      button: {
-        text: 'Get Started',
-      },
-    },
-    {
-      id: 'plus',
-      name: 'Plus',
-      description: 'For personal use',
-      monthlyPrice: '$19',
-      yearlyPrice: '$15',
-      features: [
-        { text: 'Up to 5 team members' },
-        { text: 'Basic components library' },
-        { text: 'Community support' },
-        { text: '10GB storage space' },
-      ],
-      stripePriceIds: {
-              monthly: 'price_1RhQp003mW7BWfTB7jdha4iy', // Replace with real Stripe price ID
-      yearly: 'price_1RhQqJ03mW7BWfTB2IPGIh0g',   // Replace with real Stripe price ID
-      },
-      button: {
-        text: 'Purchase',
-      },
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      description: 'For professionals',
-      monthlyPrice: '$49',
-      yearlyPrice: '$35',
-      features: [
-        { text: 'Unlimited team members' },
-        { text: 'Advanced components' },
-        { text: 'Priority support' },
-        { text: 'Unlimited storage' },
-      ],
-      stripePriceIds: {
-              monthly: 'price_1RhQup03mW7BWfTBxYA7nySq', // Replace with real Stripe price ID
-      yearly: 'price_1RhQvL03mW7BWfTBZNQjSZjR',   // Replace with real Stripe price ID
-      },
-      button: {
-        text: 'Purchase',
-      },
-    },
-  ],
+  plans,
 }: Pricing2Props) => {
   const [isYearly, setIsYearly] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isAuthenticated = useIsAuthenticated();
   const router = useRouter();
+  const paymentPlans = usePaymentPlans();
+  
+  // Use configured plans if not provided as props
+  // Convert payment plans to pricing plans format if needed
+  const pricingPlans = plans || paymentPlans.map((plan: any) => ({
+    ...plan,
+    monthlyPrice: plan.interval === 'month' ? `$${plan.price}` : `$${Math.round(plan.price / 12)}`,
+    yearlyPrice: plan.interval === 'year' ? `$${Math.round(plan.price / 12)}` : `$${plan.price * 12}`,
+    stripePriceIds: {
+      monthly: plan.stripePriceId,
+      yearly: plan.stripePriceId,
+    },
+    button: {
+      text: plan.price === 0 ? 'Get Started' : 'Purchase',
+    },
+  }));
 
   const handlePurchaseClick = (plan: PricingPlan) => {
     if (!isAuthenticated) {
@@ -171,7 +131,7 @@ const Pricing = ({
             Yearly
           </div>
           <div className="flex flex-col items-stretch gap-6 md:flex-row">
-            {plans.map((plan) => (
+            {pricingPlans.map((plan: PricingPlan) => (
               <Card key={plan.id} className="flex w-80 flex-col justify-between text-left">
                 <CardHeader>
                   <CardTitle>
@@ -195,7 +155,7 @@ const Pricing = ({
                     <p className="mb-3 font-semibold">Everything in Plus, and:</p>
                   )}
                   <ul className="space-y-4">
-                    {plan.features.map((feature, index) => (
+                    {plan.features.map((feature: PricingFeature, index: number) => (
                       <li key={feature.text} className="flex items-center gap-2">
                         <CircleCheck className="size-4" />
                         <span>{feature.text}</span>

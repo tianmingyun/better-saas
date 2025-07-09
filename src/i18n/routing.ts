@@ -1,24 +1,14 @@
 import { defineRouting } from 'next-intl/routing';
+import { i18nConfig } from '../config/i18n.config';
 
 export const routing = defineRouting({
-  locales: ['en', 'zh'],
-  defaultLocale: 'en',
-  localePrefix: 'as-needed',
-  localeDetection: false,
+  locales: i18nConfig.locales,
+  defaultLocale: i18nConfig.defaultLocale,
+  localePrefix: i18nConfig.routing.localePrefix,
+  localeDetection: i18nConfig.routing.localeDetection,
 });
 
-const localeConfig = {
-  en: {
-    name: 'English',
-    locale: 'en' as const,
-  },
-  zh: {
-    name: '中文',
-    locale: 'zh' as const,
-  },
-} as const;
-
-export const locales = routing.locales.map((locale) => ({
-  name: localeConfig[locale as keyof typeof localeConfig]?.name || locale,
+export const locales = i18nConfig.locales.map((locale) => ({
+  name: i18nConfig.languages[locale]?.name || locale,
   locale,
 }));

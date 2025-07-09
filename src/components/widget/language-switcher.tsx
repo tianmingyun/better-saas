@@ -11,17 +11,14 @@ import { usePathname } from '@/i18n/navigation';
 import { Globe } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-
-const locales = [
-  { code: 'en', name: 'English' },
-  { code: 'zh', name: '中文' },
-];
+import { useEnabledLanguages } from '@/hooks/use-config';
 
 export function LanguageSwitcher() {
   const t = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const locales = useEnabledLanguages();
 
   const handleLanguageChange = (newLocale: string) => {
     if (newLocale === locale) return;
@@ -41,7 +38,7 @@ export function LanguageSwitcher() {
     window.location.href = targetUrl;
   };
 
-  const currentLanguage = locales.find((lang) => lang.code === locale);
+  const currentLanguage = locales.find((lang: any) => lang.locale === locale);
 
   return (
     <DropdownMenu>
@@ -52,11 +49,11 @@ export function LanguageSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {locales.map((lang) => (
+        {locales.map((lang: any) => (
           <DropdownMenuItem
-            key={lang.code}
-            onClick={() => handleLanguageChange(lang.code)}
-            className={locale === lang.code ? 'bg-accent' : ''}
+            key={lang.locale}
+            onClick={() => handleLanguageChange(lang.locale)}
+            className={locale === lang.locale ? 'bg-accent' : ''}
           >
             {lang.name}
           </DropdownMenuItem>

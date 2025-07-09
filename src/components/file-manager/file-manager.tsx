@@ -10,16 +10,19 @@ import { useState } from 'react';
 import { FileTable } from './file-table';
 import { FileUpload } from './file-upload';
 import { ImagePreviewModal } from './image-preview-modal';
+import { useAppConfig } from '@/hooks/use-config';
 
 export function FileManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpload, setShowUpload] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const appConfig = useAppConfig();
 
   const { files, isLoading, error, uploadFile, deleteFile, isUploading, pagination } = useFiles({
     search: searchQuery,
     page: currentPage,
+    limit: appConfig.pagination.defaultPageSize,
   });
 
   const handlePreview = (file: FileInfo) => {

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { FileImage, Upload, X } from 'lucide-react';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useAppConfig } from '@/hooks/use-config';
 
 interface FileUploadProps {
   onUpload: (files: File[]) => void;
@@ -14,6 +15,8 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ onUpload, loading = false, className }: FileUploadProps) {
+  const appConfig = useAppConfig();
+  
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
@@ -26,10 +29,10 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+      'image/*': appConfig.upload.allowedTypes,
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
-    multiple: true,
+    maxSize: appConfig.upload.maxFileSize,
+    multiple: appConfig.upload.maxFiles > 1,
   });
 
   return (
@@ -66,7 +69,7 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
                       : '拖拽图片到这里，或点击选择文件'}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  支持 PNG、JPG、GIF、WebP 格式，单个文件最大 10MB
+                  支持 {appConfig.upload.allowedTypes.join('、')} 格式，单个文件最大 {Math.round(appConfig.upload.maxFileSize / (1024 * 1024))}MB
                 </p>
               </div>
 
