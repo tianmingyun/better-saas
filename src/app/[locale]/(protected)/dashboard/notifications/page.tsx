@@ -4,8 +4,22 @@ import { AdminGuard } from '@/components/admin-guard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Bell, CheckCircle, Info } from 'lucide-react';
+import { 
+  Bell, 
+  Settings, 
+  Users, 
+  Mail, 
+  MessageSquare, 
+  Shield,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Info
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+// Force dynamic rendering for admin-only pages
+export const dynamic = 'force-dynamic';
 
 export default function NotificationsPage() {
   const t = useTranslations('sidebar');
@@ -48,7 +62,7 @@ export default function NotificationsPage() {
   const getIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case 'warning':
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       default:

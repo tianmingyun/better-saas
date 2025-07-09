@@ -7,7 +7,7 @@ import {
   Bell,
   CreditCard,
   Files,
-  PenTool,
+  Settings,
   Shield,
   Users,
 } from 'lucide-react';
@@ -48,9 +48,9 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
             icon: Files,
           },
           {
-            title: t('articles'),
-            href: '/dashboard/articles',
-            icon: PenTool,
+            title: t('config'),
+            href: '/dashboard/config',
+            icon: Settings,
           },
         ],
       });

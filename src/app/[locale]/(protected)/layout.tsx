@@ -5,6 +5,9 @@ import { LoadingSkeleton } from '@/components/loading-skeleton';
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 
+// Force dynamic rendering for all protected routes
+export const dynamic = 'force-dynamic';
+
 type Props = {
   children: ReactNode;
 };

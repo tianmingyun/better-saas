@@ -38,7 +38,7 @@ export interface FileDeleteResponse {
 export async function uploadFileAction(formData: FormData): Promise<FileUploadResponse> {
   let session: { user?: { id: string } } | null = null;
   let file: File | null = null;
-  
+
   try {
     session = await auth.api.getSession({
       headers: await headers(),
@@ -78,7 +78,7 @@ export async function uploadFileAction(formData: FormData): Promise<FileUploadRe
  */
 export async function deleteFileAction(fileId: string): Promise<FileDeleteResponse> {
   let session: { user?: { id: string } } | null = null;
-  
+
   try {
     session = await auth.api.getSession({
       headers: await headers(),
@@ -119,7 +119,7 @@ export async function getFileListAction(
   } = {}
 ): Promise<FileListResponse> {
   let session: { user?: { id: string } } | null = null;
-  
+
   try {
     session = await auth.api.getSession({
       headers: await headers(),
@@ -159,7 +159,7 @@ export async function getFileListAction(
  */
 export async function getFileInfoAction(fileId: string): Promise<FileInfo> {
   let session: { user?: { id: string } } | null = null;
-  
+
   try {
     session = await auth.api.getSession({
       headers: await headers(),

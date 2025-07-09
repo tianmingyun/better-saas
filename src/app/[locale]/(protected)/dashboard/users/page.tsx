@@ -4,6 +4,9 @@ import { AdminGuard } from '@/components/admin-guard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 
+// Force dynamic rendering for admin-only pages
+export const dynamic = 'force-dynamic';
+
 export default function UsersPage() {
   const t = useTranslations('sidebar');
 
