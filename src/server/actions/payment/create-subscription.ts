@@ -1,9 +1,9 @@
 'use server';
 
 import { auth } from '@/lib/auth/auth';
-import { StripeProvider } from '@/lib/payment/stripe/provider';
+import { StripeProvider } from '@/payment/stripe/provider';
 import { paymentRepository } from '@/server/db/repositories/payment-repository';
-import type { ActionResult } from '@/types/payment';
+import type { ActionResult } from '@/payment/types';
 import { headers } from 'next/headers';
 import { env } from '@/env';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
@@ -176,7 +176,7 @@ export async function createCheckoutSession(
     }
 
     // 获取价格信息以确定是订阅还是一次性支付
-    const { stripe } = await import('@/lib/payment/stripe/client');
+    const { stripe } = await import('@/payment/stripe/client');
     const price = await stripe.prices.retrieve(priceId);
 
     if (price.recurring) {

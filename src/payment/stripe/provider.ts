@@ -8,8 +8,9 @@ import type {
   PaymentResult,
   SubscriptionResult,
   PaymentStatus,
-} from '@/types/payment';
+} from '@/payment/types';
 import type Stripe from 'stripe';
+import type { SubscriptionWithPeriod } from '@/types/stripe-extended';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
 
 const stripeErrorLogger = new ErrorLogger('stripe-provider');
@@ -34,7 +35,7 @@ export class StripeProvider implements PaymentProvider {
         userId,
         email,
       });
-      throw new Error('创建客户失败');
+      throw new Error('create customer failed');
     }
   }
 
@@ -46,7 +47,7 @@ export class StripeProvider implements PaymentProvider {
       const { userId, priceId, customerId, successUrl, cancelUrl, metadata } = params;
 
       if (!customerId) {
-        throw new Error('需要提供客户ID');
+        throw new Error('customer id is required');
       }
 
           // Create Checkout Session
@@ -82,7 +83,7 @@ export class StripeProvider implements PaymentProvider {
         priceId: params.priceId,
         customerId: params.customerId,
       });
-      throw new Error('创建支付失败');
+      throw new Error('create payment failed');
     }
   }
 
@@ -94,7 +95,7 @@ export class StripeProvider implements PaymentProvider {
       const { userId, priceId, customerId, successUrl, cancelUrl, trialPeriodDays, metadata } = params;
 
       if (!customerId) {
-        throw new Error('需要提供客户ID');
+        throw new Error('customer id is required');
       }
 
           // Create subscription Checkout Session
@@ -137,19 +138,19 @@ export class StripeProvider implements PaymentProvider {
         priceId: params.priceId,
         customerId: params.customerId,
       });
-      throw new Error('创建订阅支付会话失败');
+      throw new Error('create subscription checkout failed');
     }
   }
 
   /**
-   * 创建订阅
+   * Create subscription
    */
   async createSubscription(params: CreateSubscriptionParams): Promise<SubscriptionResult> {
     try {
       const { userId, priceId, customerId, trialPeriodDays, metadata } = params;
 
       if (!customerId) {
-        throw new Error('需要提供客户ID');
+        throw new Error('customer id is required');
       }
 
       // 获取价格信息
@@ -171,9 +172,7 @@ export class StripeProvider implements PaymentProvider {
         },
       });
 
-      // 安全地处理时间戳转换
-      const currentPeriodStart = (subscription as any).current_period_start;
-      const currentPeriodEnd = (subscription as any).current_period_end;
+      const subscriptionWithPeriod = subscription as unknown as SubscriptionWithPeriod;
       
       return {
         id: subscription.id,
@@ -181,14 +180,14 @@ export class StripeProvider implements PaymentProvider {
         customerId,
         priceId,
         interval: (price.recurring?.interval as 'month' | 'year') || null,
-        periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-        periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+        periodStart: subscriptionWithPeriod.current_period_start ? new Date(subscriptionWithPeriod.current_period_start * 1000) : new Date(),
+        periodEnd: subscriptionWithPeriod.current_period_end ? new Date(subscriptionWithPeriod.current_period_end * 1000) : new Date(),
         trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
         trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        currentPeriodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-        currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
-        clientSecret: (subscription.latest_invoice as any)?.payment_intent?.client_secret,
+        currentPeriodStart: subscriptionWithPeriod.current_period_start ? new Date(subscriptionWithPeriod.current_period_start * 1000) : new Date(),
+        currentPeriodEnd: subscriptionWithPeriod.current_period_end ? new Date(subscriptionWithPeriod.current_period_end * 1000) : new Date(),
+        clientSecret: (subscription.latest_invoice as Stripe.Invoice & { payment_intent?: Stripe.PaymentIntent })?.payment_intent?.client_secret || undefined,
       };
     } catch (error) {
       stripeErrorLogger.logError(error as Error, {
@@ -197,12 +196,12 @@ export class StripeProvider implements PaymentProvider {
         priceId: params.priceId,
         customerId: params.customerId,
       });
-      throw new Error('创建订阅失败');
+      throw new Error('create subscription failed');
     }
   }
 
   /**
-   * 更新订阅
+   * Update subscription
    */
   async updateSubscription(subscriptionId: string, params: UpdateSubscriptionParams): Promise<SubscriptionResult> {
     try {
@@ -215,7 +214,7 @@ export class StripeProvider implements PaymentProvider {
         const currentItem = currentSubscription.items.data[0];
         
         if (!currentItem) {
-          throw new Error('订阅项目不存在');
+          throw new Error('subscription item not found');
         }
 
         updateData.items = [
@@ -238,14 +237,12 @@ export class StripeProvider implements PaymentProvider {
       const priceItem = subscription.items.data[0];
       
       if (!priceItem) {
-        throw new Error('订阅价格项目不存在');
+        throw new Error('subscription price item not found');
       }
       
       const price = await stripe.prices.retrieve(priceItem.price.id);
 
-      // 安全地处理时间戳转换
-      const currentPeriodStart = (subscription as any).current_period_start;
-      const currentPeriodEnd = (subscription as any).current_period_end;
+      const subscriptionWithPeriod = subscription as unknown as SubscriptionWithPeriod;
 
       return {
         id: subscription.id,
@@ -253,13 +250,13 @@ export class StripeProvider implements PaymentProvider {
         customerId: subscription.customer as string,
         priceId: priceItem.price.id,
         interval: (price.recurring?.interval as 'month' | 'year') || null,
-        periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-        periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+        periodStart: subscriptionWithPeriod.current_period_start ? new Date(subscriptionWithPeriod.current_period_start * 1000) : new Date(),
+        periodEnd: subscriptionWithPeriod.current_period_end ? new Date(subscriptionWithPeriod.current_period_end * 1000) : new Date(),
         trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
         trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        currentPeriodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-        currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+        currentPeriodStart: subscriptionWithPeriod.current_period_start ? new Date(subscriptionWithPeriod.current_period_start * 1000) : new Date(),
+        currentPeriodEnd: subscriptionWithPeriod.current_period_end ? new Date(subscriptionWithPeriod.current_period_end * 1000) : new Date(),
       };
     } catch (error) {
       stripeErrorLogger.logError(error as Error, {
@@ -267,12 +264,12 @@ export class StripeProvider implements PaymentProvider {
         subscriptionId,
         priceId: params.priceId,
       });
-      throw new Error('更新订阅失败');
+      throw new Error('update subscription failed');
     }
   }
 
   /**
-   * 取消订阅
+   * Cancel subscription
    */
   async cancelSubscription(subscriptionId: string): Promise<boolean> {
     try {
@@ -290,7 +287,7 @@ export class StripeProvider implements PaymentProvider {
   }
 
   /**
-   * 获取订阅信息
+   * Get subscription information
    */
   async getSubscription(subscriptionId: string): Promise<SubscriptionResult | null> {
     try {
@@ -303,9 +300,7 @@ export class StripeProvider implements PaymentProvider {
       
       const price = await stripe.prices.retrieve(priceItem.price.id);
 
-      // 安全地处理时间戳转换
-      const currentPeriodStart = (subscription as any).current_period_start;
-      const currentPeriodEnd = (subscription as any).current_period_end;
+      const subscriptionWithPeriod = subscription as unknown as SubscriptionWithPeriod;
 
       return {
         id: subscription.id,
@@ -313,13 +308,13 @@ export class StripeProvider implements PaymentProvider {
         customerId: subscription.customer as string,
         priceId: priceItem.price.id,
         interval: (price.recurring?.interval as 'month' | 'year') || null,
-        periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-        periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+        periodStart: subscriptionWithPeriod.current_period_start ? new Date(subscriptionWithPeriod.current_period_start * 1000) : new Date(),
+        periodEnd: subscriptionWithPeriod.current_period_end ? new Date(subscriptionWithPeriod.current_period_end * 1000) : new Date(),
         trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
         trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        currentPeriodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-        currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+        currentPeriodStart: subscriptionWithPeriod.current_period_start ? new Date(subscriptionWithPeriod.current_period_start * 1000) : new Date(),
+        currentPeriodEnd: subscriptionWithPeriod.current_period_end ? new Date(subscriptionWithPeriod.current_period_end * 1000) : new Date(),
       };
     } catch (error) {
       stripeErrorLogger.logError(error as Error, {
@@ -330,9 +325,7 @@ export class StripeProvider implements PaymentProvider {
     }
   }
 
-  /**
-   * 获取支付状态
-   */
+  
   async getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
     try {
       try {
@@ -347,13 +340,11 @@ export class StripeProvider implements PaymentProvider {
         operation: 'getPaymentStatus',
         paymentId,
       });
-      throw new Error('获取支付状态失败');
+        throw new Error('get payment status failed');
     }
   }
 
-  /**
-   * 验证 Webhook
-   */
+  
   async verifyWebhook(payload: string, signature: string): Promise<boolean> {
     try {
       stripe.webhooks.constructEvent(payload, signature, stripeConfig.webhookSecret);
@@ -366,9 +357,7 @@ export class StripeProvider implements PaymentProvider {
     }
   }
 
-  /**
-   * 构造 Webhook 事件
-   */
+  
   constructWebhookEvent(payload: string, signature: string) {
     return stripe.webhooks.constructEvent(payload, signature, stripeConfig.webhookSecret);
   }

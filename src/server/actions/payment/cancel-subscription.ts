@@ -1,9 +1,9 @@
 'use server';
 
 import { auth } from '@/lib/auth/auth';
-import { StripeProvider } from '@/lib/payment/stripe/provider';
+import { StripeProvider } from '@/payment/stripe/provider';
 import { paymentRepository } from '@/server/db/repositories/payment-repository';
-import type { ActionResult } from '@/types/payment';
+import type { ActionResult } from '@/payment/types';
 import { headers } from 'next/headers';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
 

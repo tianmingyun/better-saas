@@ -1,10 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { StripeProvider } from '@/lib/payment/stripe/provider';
+import { StripeProvider } from '@/payment/stripe/provider';
 import { paymentRepository } from '@/server/db/repositories/payment-repository';
 import type Stripe from 'stripe';
 import type { SubscriptionWithPeriod, InvoiceWithSubscription } from '@/types/stripe-extended';
-import type { PaymentStatus } from '@/types/payment';
+import type { PaymentStatus } from '@/payment/types';
 import { ErrorLogger, logUtils } from '@/lib/logger/logger-utils';
 import { createChildLogger } from '@/lib/logger/logger';
 
@@ -145,7 +145,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
       }
 
       // get Stripe subscription details
-      const { stripe } = await import('@/lib/payment/stripe/client');
+      const { stripe } = await import('@/payment/stripe/client');
       const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId, {
         expand: ['items.data.price']
       });
@@ -232,7 +232,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
       }
 
       // get price information from line_items
-      const { stripe } = await import('@/lib/payment/stripe/client');
+      const { stripe } = await import('@/payment/stripe/client');
       const sessionWithLineItems = await stripe.checkout.sessions.retrieve(session.id, {
         expand: ['line_items', 'line_items.data.price']
       });

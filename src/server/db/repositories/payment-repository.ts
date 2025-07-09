@@ -1,7 +1,7 @@
 import { eq, desc, and, inArray } from 'drizzle-orm';
 import db from '@/server/db';
 import { payment, paymentEvent } from '@/server/db/schema';
-import type { PaymentRecord, PaymentStatus, PaymentType, PaymentInterval } from '@/types/payment';
+import type { PaymentRecord, PaymentStatus, PaymentType, PaymentInterval } from '@/payment/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface CreatePaymentData {

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cancelSubscription } from '@/server/actions/payment/cancel-subscription';
-import type { PaymentRecord } from '@/types/payment';
+import type { PaymentRecord } from '@/payment/types';
 import { Calendar, CreditCard, AlertCircle } from 'lucide-react';
 import { useTransition } from 'react';
 import { toast } from 'sonner';

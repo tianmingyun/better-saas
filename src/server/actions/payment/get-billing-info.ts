@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/auth';
 import { paymentRepository } from '@/server/db/repositories/payment-repository';
-import type { ActionResult, PaymentRecord } from '@/types/payment';
+import type { ActionResult, PaymentRecord } from '@/payment/types';
 import { headers } from 'next/headers';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
 
