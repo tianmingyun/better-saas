@@ -138,8 +138,10 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
           <div className="flex items-center gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
             <AlertCircle className="h-4 w-4 text-yellow-500" />
             <div className="text-sm">
-              <span className="font-medium text-yellow-500">Will be cancelled at the end of the period:</span>
-              <span className="ml-1">{formatDate(subscription.periodEnd)}</span>
+              <span className="font-medium text-yellow-500">Will be cancelled at the end of the period</span>
+              {subscription.periodEnd && (
+                <span className="ml-1">: {formatDate(subscription.periodEnd)}</span>
+              )}
             </div>
           </div>
         )}

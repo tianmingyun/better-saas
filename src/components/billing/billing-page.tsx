@@ -6,16 +6,19 @@ import { getBillingInfo } from '@/server/actions/payment/get-billing-info';
 import type { BillingInfo } from '@/server/actions/payment/get-billing-info';
 import { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CreditCard } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, CreditCard, RefreshCw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
+import { syncSingleSubscription } from '@/server/actions/payment/sync-subscription-periods';
 
 const billingErrorLogger = new ErrorLogger('billing-page');
 
 export function BillingPage() {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
@@ -38,6 +41,34 @@ export function BillingPage() {
       setLoading(false);
     }
   }, []);
+
+  const handleSyncSubscription = useCallback(async () => {
+    if (!billingInfo?.activeSubscription?.subscriptionId) {
+      toast.error('没有找到订阅信息');
+      return;
+    }
+
+    try {
+      setSyncing(true);
+      const result = await syncSingleSubscription(billingInfo.activeSubscription.subscriptionId);
+      if (result.success) {
+        toast.success(result.message || '订阅信息同步成功');
+        await loadBillingInfo(); // Reload billing info after sync
+      } else {
+        toast.error(result.error || '同步订阅信息失败');
+      }
+    } catch (err) {
+      toast.error('同步订阅信息失败');
+      billingErrorLogger.logError(err as Error, {
+        operation: 'syncSubscription',
+        subscriptionId: billingInfo.activeSubscription.subscriptionId,
+      });
+    } finally {
+      setSyncing(false);
+    }
+  }, [billingInfo?.activeSubscription?.subscriptionId, loadBillingInfo]);
+
+
 
   useEffect(() => {
     loadBillingInfo();
@@ -174,9 +205,25 @@ export function BillingPage() {
 
   return (
     <div className="container mx-auto space-y-6 p-6">
-      <div>
-        <h1 className="font-bold text-3xl">账单管理</h1>
-        <p className="text-muted-foreground">管理您的订阅和查看支付历史</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-bold text-3xl">账单管理</h1>
+          <p className="text-muted-foreground">管理您的订阅和查看支付历史</p>
+        </div>
+        {billingInfo?.activeSubscription && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncSubscription}
+              disabled={syncing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? '同步中...' : '同步订阅信息'}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Current subscription */}
