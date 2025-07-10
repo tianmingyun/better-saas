@@ -85,8 +85,8 @@ export interface SubscriptionResult {
   customerId: string;
   priceId: string;
   interval: PaymentInterval;
-  periodStart: Date;
-  periodEnd: Date;
+  periodStart?: Date;
+  periodEnd?: Date;
   trialStart?: Date;
   trialEnd?: Date;
   cancelAtPeriodEnd?: boolean;

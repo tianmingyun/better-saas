@@ -191,8 +191,8 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
         customerId: session.customer as string,
         subscriptionId: subscriptionId,
         status: subscription.status as PaymentStatus,
-        periodStart: subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : new Date(),
-        periodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date(),
+        periodStart: subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : undefined,
+        periodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : undefined,
         trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
         trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
@@ -324,8 +324,8 @@ async function handleSubscriptionCreated(event: Stripe.Event) {
     // update payment record status
     await paymentRepository.update(paymentRecord.id, {
       status: subscription.status as PaymentStatus,
-      periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-      periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+      periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : undefined,
+      periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : undefined,
       trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
       trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
@@ -375,8 +375,8 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
       // update payment record status
     await paymentRepository.update(paymentRecord.id, {
       status: subscription.status as PaymentStatus,
-      periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : new Date(),
-      periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : new Date(),
+      periodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : undefined,
+      periodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : undefined,
       trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
       trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,

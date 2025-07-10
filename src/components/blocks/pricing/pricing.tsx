@@ -27,6 +27,7 @@ interface PricingPlan {
   description: string;
   monthlyPrice: string;
   yearlyPrice: string;
+  yearlyTotal?: number;
   features: PricingFeature[];
   stripePriceIds?: {
     monthly?: string;
@@ -59,10 +60,11 @@ const Pricing = ({
   // Convert payment plans to pricing plans format if needed
   const pricingPlans = plans || paymentPlans.map((plan) => ({
     ...plan,
-    monthlyPrice: plan.interval === 'month' ? `$${plan.price}` : `$${Math.round(plan.price / 12)}`,
-    yearlyPrice: plan.interval === 'year' ? `$${Math.round(plan.price / 12)}` : `$${plan.price * 12}`,
+    monthlyPrice: plan.price === 0 ? 'Free' : `$${plan.price}`,
+    yearlyPrice: plan.price === 0 ? 'Free' : `$${Math.round((plan.yearlyPrice || plan.price * 10) / 12)}`,
+    yearlyTotal: plan.price === 0 ? 0 : (plan.yearlyPrice || plan.price * 10),
     features: plan.features.map((feature: string) => ({ text: feature })),
-    stripePriceIds: {
+    stripePriceIds: plan.stripePriceIds || {
       monthly: plan.stripePriceId,
       yearly: plan.stripePriceId,
     },
@@ -79,7 +81,7 @@ const Pricing = ({
     }
 
     // Free plan redirects directly to dashboard
-    if (plan.id === 'Free') {
+    if (plan.id === 'free') {
       router.push('/dashboard');
       return;
     }
@@ -143,11 +145,16 @@ const Pricing = ({
                     {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
                   <p className="text-muted-foreground">
-                    Billed{' '}
-                    {isYearly
-                      ? `$${Number(plan.yearlyPrice.slice(1)) * 12}`
-                      : `$${Number(plan.monthlyPrice.slice(1)) * 12}`}{' '}
-                    annually
+                    {plan.monthlyPrice === 'Free' ? (
+                      'Forever free'
+                    ) : (
+                      <>
+                        Billed{' '}
+                        {isYearly
+                          ? `$${plan.yearlyTotal} annually`
+                          : `$${Number(plan.monthlyPrice.slice(1))} monthly`}
+                      </>
+                    )}
                   </p>
                 </CardHeader>
                 <CardContent>

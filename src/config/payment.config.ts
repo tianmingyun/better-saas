@@ -7,6 +7,12 @@ export interface PaymentPlan {
   price: number;
   interval: PaymentInterval;
   stripePriceId?: string;
+  stripePriceIds?: {
+    monthly?: string;
+    yearly?: string;
+  };
+  // Add yearly price for plans that support both monthly and yearly billing
+  yearlyPrice?: number;
   features: string[];
   popular?: boolean;
   metadata?: Record<string, string>;
@@ -94,9 +100,13 @@ export const paymentConfig: PaymentConfig = {
       id: 'pro',
       name: 'Pro',
       description: 'Best for professionals',
-      price: 29,
+      price: 49,
+      yearlyPrice: 499, // $49 * 10 months (2 months free)
       interval: 'month',
-      stripePriceId: process.env.STRIPE_PRO_PRICE_ID || 'price_pro_monthly',
+      stripePriceIds: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
+        yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly',
+      },
       features: [
         'Unlimited projects',
         '100GB storage',
@@ -115,37 +125,16 @@ export const paymentConfig: PaymentConfig = {
       },
     },
     {
-      id: 'pro-yearly',
-      name: 'Pro (Yearly)',
-      description: 'Best for professionals - Save 20%',
-      price: 290,
-      interval: 'year',
-      stripePriceId: process.env.STRIPE_PRO_YEARLY_PRICE_ID || 'price_pro_yearly',
-      features: [
-        'Unlimited projects',
-        '100GB storage',
-        'Priority support',
-        'Advanced analytics',
-        'Custom integrations',
-        'Team collaboration',
-        'API access',
-        '2 months free',
-      ],
-      popular: false,
-      limits: {
-        storage: 100,
-        users: 5,
-        projects: -1, // unlimited
-        apiCalls: 50000,
-      },
-    },
-    {
       id: 'enterprise',
       name: 'Enterprise',
       description: 'For large organizations',
       price: 99,
+      yearlyPrice: 999, // $99 * 10 months (2 months free)
       interval: 'month',
-      stripePriceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_monthly',
+      stripePriceIds: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY || 'price_enterprise_monthly',
+        yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY || 'price_enterprise_yearly',
+      },
       features: [
         'Unlimited everything',
         '1TB storage',
