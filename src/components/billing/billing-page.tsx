@@ -15,12 +15,14 @@ const billingErrorLogger = new ErrorLogger('billing-page');
 
 export function BillingPage() {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   const loadBillingInfo = useCallback(async () => {
     try {
       setError(null);
+      setLoading(true);
       const result = await getBillingInfo();
       if (result.success && result.data) {
         setBillingInfo(result.data);
@@ -32,6 +34,8 @@ export function BillingPage() {
       billingErrorLogger.logError(err as Error, {
         operation: 'loadBillingInfo',
       });
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -106,6 +110,62 @@ export function BillingPage() {
             <div className="text-center">
               <p className="text-destructive">{error}</p>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto space-y-6 p-6">
+        <div className="space-y-2">
+          <div className="h-8 w-48 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-96 animate-pulse rounded bg-muted" />
+        </div>
+
+        {/* Current subscription skeleton */}
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+              <div className="h-6 w-40 animate-pulse rounded bg-muted" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+            </div>
+            <div className="h-10 w-32 animate-pulse rounded bg-muted" />
+          </CardContent>
+        </Card>
+
+        {/* Payment history skeleton */}
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Array.from({ length: 3 }, (_, i) => `payment-skeleton-${i}`).map((key) => (
+              <div key={key} className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                    <div className="h-5 w-12 animate-pulse rounded bg-muted" />
+                  </div>
+                  <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
