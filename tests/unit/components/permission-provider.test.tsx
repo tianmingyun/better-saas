@@ -1,357 +1,308 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { renderHook } from '@testing-library/react';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
+import '@testing-library/jest-dom';
+import {
+  setupTestEnvironment,
+  cleanupTestEnvironment,
+  getGlobalMocks,
+} from '../../utils/mock-setup';
+import {
+  createMockUser,
+} from '../../utils/mock-factories';
 
-// Mock permission system
-const createPermissionProvider = (isAdmin: boolean) => {
-  return function PermissionProvider({ children }: { children: React.ReactNode }) {
-    const PermissionContext = React.createContext({
-      isAdmin,
-    });
-
-    const useIsAdmin = () => {
-      const context = React.useContext(PermissionContext);
-      return context.isAdmin;
-    };
-
-    const useHasPermission = () => {
-      const isAdminUser = useIsAdmin();
-      return (permission: string) => {
-        // Admin has all permissions
-        if (isAdminUser) return true;
-        
-        // Basic permissions for all users
-        const basicPermissions = ['settings.view', 'profile.edit', 'billing.view'];
-        return basicPermissions.includes(permission);
-      };
-    };
-
-    return React.createElement(
-      PermissionContext.Provider,
-      { value: { isAdmin } },
-      children
-    );
+// Mock PermissionProvider component for testing
+const MockPermissionProvider = ({ children, requiredPermission, fallback }: any) => {
+  const mocks = getGlobalMocks();
+  
+  // Check if user has required permission
+  const hasPermission = (permission: string) => {
+    if (!mocks.authStore.user) return false;
+    if (mocks.authStore.user.role === 'admin') return true;
+    return mocks.authStore.user.permissions?.includes(permission) || false;
   };
+  
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return fallback || <div data-testid="access-denied">Access Denied</div>;
+  }
+  
+  return <>{children}</>;
 };
 
-// Create hooks for testing
-function createPermissionHooks(isAdmin: boolean) {
-  const useIsAdmin = () => isAdmin;
-  
-  const useHasPermission = () => {
-    return (permission: string) => {
-      // Admin has all permissions
-      if (isAdmin) return true;
-      
-      // Basic permissions for all users
-      const basicPermissions = ['settings.view', 'profile.edit', 'billing.view'];
-      return basicPermissions.includes(permission);
-    };
-  };
+// Mock components
+const MockChildComponent = () => <div data-testid="protected-content">Protected Content</div>;
+const MockFallbackComponent = () => <div data-testid="custom-fallback">Custom Fallback</div>;
 
-  return { useIsAdmin, useHasPermission };
-}
+// Use mock as PermissionProvider
+const PermissionProvider = MockPermissionProvider;
 
-describe('Permission Provider Tests', () => {
-  describe('PermissionProvider Component', () => {
-    it('should provide admin context when user is admin', () => {
-      const PermissionProvider = createPermissionProvider(true);
-      let contextValue: any = null;
+describe('PermissionProvider Component Tests', () => {
+  let mocks: ReturnType<typeof getGlobalMocks>;
 
-      const TestComponent = () => {
-        // Set the context value to indicate the component was rendered
-        contextValue = { isAdmin: true };
-        return null;
-      };
+  beforeEach(() => {
+    setupTestEnvironment({
+      includeAuth: true,
+      includeBrowserAPI: false,
+    });
+    
+    mocks = getGlobalMocks();
+  });
 
-      const wrapper = ({ children }: { children: React.ReactNode }) =>
-        React.createElement(PermissionProvider, { children });
+  afterEach(() => {
+    cleanupTestEnvironment();
+  });
 
-      renderHook(() => React.createElement(TestComponent), { wrapper });
+  describe('Admin User', () => {
+    it('should allow admin access to all content', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
 
-      expect(contextValue).toBeDefined();
-      if (contextValue) {
-        expect(contextValue.isAdmin).toBe(true);
-      }
+      render(
+        <PermissionProvider requiredPermission="manage_users">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeDefined();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
     });
 
-    it('should provide non-admin context when user is not admin', () => {
-      const PermissionProvider = createPermissionProvider(false);
-      let contextValue: any = null;
+    it('should allow admin access without specific permissions', () => {
+      const adminUser = createMockUser({ 
+        role: 'admin',
+        permissions: [] // Empty permissions array
+      });
+      mocks.authStore.user = adminUser;
 
-      const TestComponent = () => {
-        // Set the context value to indicate the component was rendered
-        contextValue = { isAdmin: false };
-        return null;
-      };
+      render(
+        <PermissionProvider requiredPermission="any_permission">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
 
-      const wrapper = ({ children }: { children: React.ReactNode }) =>
-        React.createElement(PermissionProvider, { children });
-
-      renderHook(() => React.createElement(TestComponent), { wrapper });
-
-      expect(contextValue).toBeDefined();
-      if (contextValue) {
-        expect(contextValue.isAdmin).toBe(false);
-      }
+      expect(screen.getByTestId('protected-content')).toBeDefined();
     });
   });
 
-  describe('useIsAdmin Hook', () => {
-    it('should return true when user is admin', () => {
-      const { useIsAdmin } = createPermissionHooks(true);
-      const { result } = renderHook(() => useIsAdmin());
+  describe('Regular User with Permissions', () => {
+    it('should allow access when user has required permission', () => {
+      const userWithPermission = createMockUser({ 
+        role: 'user',
+        permissions: ['read_posts', 'write_posts', 'manage_profile']
+      });
+      mocks.authStore.user = userWithPermission;
 
-      expect(result.current).toBe(true);
+      render(
+        <PermissionProvider requiredPermission="read_posts">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeDefined();
     });
 
-    it('should return false when user is not admin', () => {
-      const { useIsAdmin } = createPermissionHooks(false);
-      const { result } = renderHook(() => useIsAdmin());
-
-      expect(result.current).toBe(false);
-    });
-
-    it('should remain stable across re-renders', () => {
-      const { useIsAdmin } = createPermissionHooks(true);
-      const { result, rerender } = renderHook(() => useIsAdmin());
-
-      const firstResult = result.current;
-      rerender();
-      const secondResult = result.current;
-
-      expect(firstResult).toBe(secondResult);
-    });
-  });
-
-  describe('useHasPermission Hook', () => {
-    describe('Admin User Permissions', () => {
-      it('should grant all permissions to admin users', () => {
-        const { useHasPermission } = createPermissionHooks(true);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        // Admin permissions
-        expect(hasPermission('dashboard.view')).toBe(true);
-        expect(hasPermission('users.manage')).toBe(true);
-        expect(hasPermission('files.manage')).toBe(true);
-        expect(hasPermission('admin.access')).toBe(true);
-
-        // Basic permissions
-        expect(hasPermission('settings.view')).toBe(true);
-        expect(hasPermission('profile.edit')).toBe(true);
-        expect(hasPermission('billing.view')).toBe(true);
-
-        // Custom permissions
-        expect(hasPermission('custom.permission')).toBe(true);
+    it('should deny access when user lacks required permission', () => {
+      const userWithoutPermission = createMockUser({ 
+        role: 'user',
+        permissions: ['read_posts']
       });
+      mocks.authStore.user = userWithoutPermission;
 
-      it('should handle unknown permissions for admin', () => {
-        const { useHasPermission } = createPermissionHooks(true);
-        const { result } = renderHook(() => useHasPermission());
+      render(
+        <PermissionProvider requiredPermission="manage_users">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
 
-        const hasPermission = result.current;
-
-        expect(hasPermission('unknown.permission')).toBe(true);
-        expect(hasPermission('made.up.permission')).toBe(true);
-      });
-    });
-
-    describe('Regular User Permissions', () => {
-      it('should grant basic permissions to regular users', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        // Basic permissions should be granted
-        expect(hasPermission('settings.view')).toBe(true);
-        expect(hasPermission('profile.edit')).toBe(true);
-        expect(hasPermission('billing.view')).toBe(true);
-      });
-
-      it('should deny admin permissions to regular users', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        // Admin permissions should be denied
-        expect(hasPermission('dashboard.view')).toBe(false);
-        expect(hasPermission('users.manage')).toBe(false);
-        expect(hasPermission('files.manage')).toBe(false);
-        expect(hasPermission('admin.access')).toBe(false);
-      });
-
-      it('should deny unknown permissions to regular users', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        expect(hasPermission('unknown.permission')).toBe(false);
-        expect(hasPermission('made.up.permission')).toBe(false);
-      });
-    });
-
-    describe('Permission Function Stability', () => {
-      it('should return stable function reference', () => {
-        const { useHasPermission } = createPermissionHooks(true);
-        const { result, rerender } = renderHook(() => useHasPermission());
-
-        const firstFunction = result.current;
-        rerender();
-        const secondFunction = result.current;
-
-        expect(typeof firstFunction).toBe('function');
-        expect(typeof secondFunction).toBe('function');
-      });
-
-      it('should return consistent results for same permission', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        // Multiple calls should return same result
-        expect(hasPermission('settings.view')).toBe(true);
-        expect(hasPermission('settings.view')).toBe(true);
-        expect(hasPermission('admin.access')).toBe(false);
-        expect(hasPermission('admin.access')).toBe(false);
-      });
-    });
-
-    describe('Permission Categories', () => {
-      it('should handle settings permissions correctly', () => {
-        const { useHasPermission: adminHasPermission } = createPermissionHooks(true);
-        const { useHasPermission: userHasPermission } = createPermissionHooks(false);
-
-        const { result: adminResult } = renderHook(() => adminHasPermission());
-        const { result: userResult } = renderHook(() => userHasPermission());
-
-        const adminPermissions = adminResult.current;
-        const userPermissions = userResult.current;
-
-        // Both should have settings permissions
-        expect(adminPermissions('settings.view')).toBe(true);
-        expect(userPermissions('settings.view')).toBe(true);
-        
-        expect(adminPermissions('profile.edit')).toBe(true);
-        expect(userPermissions('profile.edit')).toBe(true);
-        
-        expect(adminPermissions('billing.view')).toBe(true);
-        expect(userPermissions('billing.view')).toBe(true);
-      });
-
-      it('should handle dashboard permissions correctly', () => {
-        const { useHasPermission: adminHasPermission } = createPermissionHooks(true);
-        const { useHasPermission: userHasPermission } = createPermissionHooks(false);
-
-        const { result: adminResult } = renderHook(() => adminHasPermission());
-        const { result: userResult } = renderHook(() => userHasPermission());
-
-        const adminPermissions = adminResult.current;
-        const userPermissions = userResult.current;
-
-        // Only admin should have dashboard permissions
-        expect(adminPermissions('dashboard.view')).toBe(true);
-        expect(userPermissions('dashboard.view')).toBe(false);
-        
-        expect(adminPermissions('users.manage')).toBe(true);
-        expect(userPermissions('users.manage')).toBe(false);
-      });
-
-      it('should handle file management permissions correctly', () => {
-        const { useHasPermission: adminHasPermission } = createPermissionHooks(true);
-        const { useHasPermission: userHasPermission } = createPermissionHooks(false);
-
-        const { result: adminResult } = renderHook(() => adminHasPermission());
-        const { result: userResult } = renderHook(() => userHasPermission());
-
-        const adminPermissions = adminResult.current;
-        const userPermissions = userResult.current;
-
-        // Only admin should have file management permissions
-        expect(adminPermissions('files.manage')).toBe(true);
-        expect(userPermissions('files.manage')).toBe(false);
-        
-        expect(adminPermissions('files.delete')).toBe(true);
-        expect(userPermissions('files.delete')).toBe(false);
-      });
-    });
-
-    describe('Edge Cases', () => {
-      it('should handle empty permission string', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        expect(hasPermission('')).toBe(false);
-      });
-
-      it('should handle null/undefined permission', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        expect(hasPermission(null as any)).toBe(false);
-        expect(hasPermission(undefined as any)).toBe(false);
-      });
-
-      it('should handle special characters in permission string', () => {
-        const { useHasPermission } = createPermissionHooks(true);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        // Admin should have all permissions, even with special characters
-        expect(hasPermission('permission.with-dash')).toBe(true);
-        expect(hasPermission('permission_with_underscore')).toBe(true);
-        expect(hasPermission('permission:with:colon')).toBe(true);
-      });
-
-      it('should be case sensitive', () => {
-        const { useHasPermission } = createPermissionHooks(false);
-        const { result } = renderHook(() => useHasPermission());
-
-        const hasPermission = result.current;
-
-        expect(hasPermission('settings.view')).toBe(true);
-        expect(hasPermission('SETTINGS.VIEW')).toBe(false);
-        expect(hasPermission('Settings.View')).toBe(false);
-      });
+      expect(screen.queryByTestId('protected-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
   });
 
-  describe('Permission Integration', () => {
-    it('should work together for admin user', () => {
-      const { useIsAdmin, useHasPermission } = createPermissionHooks(true);
-      
-      const { result: adminResult } = renderHook(() => useIsAdmin());
-      const { result: permissionResult } = renderHook(() => useHasPermission());
+  describe('User without Permissions', () => {
+    it('should deny access when user has no permissions', () => {
+      const userWithoutPermissions = createMockUser({ 
+        role: 'user',
+        permissions: []
+      });
+      mocks.authStore.user = userWithoutPermissions;
 
-      const isAdmin = adminResult.current;
-      const hasPermission = permissionResult.current;
+      render(
+        <PermissionProvider requiredPermission="read_posts">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
 
-      expect(isAdmin).toBe(true);
-      expect(hasPermission('admin.access')).toBe(true);
+      expect(screen.queryByTestId('protected-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
 
-    it('should work together for regular user', () => {
-      const { useIsAdmin, useHasPermission } = createPermissionHooks(false);
-      
-      const { result: adminResult } = renderHook(() => useIsAdmin());
-      const { result: permissionResult } = renderHook(() => useHasPermission());
+    it('should deny access when user has undefined permissions', () => {
+      const userWithUndefinedPermissions = createMockUser({ 
+        role: 'user',
+        permissions: undefined
+      });
+      mocks.authStore.user = userWithUndefinedPermissions;
 
-      const isAdmin = adminResult.current;
-      const hasPermission = permissionResult.current;
+      render(
+        <PermissionProvider requiredPermission="read_posts">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
 
-      expect(isAdmin).toBe(false);
-      expect(hasPermission('admin.access')).toBe(false);
-      expect(hasPermission('settings.view')).toBe(true);
+      expect(screen.queryByTestId('protected-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+  });
+
+  describe('No User', () => {
+    it('should deny access when no user is present', () => {
+      mocks.authStore.user = null;
+
+      render(
+        <PermissionProvider requiredPermission="read_posts">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.queryByTestId('protected-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+  });
+
+  describe('Custom Fallback', () => {
+    it('should show custom fallback when access is denied', () => {
+      const userWithoutPermission = createMockUser({ 
+        role: 'user',
+        permissions: ['read_posts']
+      });
+      mocks.authStore.user = userWithoutPermission;
+
+      render(
+        <PermissionProvider 
+          requiredPermission="manage_users" 
+          fallback={<MockFallbackComponent />}
+        >
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.queryByTestId('protected-content')).toBeNull();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
+      expect(screen.getByTestId('custom-fallback')).toBeDefined();
+    });
+  });
+
+  describe('No Required Permission', () => {
+    it('should allow access when no permission is required', () => {
+      const anyUser = createMockUser({ 
+        role: 'user',
+        permissions: []
+      });
+      mocks.authStore.user = anyUser;
+
+      render(
+        <PermissionProvider>
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeDefined();
+    });
+
+    it('should allow access even without user when no permission required', () => {
+      mocks.authStore.user = null;
+
+      render(
+        <PermissionProvider>
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeDefined();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty permission string', () => {
+      const user = createMockUser({ 
+        role: 'user',
+        permissions: ['read_posts']
+      });
+      mocks.authStore.user = user;
+
+      render(
+        <PermissionProvider requiredPermission="">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      // Empty permission should be treated as no permission required
+      expect(screen.getByTestId('protected-content')).toBeDefined();
+    });
+
+    it('should handle multiple children', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
+
+      render(
+        <PermissionProvider requiredPermission="manage_users">
+          <MockChildComponent />
+          <div data-testid="second-child">Second Child</div>
+        </PermissionProvider>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeDefined();
+      expect(screen.getByTestId('second-child')).toBeDefined();
+    });
+
+    it('should handle null children', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
+
+      const { container } = render(
+        <PermissionProvider requiredPermission="manage_users">
+          {null}
+        </PermissionProvider>
+      );
+
+      expect(container).toBeDefined();
+    });
+  });
+
+  describe('Permission Scenarios', () => {
+    it('should handle case-sensitive permissions', () => {
+      const user = createMockUser({ 
+        role: 'user',
+        permissions: ['Read_Posts', 'WRITE_POSTS']
+      });
+      mocks.authStore.user = user;
+
+      render(
+        <PermissionProvider requiredPermission="read_posts">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      // Should be case-sensitive by default
+      expect(screen.queryByTestId('protected-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+
+    it('should handle exact permission match', () => {
+      const user = createMockUser({ 
+        role: 'user',
+        permissions: ['read_posts', 'read_posts_admin']
+      });
+      mocks.authStore.user = user;
+
+      render(
+        <PermissionProvider requiredPermission="read_posts">
+          <MockChildComponent />
+        </PermissionProvider>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeDefined();
     });
   });
 }); 

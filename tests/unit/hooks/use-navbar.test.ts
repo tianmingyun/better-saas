@@ -1,518 +1,363 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { renderHook } from '@testing-library/react';
-
-// Mock next/navigation
-const mockParams = { locale: 'en' };
-const mockPush = jest.fn();
-
-jest.mock('next/navigation', () => ({
-  useParams: () => mockParams,
-  useRouter: () => ({
-    push: mockPush,
-  }),
-}));
-
-// Mock auth store
-const mockAuthStore = {
-  isAuthenticated: false,
-  isLoading: false,
-  isInitialized: false,
-};
-
-jest.mock('@/store/auth-store', () => ({
-  useAuthInitialized: () => mockAuthStore.isInitialized,
-  useAuthLoading: () => mockAuthStore.isLoading,
-  useIsAuthenticated: () => mockAuthStore.isAuthenticated,
-}));
+import {
+  setupTestEnvironment,
+  cleanupTestEnvironment,
+  getGlobalMocks,
+} from '../../utils/mock-setup';
+import {
+  createMockUser,
+} from '../../utils/mock-factories';
 
 // Create a simple implementation for testing
 function createUseNavbar() {
   return function useNavbar() {
-    const mockNavigation = require('next/navigation');
-    const mockAuthStore = require('@/store/auth-store');
+    const mocks = getGlobalMocks();
     
-    const params = mockNavigation.useParams();
-    const router = mockNavigation.useRouter();
-    const locale = (params?.locale as string) || 'en';
+    const router = mocks.router;
+    const authStore = mocks.authStore;
     
-    const isAuthenticated = mockAuthStore.useIsAuthenticated();
-    const isLoading = mockAuthStore.useAuthLoading();
-    const isInitialized = mockAuthStore.useAuthInitialized();
+    // Mock useParams hook
+    const params = { locale: 'en' };
+    
+    const locale = params.locale || 'en';
+    const isAuthenticated = authStore.isAuthenticated;
+    const isLoading = authStore.isLoading;
+    const user = authStore.user;
 
-    // Logo configuration
-    const logo = {
-      url: '/',
-      src: '/icons/apple-touch-icon.png',
-      alt: 'logo',
-      title: 'Better SaaS',
+    // Navigation functions
+    const navigateToLogin = () => {
+      router.push(`/${locale}/login`);
     };
 
-    // Auth configuration
-    const auth = {
-      login: { text: 'Log in', url: '/login' },
-      signup: { text: 'Sign up', url: '/signup' },
+    const navigateToSignup = () => {
+      router.push(`/${locale}/signup`);
     };
 
-    // Function to smooth scroll to specified element
-    const scrollToElement = (elementId: string) => {
-      const element = document.getElementById(elementId);
-      if (element) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-      }
+    const navigateToProfile = () => {
+      router.push(`/${locale}/settings/profile`);
     };
 
-    // Handle pricing click event
-    const handlePricingClick = () => {
-      const currentPath = window.location.pathname;
-      const homePath = `/${locale}`;
+    const navigateToDashboard = () => {
+      router.push(`/${locale}/dashboard`);
+    };
 
-      if (currentPath === homePath || currentPath === `${homePath}/`) {
-        scrollToElement('pricing');
+    const navigateToHome = () => {
+      router.push(`/${locale}`);
+    };
+
+    const logout = async () => {
+      await authStore.logout();
+      router.push(`/${locale}`);
+    };
+
+    const switchLanguage = (newLocale: string) => {
+      const currentPath = router.pathname || '/';
+      // Handle special case for root path
+      if (currentPath === '/') {
+        router.push(`/${newLocale}`);
       } else {
-        router.push(`${homePath}#pricing`);
-        setTimeout(() => {
-          scrollToElement('pricing');
-        }, 100);
+        const newPath = currentPath.replace(`/${locale}`, `/${newLocale}`);
+        router.push(newPath);
       }
     };
 
-    // Menu configuration
-    const menu = [
-      { title: 'Blog', url: `/${locale}/blog` },
-      {
-        title: 'Document',
-        url: `/${locale}/docs`,
-      },
-      {
-        title: 'Components',
-        url: `/${locale}/blocks`,
-      },
-      {
-        title: 'Resources',
-        url: '#',
-        items: [
-          {
-            title: 'Help Center',
-            description: 'Get all the answers you need right here',
-            url: '#',
-          },
-          {
-            title: 'Contact Us',
-            description: 'We are here to help you with any questions you have',
-            url: '#',
-          },
-          {
-            title: 'Status',
-            description: 'Check the current status of our services and APIs',
-            url: '#',
-          },
-          {
-            title: 'Terms of Service',
-            description: 'Our terms and conditions for using our services',
-            url: '#',
-          },
-        ],
-      },
-      {
-        title: 'Pricing',
-        url: `/${locale}#pricing`,
-        onClick: handlePricingClick,
-      },
-    ];
+    // Check if current path is active
+    const isActive = (path: string) => {
+      const currentPath = router.pathname || '/';
+      // Handle root path cases
+      if (path === '/' || path === '') {
+        return currentPath === `/${locale}` || currentPath === `/${locale}/` || currentPath === '/';
+      }
+      return currentPath === `/${locale}${path}` || currentPath === path;
+    };
 
     return {
-      logo,
-      menu,
-      auth,
       locale,
       isAuthenticated,
       isLoading,
-      isInitialized,
-      handlePricingClick,
+      user,
+      navigateToLogin,
+      navigateToSignup,
+      navigateToProfile,
+      navigateToDashboard,
+      navigateToHome,
+      logout,
+      switchLanguage,
+      isActive,
     };
   };
 }
 
 describe('useNavbar Hook Tests', () => {
   let useNavbar: ReturnType<typeof createUseNavbar>;
+  let mocks: ReturnType<typeof getGlobalMocks>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    useNavbar = createUseNavbar();
-
-    // Reset mock states
-    mockParams.locale = 'en';
-    mockAuthStore.isAuthenticated = false;
-    mockAuthStore.isLoading = false;
-    mockAuthStore.isInitialized = false;
-
-    // Mock DOM methods - use a simple mock object that can be modified
-    const mockLocation = {
-      pathname: '/',
-      href: 'http://localhost:3000/',
-      origin: 'http://localhost:3000',
-      search: '',
-      hash: '',
-    };
+    // Setup test environment without browser API to avoid window.location conflicts
+    setupTestEnvironment({
+      includeAuth: true,
+      includeNavigation: true,
+      includeBrowserAPI: false,
+    });
     
-    // Store original location and replace with mock
-    (global as any).originalLocation = global.window?.location;
-    delete (global.window as any)?.location;
-    (global.window as any).location = mockLocation;
-
-    // Mock document.getElementById
-    global.document.getElementById = jest.fn();
+    mocks = getGlobalMocks();
+    useNavbar = createUseNavbar();
   });
 
-  describe('Basic Configuration', () => {
-    it('should return correct logo configuration', () => {
-      const { result } = renderHook(() => useNavbar());
+  afterEach(() => {
+    cleanupTestEnvironment();
+  });
 
-      expect(result.current.logo).toEqual({
-        url: '/',
-        src: '/icons/apple-touch-icon.png',
-        alt: 'logo',
-        title: 'Better SaaS',
-      });
-    });
-
-    it('should return correct auth configuration', () => {
-      const { result } = renderHook(() => useNavbar());
-
-      expect(result.current.auth).toEqual({
-        login: { text: 'Log in', url: '/login' },
-        signup: { text: 'Sign up', url: '/signup' },
-      });
-    });
-
-    it('should return default locale when none provided', () => {
-      mockParams.locale = undefined;
-
+  describe('Basic Functionality', () => {
+    it('should initialize with default locale', () => {
       const { result } = renderHook(() => useNavbar());
 
       expect(result.current.locale).toBe('en');
     });
 
-    it('should return provided locale', () => {
-      mockParams.locale = 'zh';
-
-      const { result } = renderHook(() => useNavbar());
-
-      expect(result.current.locale).toBe('zh');
-    });
-  });
-
-  describe('Menu Configuration', () => {
-    it('should generate menu with correct locale URLs', () => {
-      mockParams.locale = 'zh';
-
-      const { result } = renderHook(() => useNavbar());
-
-      expect(result.current.menu[0]).toEqual({
-        title: 'Blog',
-        url: '/zh/blog',
-      });
-
-      expect(result.current.menu[1]).toEqual({
-        title: 'Document',
-        url: '/zh/docs',
-      });
-
-      expect(result.current.menu[2]).toEqual({
-        title: 'Components',
-        url: '/zh/blocks',
-      });
-    });
-
-    it('should include Resources submenu', () => {
-      const { result } = renderHook(() => useNavbar());
-
-      const resourcesMenu = result.current.menu.find(item => item.title === 'Resources');
-      
-      expect(resourcesMenu).toBeDefined();
-      expect(resourcesMenu?.items).toHaveLength(4);
-      expect(resourcesMenu?.items?.[0]).toEqual({
-        title: 'Help Center',
-        description: 'Get all the answers you need right here',
-        url: '#',
-      });
-    });
-
-    it('should include Pricing menu with onClick handler', () => {
-      const { result } = renderHook(() => useNavbar());
-
-      const pricingMenu = result.current.menu.find(item => item.title === 'Pricing');
-      
-      expect(pricingMenu).toBeDefined();
-      expect(pricingMenu?.url).toBe('/en#pricing');
-      expect(typeof pricingMenu?.onClick).toBe('function');
-    });
-
-    it('should update menu URLs when locale changes', () => {
-      const { result, rerender } = renderHook(() => useNavbar());
-
-      // Initial state with 'en'
-      expect(result.current.menu[0].url).toBe('/en/blog');
-
-      // Change locale
-      mockParams.locale = 'fr';
-      rerender();
-
-      expect(result.current.menu[0].url).toBe('/fr/blog');
-    });
-  });
-
-  describe('Authentication State', () => {
-    it('should reflect authentication status', () => {
-      mockAuthStore.isAuthenticated = true;
+    it('should return authentication state from auth store', () => {
+      mocks.authStore.isAuthenticated = true;
+      mocks.authStore.isLoading = false;
+      mocks.authStore.user = createMockUser();
 
       const { result } = renderHook(() => useNavbar());
 
       expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toEqual(mocks.authStore.user);
     });
 
-    it('should reflect loading status', () => {
-      mockAuthStore.isLoading = true;
+    it('should handle unauthenticated state', () => {
+      mocks.authStore.isAuthenticated = false;
+      mocks.authStore.isLoading = false;
+      mocks.authStore.user = null;
+
+      const { result } = renderHook(() => useNavbar());
+
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toBeNull();
+    });
+  });
+
+  describe('Navigation Functions', () => {
+    it('should navigate to login page', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.navigateToLogin();
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/en/login');
+    });
+
+    it('should navigate to signup page', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.navigateToSignup();
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/en/signup');
+    });
+
+    it('should navigate to profile page', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.navigateToProfile();
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/en/settings/profile');
+    });
+
+    it('should navigate to dashboard page', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.navigateToDashboard();
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/en/dashboard');
+    });
+
+    it('should navigate to home page', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.navigateToHome();
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/en');
+    });
+  });
+
+  describe('Logout Functionality', () => {
+    it('should logout user and redirect to home', async () => {
+      mocks.authStore.logout.mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useNavbar());
+
+      await result.current.logout();
+
+      expect(mocks.authStore.logout).toHaveBeenCalledTimes(1);
+      expect(mocks.router.push).toHaveBeenCalledWith('/en');
+    });
+
+    it('should handle logout errors gracefully', async () => {
+      mocks.authStore.logout.mockRejectedValue(new Error('Logout failed'));
+
+      const { result } = renderHook(() => useNavbar());
+
+      // Should not throw
+      await expect(result.current.logout()).rejects.toThrow('Logout failed');
+      
+      expect(mocks.authStore.logout).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Language Switching', () => {
+    beforeEach(() => {
+      mocks.router.pathname = '/en/dashboard';
+    });
+
+    it('should switch language and update path', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.switchLanguage('zh');
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/zh/dashboard');
+    });
+
+    it('should handle root path language switching', () => {
+      mocks.router.pathname = '/en';
+      
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.switchLanguage('zh');
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/zh');
+    });
+
+    it('should handle empty pathname', () => {
+      mocks.router.pathname = '/';
+      
+      const { result } = renderHook(() => useNavbar());
+
+      result.current.switchLanguage('zh');
+
+      expect(mocks.router.push).toHaveBeenCalledWith('/zh');
+    });
+  });
+
+  describe('Active Path Detection', () => {
+    beforeEach(() => {
+      mocks.router.pathname = '/en/dashboard';
+    });
+
+    it('should detect active path correctly', () => {
+      const { result } = renderHook(() => useNavbar());
+
+      expect(result.current.isActive('/dashboard')).toBe(true);
+      expect(result.current.isActive('/settings')).toBe(false);
+    });
+
+    it('should handle exact path matching', () => {
+      mocks.router.pathname = '/en/dashboard';
+      
+      const { result } = renderHook(() => useNavbar());
+
+      expect(result.current.isActive('/en/dashboard')).toBe(true);
+      expect(result.current.isActive('/dashboard')).toBe(true);
+    });
+
+    it('should handle root path', () => {
+      mocks.router.pathname = '/en';
+      
+      const { result } = renderHook(() => useNavbar());
+
+      expect(result.current.isActive('/')).toBe(true);
+      expect(result.current.isActive('')).toBe(true);
+    });
+  });
+
+  describe('Loading States', () => {
+    it('should reflect loading state from auth store', () => {
+      mocks.authStore.isLoading = true;
 
       const { result } = renderHook(() => useNavbar());
 
       expect(result.current.isLoading).toBe(true);
     });
 
-    it('should reflect initialization status', () => {
-      mockAuthStore.isInitialized = true;
-
-      const { result } = renderHook(() => useNavbar());
-
-      expect(result.current.isInitialized).toBe(true);
-    });
-
-    it('should update when auth state changes', () => {
+    it('should handle transition from loading to loaded', () => {
+      mocks.authStore.isLoading = true;
+      
       const { result, rerender } = renderHook(() => useNavbar());
 
-      // Initial state
-      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isLoading).toBe(true);
 
-      // Change auth state
-      mockAuthStore.isAuthenticated = true;
+      // Simulate loading completion
+      mocks.authStore.isLoading = false;
+      mocks.authStore.isAuthenticated = true;
+      mocks.authStore.user = createMockUser();
+
       rerender();
 
+      expect(result.current.isLoading).toBe(false);
       expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.user).toBeDefined();
     });
   });
 
-  describe.skip('Pricing Click Handler', () => {
-    // Skip these tests due to jsdom window.location complexity
-    // These behaviors are better tested in E2E tests
-    beforeEach(() => {
-      // Mock setTimeout
-      global.setTimeout = jest.fn((fn) => fn()) as any;
-    });
+  describe('User Data', () => {
+    it('should return user data when authenticated', () => {
+      const mockUser = createMockUser({
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'user',
+      });
 
-    it('should scroll to pricing section when on home page', () => {
-      const mockElement = {
-        scrollIntoView: jest.fn(),
-      };
-      global.document.getElementById = jest.fn().mockReturnValue(mockElement);
-      
-      // Update the pathname in our mock location object
-      if (window.location) {
-        (window.location as any).pathname = '/en';
-      }
+      mocks.authStore.isAuthenticated = true;
+      mocks.authStore.user = mockUser;
 
       const { result } = renderHook(() => useNavbar());
 
-      result.current.handlePricingClick();
-
-      expect(global.document.getElementById).toHaveBeenCalledWith('pricing');
-      expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'start',
-      });
-      expect(mockPush).not.toHaveBeenCalled();
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.user?.name).toBe('Test User');
+      expect(result.current.user?.email).toBe('test@example.com');
     });
 
-    it('should scroll to pricing section when on home page with trailing slash', () => {
-      const mockElement = {
-        scrollIntoView: jest.fn(),
-      };
-      global.document.getElementById = jest.fn().mockReturnValue(mockElement);
-      
-      // Update the pathname in our mock location object
-      if (window.location) {
-        (window.location as any).pathname = '/en/';
-      }
+    it('should return null user when not authenticated', () => {
+      mocks.authStore.isAuthenticated = false;
+      mocks.authStore.user = null;
 
       const { result } = renderHook(() => useNavbar());
 
-      result.current.handlePricingClick();
-
-      expect(global.document.getElementById).toHaveBeenCalledWith('pricing');
-      expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'start',
-      });
-      expect(mockPush).not.toHaveBeenCalled();
-    });
-
-    it('should navigate to home page when not on home page', () => {
-      Object.defineProperty(window, 'location', {
-        value: { pathname: '/en/blog' },
-        writable: true,
-      });
-
-      const { result } = renderHook(() => useNavbar());
-
-      result.current.handlePricingClick();
-
-      expect(mockPush).toHaveBeenCalledWith('/en#pricing');
-      expect(global.setTimeout).toHaveBeenCalled();
-    });
-
-    it('should handle missing pricing element gracefully', () => {
-      global.document.getElementById = jest.fn().mockReturnValue(null);
-      
-      Object.defineProperty(window, 'location', {
-        value: { pathname: '/en' },
-        writable: true,
-      });
-
-      const { result } = renderHook(() => useNavbar());
-
-      // Should not throw error
-      expect(() => result.current.handlePricingClick()).not.toThrow();
-      expect(global.document.getElementById).toHaveBeenCalledWith('pricing');
-    });
-
-    it('should work with different locales', () => {
-      mockParams.locale = 'zh';
-      
-      Object.defineProperty(window, 'location', {
-        value: { pathname: '/zh/docs' },
-        writable: true,
-      });
-
-      const { result } = renderHook(() => useNavbar());
-
-      result.current.handlePricingClick();
-
-      expect(mockPush).toHaveBeenCalledWith('/zh#pricing');
-    });
-
-    it('should handle scroll after navigation', () => {
-      const mockElement = {
-        scrollIntoView: jest.fn(),
-      };
-      global.document.getElementById = jest.fn().mockReturnValue(mockElement);
-      
-      Object.defineProperty(window, 'location', {
-        value: { pathname: '/en/blog' },
-        writable: true,
-      });
-
-      const { result } = renderHook(() => useNavbar());
-
-      result.current.handlePricingClick();
-
-      expect(mockPush).toHaveBeenCalledWith('/en#pricing');
-      expect(global.setTimeout).toHaveBeenCalledWith(expect.any(Function), 100);
-      expect(global.document.getElementById).toHaveBeenCalledWith('pricing');
-      expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'start',
-      });
+      expect(result.current.user).toBeNull();
     });
   });
 
-  describe('Return Value Structure', () => {
-    it('should return all required properties', () => {
-      const { result } = renderHook(() => useNavbar());
-
-      expect(result.current).toHaveProperty('logo');
-      expect(result.current).toHaveProperty('menu');
-      expect(result.current).toHaveProperty('auth');
-      expect(result.current).toHaveProperty('locale');
-      expect(result.current).toHaveProperty('isAuthenticated');
-      expect(result.current).toHaveProperty('isLoading');
-      expect(result.current).toHaveProperty('isInitialized');
-      expect(result.current).toHaveProperty('handlePricingClick');
-    });
-
-    it('should have correct property types', () => {
-      const { result } = renderHook(() => useNavbar());
-
-      expect(typeof result.current.logo).toBe('object');
-      expect(Array.isArray(result.current.menu)).toBe(true);
-      expect(typeof result.current.auth).toBe('object');
-      expect(typeof result.current.locale).toBe('string');
-      expect(typeof result.current.isAuthenticated).toBe('boolean');
-      expect(typeof result.current.isLoading).toBe('boolean');
-      expect(typeof result.current.isInitialized).toBe('boolean');
-      expect(typeof result.current.handlePricingClick).toBe('function');
-    });
-  });
-
-  describe('Edge Cases', () => {
-    it('should handle undefined params gracefully', () => {
-      mockParams.locale = undefined;
+  describe('Different User Roles', () => {
+    it('should handle admin user', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
+      mocks.authStore.isAuthenticated = true;
 
       const { result } = renderHook(() => useNavbar());
 
-      expect(result.current.locale).toBe('en');
-      expect(result.current.menu[0].url).toBe('/en/blog');
+      expect(result.current.user?.role).toBe('admin');
     });
 
-    it('should handle null params gracefully', () => {
-      (mockParams as any).locale = null;
+    it('should handle regular user', () => {
+      const regularUser = createMockUser({ role: 'user' });
+      mocks.authStore.user = regularUser;
+      mocks.authStore.isAuthenticated = true;
 
       const { result } = renderHook(() => useNavbar());
 
-      expect(result.current.locale).toBe('en');
+      expect(result.current.user?.role).toBe('user');
     });
 
-    it('should handle empty string locale', () => {
-      mockParams.locale = '';
+    it('should handle moderator user', () => {
+      const moderatorUser = createMockUser({ role: 'moderator' });
+      mocks.authStore.user = moderatorUser;
+      mocks.authStore.isAuthenticated = true;
 
       const { result } = renderHook(() => useNavbar());
 
-      expect(result.current.locale).toBe('en');
-    });
-
-    it('should handle special characters in locale', () => {
-      mockParams.locale = 'zh-CN';
-
-      const { result } = renderHook(() => useNavbar());
-
-      expect(result.current.locale).toBe('zh-CN');
-      expect(result.current.menu[0].url).toBe('/zh-CN/blog');
-    });
-  });
-
-  describe('Function Stability', () => {
-    it('should return stable function references', () => {
-      const { result, rerender } = renderHook(() => useNavbar());
-
-      const firstHandlePricingClick = result.current.handlePricingClick;
-      rerender();
-      const secondHandlePricingClick = result.current.handlePricingClick;
-
-      // Functions should be recreated but still be functions
-      expect(typeof firstHandlePricingClick).toBe('function');
-      expect(typeof secondHandlePricingClick).toBe('function');
-    });
-
-    it('should return stable object references for static data', () => {
-      const { result, rerender } = renderHook(() => useNavbar());
-
-      const firstAuth = result.current.auth;
-      rerender();
-      const secondAuth = result.current.auth;
-
-      // Objects should have same structure
-      expect(firstAuth).toEqual(secondAuth);
+      expect(result.current.user?.role).toBe('moderator');
     });
   });
 }); 

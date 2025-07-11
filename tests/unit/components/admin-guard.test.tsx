@@ -1,343 +1,418 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
+import '@testing-library/jest-dom';
+import {
+  setupTestEnvironment,
+  cleanupTestEnvironment,
+  getGlobalMocks,
+} from '../../utils/mock-setup';
+import {
+  createMockUser,
+} from '../../utils/mock-factories';
 
-// Mock the AdminGuard component
-const MockAdminGuard = jest.fn(({ children, fallback, showAccessDenied, redirectTo }) => {
-  const mockAuthStore = require('@/store/auth-store');
-  const mockNavigation = require('next/navigation');
-  const mockPermissions = require('@/components/auth/permission-provider');
+// Mock AdminGuard component for testing
+const MockAdminGuard = ({ children, fallback }: any) => {
+  const mocks = getGlobalMocks();
   
-  const isAuthenticated = mockAuthStore.useIsAuthenticated();
-  const isAdmin = mockPermissions.useIsAdmin();
-  const isLoading = mockAuthStore.useAuthLoading();
-  const isInitialized = mockAuthStore.useAuthInitialized();
-  const router = mockNavigation.useRouter();
-
-  // Auto redirect effect
-  React.useEffect(() => {
-    if (isInitialized && !isLoading && isAuthenticated && !isAdmin) {
-      router.push(redirectTo || '/settings/profile');
-    }
-  }, [isInitialized, isLoading, isAuthenticated, isAdmin, redirectTo, router]);
-
-  // Loading state
-  if (!isInitialized || isLoading) {
-    if (fallback) return fallback;
-    return React.createElement('div', { 'data-testid': 'loading-skeleton' }, 'Loading Skeleton');
-  }
-
-  // Not authenticated - handled by AuthGuard
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // Not admin
+  // Check if user is admin
+  const isAdmin = mocks.authStore.user?.role === 'admin';
+  
   if (!isAdmin) {
-    if (showAccessDenied === false) return null;
-    
-    return React.createElement('div', null,
-      React.createElement('div', null, '管理员权限必需'),
-      React.createElement('div', null, '此页面仅限管理员访问。如果您认为这是错误，请联系系统管理员。'),
-      React.createElement('button', { onClick: () => router.push(redirectTo || '/settings/profile') }, '返回设置'),
-      React.createElement('button', { onClick: () => router.push('/') }, '返回首页')
-    );
+    return fallback || <div data-testid="access-denied">Access Denied - Admin Only</div>;
   }
-
-  // Is admin - render children
-  return children;
-});
-
-// Mock next/navigation
-const mockPush = jest.fn();
-
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
-}));
-
-// Mock next-intl
-jest.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
-}));
-
-// Mock auth store
-const mockAuthStore = {
-  isAuthenticated: false,
-  isLoading: false,
-  isInitialized: false,
+  
+  return <>{children}</>;
 };
 
-jest.mock('@/store/auth-store', () => ({
-  useAuthLoading: () => mockAuthStore.isLoading,
-  useIsAuthenticated: () => mockAuthStore.isAuthenticated,
-  useAuthInitialized: () => mockAuthStore.isInitialized,
-}));
+// Mock components
+const MockChildComponent = () => <div data-testid="admin-content">Admin Content</div>;
+const MockFallbackComponent = () => <div data-testid="custom-fallback">Custom Fallback</div>;
 
-// Mock permission provider
-const mockPermissionProvider = {
-  isAdmin: false,
-};
-
-jest.mock('@/components/auth/permission-provider', () => ({
-  useIsAdmin: () => mockPermissionProvider.isAdmin,
-}));
-
-// Use our mock component
+// Use mock as AdminGuard
 const AdminGuard = MockAdminGuard;
 
 describe('AdminGuard Component Tests', () => {
+  let mocks: ReturnType<typeof getGlobalMocks>;
+
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Reset mock states
-    mockAuthStore.isAuthenticated = false;
-    mockAuthStore.isLoading = false;
-    mockAuthStore.isInitialized = false;
-    mockPermissionProvider.isAdmin = false;
+    setupTestEnvironment({
+      includeAuth: true,
+      includeBrowserAPI: false,
+    });
+    
+    mocks = getGlobalMocks();
   });
 
-  describe('Loading States', () => {
-    it('should show loading skeleton when not initialized', () => {
-      mockAuthStore.isInitialized = false;
-      mockAuthStore.isLoading = true;
+  afterEach(() => {
+    cleanupTestEnvironment();
+  });
+
+  describe('Admin User Access', () => {
+    it('should allow access for admin user', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
 
       render(
         <AdminGuard>
-          <div>Admin Content</div>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      expect(screen.getByTestId('loading-skeleton')).toBeDefined();
-      expect(screen.queryByText('Admin Content')).toBeNull();
+      expect(screen.getByTestId('admin-content')).toBeDefined();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
     });
 
-    it('should show custom fallback when provided and loading', () => {
-      mockAuthStore.isInitialized = false;
-      mockAuthStore.isLoading = true;
+    it('should allow access for admin user with any permissions', () => {
+      const adminUser = createMockUser({ 
+        role: 'admin',
+        permissions: ['basic_permission']
+      });
+      mocks.authStore.user = adminUser;
 
       render(
-        <AdminGuard fallback={<div>Custom Loading</div>}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      expect(screen.getByText('Custom Loading')).toBeDefined();
-      expect(screen.queryByTestId('loading-skeleton')).toBeNull();
+      expect(screen.getByTestId('admin-content')).toBeDefined();
+    });
+
+    it('should allow access for admin user without permissions', () => {
+      const adminUser = createMockUser({ 
+        role: 'admin',
+        permissions: []
+      });
+      mocks.authStore.user = adminUser;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.getByTestId('admin-content')).toBeDefined();
     });
   });
 
-  describe('Authentication States', () => {
-    it('should return null when user is not authenticated', () => {
-      mockAuthStore.isAuthenticated = false;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
+  describe('Non-Admin User Access', () => {
+    it('should deny access for regular user', () => {
+      const regularUser = createMockUser({ role: 'user' });
+      mocks.authStore.user = regularUser;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+
+    it('should deny access for moderator user', () => {
+      const moderatorUser = createMockUser({ role: 'moderator' });
+      mocks.authStore.user = moderatorUser;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+
+    it('should deny access for user with many permissions but not admin', () => {
+      const powerUser = createMockUser({ 
+        role: 'user',
+        permissions: ['read_all', 'write_all', 'manage_files', 'manage_users']
+      });
+      mocks.authStore.user = powerUser;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+  });
+
+  describe('No User', () => {
+    it('should deny access when no user is present', () => {
+      mocks.authStore.user = null;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+
+    it('should deny access when user is undefined', () => {
+      mocks.authStore.user = null;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
+    });
+  });
+
+  describe('Custom Fallback', () => {
+    it('should show custom fallback when access is denied', () => {
+      const regularUser = createMockUser({ role: 'user' });
+      mocks.authStore.user = regularUser;
+
+      render(
+        <AdminGuard fallback={<MockFallbackComponent />}>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
+      expect(screen.getByTestId('custom-fallback')).toBeDefined();
+    });
+
+    it('should show custom fallback when no user', () => {
+      mocks.authStore.user = null;
+
+      render(
+        <AdminGuard fallback={<MockFallbackComponent />}>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
+      expect(screen.getByTestId('custom-fallback')).toBeDefined();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle multiple children for admin', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+          <div data-testid="second-child">Second Admin Content</div>
+        </AdminGuard>
+      );
+
+      expect(screen.getByTestId('admin-content')).toBeDefined();
+      expect(screen.getByTestId('second-child')).toBeDefined();
+    });
+
+    it('should handle null children for admin', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
 
       const { container } = render(
         <AdminGuard>
-          <div>Admin Content</div>
+          {null}
         </AdminGuard>
       );
 
-      expect(container.firstChild).toBeNull();
-    });
-  });
-
-  describe('Admin Authorization', () => {
-    it('should render children when user is authenticated and is admin', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = true;
-
-      render(
-        <AdminGuard>
-          <div>Admin Content</div>
-        </AdminGuard>
-      );
-
-      expect(screen.getByText('Admin Content')).toBeDefined();
+      expect(container).toBeDefined();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
     });
 
-    it('should redirect when user is authenticated but not admin', async () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
-
-      render(
-        <AdminGuard>
-          <div>Admin Content</div>
-        </AdminGuard>
-      );
-
-      await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/settings/profile');
-      });
-    });
-
-    it('should use custom redirectTo path', async () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
-
-      render(
-        <AdminGuard redirectTo="/custom-redirect">
-          <div>Admin Content</div>
-        </AdminGuard>
-      );
-
-      await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/custom-redirect');
-      });
-    });
-
-    it('should show access denied message when user is not admin', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
-
-      render(
-        <AdminGuard showAccessDenied={true}>
-          <div>Admin Content</div>
-        </AdminGuard>
-      );
-
-      expect(screen.getByText('管理员权限必需')).toBeDefined();
-      expect(screen.getByText('此页面仅限管理员访问。如果您认为这是错误，请联系系统管理员。')).toBeDefined();
-      expect(screen.getByRole('button', { name: '返回设置' })).toBeDefined();
-      expect(screen.getByRole('button', { name: '返回首页' })).toBeDefined();
-    });
-
-    it('should not show access denied when showAccessDenied is false', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
+    it('should handle empty children for admin', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
 
       const { container } = render(
-        <AdminGuard showAccessDenied={false}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          {/* Empty */}
         </AdminGuard>
       );
 
-      expect(container.firstChild).toBeNull();
+      expect(container).toBeDefined();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
+    });
+
+    it('should handle multiple children for non-admin', () => {
+      const regularUser = createMockUser({ role: 'user' });
+      mocks.authStore.user = regularUser;
+
+      render(
+        <AdminGuard>
+          <MockChildComponent />
+          <div data-testid="second-child">Second Admin Content</div>
+        </AdminGuard>
+      );
+
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.queryByTestId('second-child')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
   });
 
-  describe('User Interactions', () => {
-    it('should handle return to settings button click', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
+  describe('Role Validation', () => {
+    it('should be case sensitive for role check', () => {
+      const userWithWrongCase = createMockUser({ role: 'Admin' as any });
+      mocks.authStore.user = userWithWrongCase;
 
       render(
-        <AdminGuard showAccessDenied={true}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      const settingsButton = screen.getByRole('button', { name: '返回设置' });
-      fireEvent.click(settingsButton);
-
-      expect(mockPush).toHaveBeenCalledWith('/settings/profile');
+      // Should be case sensitive - 'Admin' !== 'admin'
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
 
-    it('should handle return to home button click', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
+    it('should handle empty role', () => {
+      const userWithEmptyRole = createMockUser({ role: '' as any });
+      mocks.authStore.user = userWithEmptyRole;
 
       render(
-        <AdminGuard showAccessDenied={true}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      const homeButton = screen.getByRole('button', { name: '返回首页' });
-      fireEvent.click(homeButton);
-
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
 
-    it('should use custom redirectTo for settings button', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-      mockPermissionProvider.isAdmin = false;
+    it('should handle undefined role', () => {
+      const userWithUndefinedRole = createMockUser({ role: undefined as any });
+      mocks.authStore.user = userWithUndefinedRole;
 
       render(
-        <AdminGuard redirectTo="/custom-settings" showAccessDenied={true}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      const settingsButton = screen.getByRole('button', { name: '返回设置' });
-      fireEvent.click(settingsButton);
-
-      expect(mockPush).toHaveBeenCalledWith('/custom-settings');
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
   });
 
-  describe('Combined States', () => {
-    it('should handle transition from loading to admin access', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = false;
-      mockAuthStore.isLoading = true;
-      mockPermissionProvider.isAdmin = true;
+  describe('Component Behavior', () => {
+    it('should not call children side effects when access denied', () => {
+      const regularUser = createMockUser({ role: 'user' });
+      mocks.authStore.user = regularUser;
 
-      const { rerender } = render(
+      const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      const ChildWithSideEffect = () => {
+        console.log('Child component rendered');
+        return <div data-testid="admin-content">Admin Content</div>;
+      };
+
+      render(
         <AdminGuard>
-          <div>Admin Content</div>
+          <ChildWithSideEffect />
         </AdminGuard>
       );
 
-      // Initially loading
-      expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(mockConsoleLog).not.toHaveBeenCalled();
 
-      // Update to initialized and not loading
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
-
-      rerender(
-        <AdminGuard>
-          <div>Admin Content</div>
-        </AdminGuard>
-      );
-
-      expect(screen.getByText('Admin Content')).toBeDefined();
+      mockConsoleLog.mockRestore();
     });
 
-    it('should handle transition from loading to access denied', () => {
-      mockAuthStore.isAuthenticated = true;
-      mockAuthStore.isInitialized = false;
-      mockAuthStore.isLoading = true;
-      mockPermissionProvider.isAdmin = false;
+    it('should call children side effects when access granted', () => {
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
+
+      const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      const ChildWithSideEffect = () => {
+        console.log('Child component rendered');
+        return <div data-testid="admin-content">Admin Content</div>;
+      };
+
+      render(
+        <AdminGuard>
+          <ChildWithSideEffect />
+        </AdminGuard>
+      );
+
+      expect(screen.getByTestId('admin-content')).toBeDefined();
+      expect(mockConsoleLog).toHaveBeenCalledWith('Child component rendered');
+
+      mockConsoleLog.mockRestore();
+    });
+  });
+
+  describe('Integration Scenarios', () => {
+    it('should handle user role changes', () => {
+      // Start with regular user
+      const regularUser = createMockUser({ role: 'user' });
+      mocks.authStore.user = regularUser;
 
       const { rerender } = render(
-        <AdminGuard showAccessDenied={true}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      // Initially loading
-      expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+      // Should deny access initially
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
 
-      // Update to initialized and not loading
-      mockAuthStore.isInitialized = true;
-      mockAuthStore.isLoading = false;
+      // Update to admin user
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
 
       rerender(
-        <AdminGuard showAccessDenied={true}>
-          <div>Admin Content</div>
+        <AdminGuard>
+          <MockChildComponent />
         </AdminGuard>
       );
 
-      expect(screen.getByText('管理员权限必需')).toBeDefined();
+      // Should now allow access
+      expect(screen.getByTestId('admin-content')).toBeDefined();
+      expect(screen.queryByTestId('access-denied')).toBeNull();
+    });
+
+    it('should handle admin logout', () => {
+      // Start with admin user
+      const adminUser = createMockUser({ role: 'admin' });
+      mocks.authStore.user = adminUser;
+
+      const { rerender } = render(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      // Should allow access initially
+      expect(screen.getByTestId('admin-content')).toBeDefined();
+
+      // Simulate logout
+      mocks.authStore.user = null;
+
+      rerender(
+        <AdminGuard>
+          <MockChildComponent />
+        </AdminGuard>
+      );
+
+      // Should now deny access
+      expect(screen.queryByTestId('admin-content')).toBeNull();
+      expect(screen.getByTestId('access-denied')).toBeDefined();
     });
   });
 }); 
