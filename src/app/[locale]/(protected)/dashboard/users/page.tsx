@@ -51,7 +51,7 @@ export default function UsersPage() {
             <CardContent>
               {loading ? (
                 <div className="space-y-2">
-                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
+                  <div className='h-8 w-16 animate-pulse rounded bg-gray-200' />
                 </div>
               ) : (
                 <div className="font-bold text-2xl">{formatNumber(stats?.totalUsers || 0)}</div>
@@ -67,7 +67,7 @@ export default function UsersPage() {
             <CardContent>
               {loading ? (
                 <div className="space-y-2">
-                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
+                  <div className='h-8 w-16 animate-pulse rounded bg-gray-200' />
                 </div>
               ) : (
                 <div className="font-bold text-2xl">{formatNumber(stats?.activeUsers || 0)}</div>
@@ -83,7 +83,7 @@ export default function UsersPage() {
             <CardContent>
               {loading ? (
                 <div className="space-y-2">
-                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
+                  <div className='h-8 w-16 animate-pulse rounded bg-gray-200' />
                 </div>
               ) : (
                 <div className="font-bold text-2xl">{formatNumber(stats?.newUsers || 0)}</div>
@@ -100,7 +100,7 @@ export default function UsersPage() {
             <CardContent>
               {loading ? (
                 <div className="space-y-2">
-                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
+                  <div className='h-8 w-16 animate-pulse rounded bg-gray-200' />
                 </div>
               ) : (
                 <div className="font-bold text-2xl">{formatNumber(stats?.paidUsers || 0)}</div>

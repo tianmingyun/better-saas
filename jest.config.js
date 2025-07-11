@@ -20,8 +20,26 @@ const customJestConfig = {
     '^.+\\.(css|sass|scss)$': 'identity-obj-proxy',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@t3-oss|next-intl|use-intl|@mswjs|msw)/)',
+    'node_modules/(?!(@t3-oss|next-intl|use-intl|@mswjs|msw|@radix-ui|nanostores|better-auth|zustand)/)',
   ],
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': ['ts-jest', {
+      useESM: true,
+      tsconfig: {
+        module: 'esnext',
+        moduleResolution: 'node',
+        target: 'es2022',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+      }
+    }],
+  },
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
@@ -46,4 +64,5 @@ const customJestConfig = {
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
+// @ts-ignore
 export default createJestConfig(customJestConfig)

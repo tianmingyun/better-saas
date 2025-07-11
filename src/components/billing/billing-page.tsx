@@ -68,8 +68,6 @@ export function BillingPage() {
     }
   }, [billingInfo?.activeSubscription?.subscriptionId, loadBillingInfo]);
 
-
-
   useEffect(() => {
     loadBillingInfo();
   }, [loadBillingInfo]);
@@ -78,7 +76,7 @@ export function BillingPage() {
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
-    
+
     if (success === 'true') {
       toast.success('支付成功！您的订阅已激活。', {
         duration: 5000,
@@ -130,8 +128,6 @@ export function BillingPage() {
         return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
-
-
 
   if (error) {
     return (
@@ -228,8 +224,8 @@ export function BillingPage() {
 
       {/* Current subscription */}
       {billingInfo?.activeSubscription ? (
-        <SubscriptionCard 
-          subscription={billingInfo.activeSubscription} 
+        <SubscriptionCard
+          subscription={billingInfo.activeSubscription}
           onUpdate={loadBillingInfo}
         />
       ) : (
@@ -239,9 +235,7 @@ export function BillingPage() {
             <CardDescription>您目前没有活跃的订阅</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              您可以在定价页面选择适合的订阅计划
-            </p>
+            <p className="text-muted-foreground">您可以在定价页面选择适合的订阅计划</p>
           </CardContent>
         </Card>
       )}
@@ -253,9 +247,7 @@ export function BillingPage() {
             <CreditCard className="h-5 w-5" />
             支付历史
           </CardTitle>
-          <CardDescription>
-            您的所有支付记录
-          </CardDescription>
+          <CardDescription>您的所有支付记录</CardDescription>
         </CardHeader>
         <CardContent>
           {billingInfo?.paymentHistory && billingInfo.paymentHistory.length > 0 ? (
@@ -274,30 +266,28 @@ export function BillingPage() {
                         {getStatusText(payment.status)}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className='flex items-center gap-2 text-muted-foreground text-sm'>
                       <Calendar className="h-4 w-4" />
                       <span>{formatDate(payment.createdAt)}</span>
                     </div>
                     {payment.interval && (
-                      <div className="text-sm text-muted-foreground">
+                      <div className='text-muted-foreground text-sm'>
                         计费周期：{payment.interval === 'month' ? '月付' : '年付'}
                       </div>
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-muted-foreground">价格ID</div>
+                    <div className='text-muted-foreground text-sm'>价格ID</div>
                     <div className="font-mono text-sm">{payment.priceId}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-muted-foreground">
-              暂无支付记录
-            </div>
+            <div className="py-8 text-center text-muted-foreground">暂无支付记录</div>
           )}
         </CardContent>
       </Card>
     </div>
   );
-} 
+}

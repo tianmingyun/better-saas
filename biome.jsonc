@@ -5,7 +5,16 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "files": { "ignoreUnknown": false, "ignore": [] },
+  "files": {
+    "ignoreUnknown": false,
+    "ignore": [
+      ".next/**",
+      ".cursor/**",
+      ".vscode/**",
+      "node_modules/**",
+      "tests/**"
+    ]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

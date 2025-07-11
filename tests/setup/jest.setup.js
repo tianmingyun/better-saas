@@ -1,14 +1,27 @@
 import '@testing-library/jest-dom'
 import { TextEncoder, TextDecoder } from 'util'
+import { config } from 'dotenv'
+
+// Load test environment variables
+config({ path: '.env.test' })
 
 // Polyfill Web APIs for Node.js
 global.TextEncoder = TextEncoder
+// @ts-ignore - TextDecoder type compatibility issue
 global.TextDecoder = TextDecoder
 
 // Mock fetch instead of using undici to avoid compatibility issues
+// @ts-ignore - Mock type compatibility
 global.fetch = jest.fn()
+// @ts-ignore - Mock type compatibility
 global.Request = jest.fn()
+// @ts-ignore - Mock type compatibility
 global.Response = jest.fn()
+
+// Mock @t3-oss/env-nextjs
+jest.mock('@t3-oss/env-nextjs', () => ({
+  createEnv: jest.fn(() => process.env),
+}))
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -33,15 +46,12 @@ jest.mock('next/navigation', () => ({
 // Mock Next.js Image component
 jest.mock('next/image', () => ({
   __esModule: true,
+  // @ts-ignore - Props type
   default: (props) => {
     // eslint-disable-next-line @next/next/no-img-element
     return <img {...props} />
   },
 }))
-
-// Mock environment variables
-process.env.NODE_ENV = 'test'
-process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000'
 
 // Mock console methods in tests
 global.console = {
@@ -69,12 +79,17 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
-// Mock IntersectionObserver
+// Mock IntersectionObserver with proper implementation
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
+  constructor() {
+    this.root = null
+    this.rootMargin = ''
+    this.thresholds = []
+  }
   disconnect() {}
   observe() {}
   unobserve() {}
+  takeRecords() { return [] }
 }
 
 // Mock ResizeObserver
