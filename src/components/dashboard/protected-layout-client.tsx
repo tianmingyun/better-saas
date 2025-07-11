@@ -26,7 +26,7 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
   const sidebarGroups: SidebarGroup[] = useMemo(() => {
     const groups: SidebarGroup[] = [];
 
-    // 管理员才能看到 Dashboard 菜单
+    // only admin can see Dashboard menu
     if (isAdmin) {
       groups.push({
         title: t('dashboard'),
@@ -36,11 +36,6 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
             title: t('users'),
             href: '/dashboard/users',
             icon: Users,
-          },
-          {
-            title: t('notifications'),
-            href: '/dashboard/notifications',
-            icon: Bell,
           },
           {
             title: t('files'),
@@ -56,7 +51,7 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
       });
     }
 
-    // 所有登录用户都能看到 Settings 菜单
+    // all users can see Settings menu
     groups.push({
       title: t('settings'),
       defaultOpen: true,

@@ -5,6 +5,10 @@ import { LoadingSkeleton } from '@/components/loading-skeleton';
 import PermissionWrapper from '@/components/auth/permission-wrapper';
 import { Suspense } from 'react';
 
+// Force dynamic rendering for settings routes
+// This is necessary because settings pages now check admin permissions
+export const dynamic = 'force-dynamic';
+
 type Props = {
   children: ReactNode;
 };
@@ -13,16 +17,17 @@ type Props = {
  * Settings layout - Handles authentication and layout for settings pages
  * Settings pages require:
  * 1. User authentication (AuthGuard)
- * 2. Basic permission context (PermissionWrapper without admin check)
+ * 2. Permission context with admin check (PermissionWrapper)
  * 3. Standard layout (ProtectedLayoutClient)
  * 
- * No admin permissions needed, allowing for static rendering
+ * Admin users will see both Dashboard and Settings menus
+ * Regular users will only see Settings menu
  */
 export default function SettingsLayout({ children }: Props) {
   return (
     <Suspense fallback={<LoadingSkeleton />}>
       <AuthGuard useSkeletonFallback>
-        <PermissionWrapper checkAdminStatus={false}>
+        <PermissionWrapper>
           <ProtectedLayoutClient>{children}</ProtectedLayoutClient>
         </PermissionWrapper>
       </AuthGuard>

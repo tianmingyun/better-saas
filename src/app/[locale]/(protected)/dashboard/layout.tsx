@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: Props) {
   return (
     <Suspense fallback={<LoadingSkeleton />}>
       <AuthGuard useSkeletonFallback>
-        <PermissionWrapper checkAdminStatus={true}>
+        <PermissionWrapper>
           <ProtectedLayoutClient>{children}</ProtectedLayoutClient>
         </PermissionWrapper>
       </AuthGuard>
