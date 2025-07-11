@@ -1,7 +1,7 @@
 import { and, desc, eq, ilike, sql } from 'drizzle-orm';
 import type { FileInfo } from '@/lib/file-service';
 import db from '../index';
-import { file } from '../schema';
+import { file, user } from '../schema';
 
 export interface CreateFileData {
   id: string;
@@ -106,17 +106,23 @@ export class FileRepository {
 
     const total = countResult[0]?.count || 0;
 
-    // 获取文件列表
+    // 获取文件列表 (关联用户表)
     const files = await db
-      .select()
+      .select({
+        file: file,
+        user: {
+          email: user.email,
+        },
+      })
       .from(file)
+      .leftJoin(user, eq(file.uploadUserId, user.id))
       .where(whereClause)
       .orderBy(desc(file.createdAt))
       .limit(limit)
       .offset(offset);
 
     return {
-      files: files.map((f) => this.toFileInfo(f)),
+      files: files.map((result) => this.toFileInfoWithUser(result.file, result.user?.email)),
       total,
     };
   }
@@ -151,6 +157,26 @@ export class FileRepository {
       r2Key: fileRecord.r2Key,
       thumbnailKey: fileRecord.thumbnailKey || undefined,
       uploadUserId: fileRecord.uploadUserId,
+      createdAt: fileRecord.createdAt.toISOString(),
+      updatedAt: fileRecord.updatedAt.toISOString(),
+      url: '', // Temporarily set to empty string, actual URL will be added in service layer
+      thumbnailUrl: undefined,
+    };
+  }
+
+  private toFileInfoWithUser(fileRecord: FileRecord, userEmail?: string): FileInfo {
+    return {
+      id: fileRecord.id,
+      filename: fileRecord.filename,
+      originalName: fileRecord.originalName,
+      mimeType: fileRecord.mimeType,
+      size: fileRecord.size,
+      width: fileRecord.width || undefined,
+      height: fileRecord.height || undefined,
+      r2Key: fileRecord.r2Key,
+      thumbnailKey: fileRecord.thumbnailKey || undefined,
+      uploadUserId: fileRecord.uploadUserId,
+      uploadUserEmail: userEmail,
       createdAt: fileRecord.createdAt.toISOString(),
       updatedAt: fileRecord.updatedAt.toISOString(),
       url: '', // Temporarily set to empty string, actual URL will be added in service layer

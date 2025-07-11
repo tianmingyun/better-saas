@@ -81,6 +81,7 @@ export function FileTable({
               <TableHead className="w-24">Preview</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Size</TableHead>
+              <TableHead>Upload User</TableHead>
               <TableHead>Last Modified</TableHead>
               <TableHead className="w-12" />
             </TableRow>
@@ -96,6 +97,9 @@ export function FileTable({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-20" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-32" />
@@ -131,6 +135,7 @@ export function FileTable({
             <TableHead className="w-24">Preview</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Size</TableHead>
+            <TableHead>Upload User</TableHead>
             <TableHead>Last Modified</TableHead>
             <TableHead className="w-12" />
           </TableRow>
@@ -169,6 +174,9 @@ export function FileTable({
               </TableCell>
               <TableCell>
                 <span className="text-muted-foreground text-sm">{formatFileSize(file.size)}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-muted-foreground text-sm">{file.uploadUserEmail || file.uploadUserId}</span>
               </TableCell>
               <TableCell>
                 <span className="text-muted-foreground text-sm">{formatDate(file.createdAt)}</span>

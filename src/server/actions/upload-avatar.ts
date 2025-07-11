@@ -3,14 +3,14 @@
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
 import { getErrorMessage } from './error-messages';
-import { uploadToR2, getFileUrl } from '@/lib/file-service';
-import { generateUniqueFilename } from '@/lib/file-service';
+import { uploadFile } from '@/lib/file-service';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
+import type { User } from 'better-auth/types';
 
 const avatarErrorLogger = new ErrorLogger('upload-avatar');
 
 export async function uploadAvatarAction(formData: FormData) {
-  let session: { user?: { id: string } } | null = null;
+  let session: { user?: User } | null = null;
   let file: File | null = null;
   
   try {
@@ -36,25 +36,13 @@ export async function uploadAvatarAction(formData: FormData) {
       throw new Error(await getErrorMessage('fileSizeLimit'));
     }
 
-    // 读取文件内容
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // 生成唯一文件名
-    const filename = generateUniqueFilename(file.name);
-    
-    // 为头像创建专门的R2路径
-    const r2Key = `avatars/${session.user.id}/${filename}`;
-
-    // 上传到R2
-    await uploadToR2(r2Key, buffer, file.type);
-
-    // 生成访问URL
-    const fileUrl = getFileUrl(r2Key);
+    // Use the unified file upload logic that saves to database
+    const fileInfo = await uploadFile(file, session.user.id);
 
     return {
       success: true,
-      url: fileUrl,
+      url: fileInfo.url,
+      fileInfo,
     };
   } catch (error) {
     avatarErrorLogger.logError(error as Error, {

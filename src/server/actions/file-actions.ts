@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/auth';
+import { isAdmin } from '@/lib/auth/permissions';
 import {
   uploadFile,
   deleteFile,
@@ -11,6 +12,7 @@ import {
 import { headers } from 'next/headers';
 import { getErrorMessage } from './error-messages';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
+import type { User } from 'better-auth/types';
 
 const fileErrorLogger = new ErrorLogger('file-actions');
 
@@ -36,7 +38,7 @@ export interface FileDeleteResponse {
  * 上传文件 Server Action
  */
 export async function uploadFileAction(formData: FormData): Promise<FileUploadResponse> {
-  let session: { user?: { id: string } } | null = null;
+  let session: { user?: User } | null = null;
   let file: File | null = null;
 
   try {
@@ -77,7 +79,7 @@ export async function uploadFileAction(formData: FormData): Promise<FileUploadRe
  * 删除文件 Server Action
  */
 export async function deleteFileAction(fileId: string): Promise<FileDeleteResponse> {
-  let session: { user?: { id: string } } | null = null;
+  let session: { user?: User } | null = null;
 
   try {
     session = await auth.api.getSession({
@@ -88,7 +90,11 @@ export async function deleteFileAction(fileId: string): Promise<FileDeleteRespon
       throw new Error(await getErrorMessage('unauthorizedAccess'));
     }
 
-    const success = await deleteFile(fileId, session.user.id);
+    // Check if user is admin - admins can delete any file
+    const userIsAdmin = isAdmin(session.user);
+    
+    // Pass userId only if user is not admin (to enforce ownership check)
+    const success = await deleteFile(fileId, userIsAdmin ? undefined : session.user.id);
 
     if (!success) {
       throw new Error(await getErrorMessage('fileDeleteFailed'));
@@ -118,7 +124,7 @@ export async function getFileListAction(
     search?: string;
   } = {}
 ): Promise<FileListResponse> {
-  let session: { user?: { id: string } } | null = null;
+  let session: { user?: User } | null = null;
 
   try {
     session = await auth.api.getSession({
@@ -131,11 +137,11 @@ export async function getFileListAction(
 
     const { page = 1, limit = 20, search = '' } = options;
 
+    // Remove userId parameter to fetch all files instead of just current user's files
     const result = await getFileList({
       page,
       limit,
       search,
-      userId: session.user.id,
     });
 
     return result;
@@ -158,7 +164,7 @@ export async function getFileListAction(
  * 获取文件信息 Server Action
  */
 export async function getFileInfoAction(fileId: string): Promise<FileInfo> {
-  let session: { user?: { id: string } } | null = null;
+  let session: { user?: User } | null = null;
 
   try {
     session = await auth.api.getSession({

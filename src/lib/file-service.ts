@@ -19,6 +19,7 @@ export interface FileInfo {
   r2Key: string;
   thumbnailKey?: string;
   uploadUserId: string;
+  uploadUserEmail?: string;
   createdAt: string;
   updatedAt: string;
   url: string;

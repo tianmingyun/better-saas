@@ -34,7 +34,7 @@ export function FileManager() {
       {/* Page title and description */}
       <div className="flex flex-col space-y-2">
         <h1 className="font-bold text-2xl">R2 Image/Video Management</h1>
-        <p className="text-muted-foreground">Browse files stored in Cloudflare R2 (Admin only).</p>
+        <p className="text-muted-foreground">Browse all files uploaded by users (Admin only).</p>
       </div>
 
               {/* Upload area */}
@@ -94,10 +94,7 @@ export function FileManager() {
               {/* Pagination */}
       {pagination && pagination.total > 0 && (
         <div className="flex items-center justify-between">
-          <div className="text-muted-foreground text-sm">
-            共 {pagination.total} 个文件，第 {pagination.page} 页，共{' '}
-            {Math.ceil(pagination.total / pagination.limit)} 页
-          </div>
+          
           <PaginationControls
             currentPage={pagination.page}
             totalPages={Math.ceil(pagination.total / pagination.limit)}

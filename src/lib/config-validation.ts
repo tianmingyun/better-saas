@@ -256,6 +256,12 @@ export function validateAllConfigs(configs: {
     i18n: validateConfig(configs.i18n, i18nConfigSchema, 'i18n'),
     theme: validateConfig(configs.theme, themeConfigSchema, 'theme'),
     payment: validateConfig(configs.payment, paymentConfigSchema, 'payment'),
+  } as {
+    app: z.infer<typeof appConfigSchema>;
+    features: z.infer<typeof featuresConfigSchema>;
+    i18n: z.infer<typeof i18nConfigSchema>;
+    theme: z.infer<typeof themeConfigSchema>;
+    payment: z.infer<typeof paymentConfigSchema>;
   };
 
   // Cross-validation checks
@@ -266,11 +272,11 @@ export function validateAllConfigs(configs: {
 
 // Cross-reference validation
 function validateCrossReferences(configs: {
-  app: any;
-  features: any;
-  i18n: any;
-  theme: any;
-  payment: any;
+  app: z.infer<typeof appConfigSchema>;
+  features: z.infer<typeof featuresConfigSchema>;
+  i18n: z.infer<typeof i18nConfigSchema>;
+  theme: z.infer<typeof themeConfigSchema>;
+  payment: z.infer<typeof paymentConfigSchema>;
 }) {
   // Check if default locale exists in languages
   if (!configs.i18n.languages[configs.i18n.defaultLocale]) {
@@ -289,7 +295,7 @@ function validateCrossReferences(configs: {
 
   // Check if payment trial plans exist
   if (configs.payment.trial.enabled) {
-    const planIds = configs.payment.plans.map((plan: any) => plan.id);
+    const planIds = configs.payment.plans.map(plan => plan.id);
     for (const trialPlanId of configs.payment.trial.plans) {
       if (!planIds.includes(trialPlanId)) {
         throw new Error(`Trial plan '${trialPlanId}' not found in payment plans`);
@@ -299,11 +305,11 @@ function validateCrossReferences(configs: {
 
   // Check if payment is enabled but no plans have stripe price IDs
   if (configs.features.payment.enabled) {
-    const paidPlans = configs.payment.plans.filter((plan: any) => plan.price > 0);
+    const paidPlans = configs.payment.plans.filter(plan => plan.price > 0);
     if (paidPlans.length > 0) {
-      const missingPriceIds = paidPlans.filter((plan: any) => !plan.stripePriceId);
+      const missingPriceIds = paidPlans.filter(plan => !plan.stripePriceId);
       if (missingPriceIds.length > 0) {
-        console.warn(`Warning: Paid plans missing Stripe price IDs: ${missingPriceIds.map((p: any) => p.id).join(', ')}`);
+        console.warn(`Warning: Paid plans missing Stripe price IDs: ${missingPriceIds.map(p => p.id).join(', ')}`);
       }
     }
   }
