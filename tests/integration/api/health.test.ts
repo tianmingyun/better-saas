@@ -13,10 +13,9 @@ function createMockRequest(method: string, url: string, body?: any) {
 
 function createMockResponse() {
   const res = {
-    status: 200,
-    headers: {},
-    body: null,
     statusCode: 200,
+    headers: {},
+    body: null as any,
     setHeader: function (name: string, value: string) {
       this.headers[name] = value;
       return this;

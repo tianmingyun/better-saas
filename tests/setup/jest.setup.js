@@ -1,22 +1,50 @@
-import '@testing-library/jest-dom'
-import { TextEncoder, TextDecoder } from 'util'
-import { config } from 'dotenv'
+// Load comprehensive polyfills FIRST
+require('./global-polyfills')
+
+const { config } = require('dotenv')
+require('@testing-library/jest-dom')
 
 // Load test environment variables
 config({ path: '.env.test' })
 
 // Polyfill Web APIs for Node.js
+const { TextEncoder, TextDecoder } = require('util')
 global.TextEncoder = TextEncoder
 // @ts-ignore - TextDecoder type compatibility issue
 global.TextDecoder = TextDecoder
 
+// Mock performance API for jsdom environment
+if (typeof global.performance === 'undefined' || !global.performance.getEntriesByName) {
+  global.performance = {
+    ...global.performance,
+    now: () => Date.now(),
+    getEntriesByName: () => [],
+    mark: () => {},
+    measure: () => {},
+    clearMarks: () => {},
+    clearMeasures: () => {},
+    getEntries: () => [],
+    getEntriesByType: () => [],
+  }
+}
+
+// Also set up performance for Node.js environment
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+  const { performance } = require('perf_hooks')
+  if (!performance.getEntriesByName) {
+    performance.getEntriesByName = () => []
+  }
+}
+
 // Mock fetch instead of using undici to avoid compatibility issues
+// Only mock if fetch is not already available (for Node environments)
+if (typeof global.fetch === 'undefined') {
+  global.fetch = require('node-fetch')
+}
 // @ts-ignore - Mock type compatibility
-global.fetch = jest.fn()
+global.Request = global.Request || jest.fn()
 // @ts-ignore - Mock type compatibility
-global.Request = jest.fn()
-// @ts-ignore - Mock type compatibility
-global.Response = jest.fn()
+global.Response = global.Response || jest.fn()
 
 // Mock @t3-oss/env-nextjs
 jest.mock('@t3-oss/env-nextjs', () => ({
@@ -47,9 +75,13 @@ jest.mock('next/navigation', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   // @ts-ignore - Props type
-  default: (props) => {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} />
+  default: function MockImage(props) {
+    // Create a simple object that mimics an img element for testing
+    return {
+      type: 'img',
+      props: props,
+      toString: () => `<img ${Object.keys(props).map(key => `${key}="${props[key]}"`).join(' ')} />`
+    }
   },
 }))
 
@@ -64,20 +96,22 @@ global.console = {
   error: jest.fn(),
 }
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-})
+// Mock window.matchMedia (only in jsdom environment)
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // deprecated
+      removeListener: jest.fn(), // deprecated
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  })
+}
 
 // Mock IntersectionObserver with proper implementation
 global.IntersectionObserver = class IntersectionObserver {

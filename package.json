@@ -102,6 +102,7 @@
     "@types/supertest": "^6.0.3",
     "artillery": "^2.0.23",
     "drizzle-kit": "^0.30.5",
+    "formdata-node": "^6.0.3",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4",
     "msw": "^2.10.3",

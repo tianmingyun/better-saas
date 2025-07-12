@@ -8,7 +8,6 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.js'],
-  testEnvironment: 'jsdom',
   testMatch: [
     '<rootDir>/tests/unit/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/tests/integration/**/*.test.{js,jsx,ts,tsx}',
@@ -18,28 +17,12 @@ const customJestConfig = {
     '^@/tests/(.*)$': '<rootDir>/tests/$1',
     '^.+\\.(jpg|jpeg|png|gif|webp|avif|svg)$': '<rootDir>/tests/__mocks__/fileMock.js',
     '^.+\\.(css|sass|scss)$': 'identity-obj-proxy',
+    '^next/font/(.*)$': '<rootDir>/tests/__mocks__/fileMock.js',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(@t3-oss|next-intl|use-intl|@mswjs|msw|@radix-ui|nanostores|better-auth|zustand)/)',
   ],
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['ts-jest', {
-      useESM: true,
-      tsconfig: {
-        module: 'esnext',
-        moduleResolution: 'node',
-        target: 'es2022',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      }
-    }],
-  },
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
+  // Remove custom transform config to use Next.js defaults
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
@@ -49,18 +32,57 @@ const customJestConfig = {
     '!src/app/**/error.tsx',
     '!src/middleware.ts',
     '!src/env.ts',
+    // Exclude test files and mock files
+    '!src/**/*.test.{js,jsx,ts,tsx}',
+    '!src/**/*.spec.{js,jsx,ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/**/__mocks__/**',
+    // Include important business logic files
+    'src/lib/**/*.{js,jsx,ts,tsx}',
+    'src/server/**/*.{js,jsx,ts,tsx}',
+    'src/components/**/*.{js,jsx,ts,tsx}',
+    'src/hooks/**/*.{js,jsx,ts,tsx}',
+    'src/store/**/*.{js,jsx,ts,tsx}',
   ],
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
   coverageDirectory: 'coverage',
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 75,
-      lines: 80,
-      statements: 80,
+      branches: 75,
+      functions: 80,
+      lines: 85,
+      statements: 85,
+    },
+    // Specific thresholds for critical modules
+    'src/lib/auth/**/*.{js,jsx,ts,tsx}': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    'src/lib/file-service.ts': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+    'src/server/actions/**/*.{js,jsx,ts,tsx}': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
     },
   },
-  testTimeout: 10000,
+  testTimeout: 30000, // Increased timeout for integration tests
+  testEnvironment: 'jsdom', // Use jsdom for all tests
+  // Verbose output for better debugging
+  verbose: true,
+  // Fail fast on first test failure in CI
+  bail: process.env.CI ? 1 : 0,
+  // Clear mocks between tests
+  clearMocks: true,
+  // Restore mocks after each test
+  restoreMocks: true,
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
