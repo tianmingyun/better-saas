@@ -18,6 +18,7 @@ A modern, full-stack SaaS application built with Next.js 15, featuring authentic
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **Framework**: Next.js 15 (App Router)
 - **UI Components**: Radix UI + Tailwind CSS
 - **State Management**: Zustand
@@ -26,6 +27,7 @@ A modern, full-stack SaaS application built with Next.js 15, featuring authentic
 - **Icons**: Lucide React
 
 ### Backend
+
 - **Runtime**: Node.js
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth
@@ -34,6 +36,7 @@ A modern, full-stack SaaS application built with Next.js 15, featuring authentic
 - **Validation**: Zod
 
 ### Development & Testing
+
 - **Language**: TypeScript
 - **Package Manager**: pnpm
 - **Code Quality**: Biome (formatting, linting)
@@ -101,7 +104,7 @@ src/
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm
 - PostgreSQL database
 - Stripe account (for payments)
@@ -110,22 +113,26 @@ src/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd better-saas
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp env.example .env.local
    ```
-   
+
    Fill in the required environment variables:
+
    - `DATABASE_URL`: PostgreSQL connection string
    - `BETTER_AUTH_SECRET`: Random secret for authentication
    - `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`: GitHub OAuth app credentials
@@ -138,16 +145,19 @@ src/
    - `ADMIN_EMAILS`: Comma-separated list of admin email addresses
 
 4. **Set up the database**
+
    ```bash
    pnpm db:push
    ```
 
 5. **Set up admin user (optional)**
+
    ```bash
    pnpm admin:setup
    ```
 
 6. **Start the development server**
+
    ```bash
    pnpm dev
    ```
@@ -157,24 +167,28 @@ src/
 ## 📋 Available Scripts
 
 ### Development
+
 - `pnpm dev` - Start development server with Turbo mode
 - `pnpm build` - Build for production
 - `pnpm start` - Start production server
 - `pnpm preview` - Build and start production server
 
 ### Code Quality
+
 - `pnpm check` - Run Biome checks
 - `pnpm check:write` - Fix Biome issues
 - `pnpm check:unsafe` - Fix Biome issues with unsafe fixes
 - `pnpm typecheck` - Run TypeScript checks
 
 ### Database
+
 - `pnpm db:generate` - Generate database migrations
 - `pnpm db:migrate` - Run database migrations
 - `pnpm db:push` - Push schema changes to database
 - `pnpm db:studio` - Open Drizzle Studio
 
 ### Testing
+
 - `pnpm test` - Run all Jest tests
 - `pnpm test:unit` - Run unit tests only
 - `pnpm test:integration` - Run integration tests only
@@ -185,17 +199,20 @@ src/
 - `pnpm test:all` - Run all tests (unit, integration, and E2E)
 
 ### Admin
+
 - `pnpm admin:setup` - Set up admin user account
 
 ## 🏗️ Architecture
 
 ### Authentication Flow
+
 - Uses Better Auth for secure authentication
 - Supports multiple providers (email/password, GitHub, Google)
 - Session management with database persistence
 - Role-based access control with admin permissions
 
 ### Database Design
+
 - **Users**: User profiles and authentication data
 - **Sessions**: Active user sessions
 - **Files**: File metadata and storage references
@@ -203,6 +220,7 @@ src/
 - **Payment Events**: Webhook event tracking
 
 ### File Management
+
 - Secure file uploads with validation
 - Image processing and thumbnail generation
 - Cloud storage integration (S3/R2)
@@ -210,6 +228,7 @@ src/
 - Support for multiple file types with size limits
 
 ### Payment System
+
 - Stripe integration for subscriptions
 - Webhook handling for payment events
 - Subscription lifecycle management
@@ -217,6 +236,7 @@ src/
 - Multiple pricing plans with feature limits
 
 ### Testing Architecture
+
 - **Unit Tests**: Component and utility function testing
 - **Integration Tests**: API endpoints and database operations
 - **E2E Tests**: Full user workflows with Playwright
@@ -225,6 +245,7 @@ src/
 ## 🌍 Internationalization
 
 The application supports multiple languages:
+
 - English (default)
 - Chinese (Simplified)
 
@@ -235,6 +256,7 @@ Language files are located in `src/i18n/messages/`.
 The project includes a comprehensive testing suite covering multiple levels:
 
 ### Test Structure
+
 ```
 tests/
 ├── unit/                   # Unit tests
@@ -255,12 +277,14 @@ tests/
 ```
 
 ### Test Coverage
+
 - **Unit Tests**: 85%+ line coverage for critical components
 - **Integration Tests**: API endpoints, database operations, and service workflows
 - **E2E Tests**: Complete user journeys across all major features
 - **Coverage Thresholds**: Enforced minimums for branches, functions, lines, and statements
 
 ### Testing Features
+
 - **Multi-browser E2E**: Chromium, Firefox, and Safari support
 - **Visual Testing**: Screenshot comparison for UI consistency
 - **Database Testing**: Real database integration with cleanup
@@ -268,6 +292,7 @@ tests/
 - **Parallel Execution**: Fast test runs with parallel processing
 
 ### Running Tests
+
 ```bash
 # Run all tests
 pnpm test:all
@@ -288,6 +313,7 @@ pnpm test:e2e:ui
 ## 📖 Documentation
 
 Built-in documentation is available at `/docs` and includes:
+
 - Architecture overview
 - Installation guide
 - API documentation
@@ -297,17 +323,13 @@ Built-in documentation is available at `/docs` and includes:
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
+
 1. Connect your repository to Vercel
 2. Set environment variables in Vercel dashboard
 3. Deploy automatically on push
 
-### Docker
-```bash
-docker build -t better-saas .
-docker run -p 3000:3000 better-saas
-```
-
 ### Manual Deployment
+
 ```bash
 pnpm build
 pnpm start
@@ -329,6 +351,7 @@ pnpm start
 7. Submit a pull request
 
 ### Code Quality Standards
+
 - All code must pass Biome linting and formatting
 - TypeScript strict mode compliance required
 - Minimum test coverage: 85% for critical components
@@ -337,20 +360,3 @@ pnpm start
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-## 🆘 Support
-
-- Check the [documentation](/docs) for detailed guides
-- Review the [testing documentation](tests/README.md) for test-related questions
-- Open an issue for bug reports or feature requests
-- Join our community discussions
-
-### Getting Help
-- **Documentation**: Comprehensive guides at `/docs`
-- **Testing**: Detailed testing guides in `tests/e2e/README.md` and `tests/integration/README.md`
-- **Issues**: GitHub Issues for bug reports and feature requests
-- **Discussions**: Community discussions for questions and ideas
-
----
-
-Built with ❤️ using the T3 Stack and modern web technologies.
