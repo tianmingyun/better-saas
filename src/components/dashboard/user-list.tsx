@@ -175,6 +175,7 @@ export function UserList() {
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
+                data-testid="user-search"
                 placeholder="搜索用户名或邮箱..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -201,7 +202,7 @@ export function UserList() {
 
           {/* Table */}
           <div className="rounded-md border">
-            <Table>
+            <Table data-testid="users-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>用户</TableHead>
@@ -258,7 +259,7 @@ export function UserList() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" data-testid={`email-verified-${user.id}`}>
                         {user.emailVerified ? (
                           <>
                             <CheckCircle className="h-4 w-4 text-green-500" />

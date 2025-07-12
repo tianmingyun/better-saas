@@ -37,7 +37,7 @@ export function LoginForm({
           <CardDescription>{t('loginWithSocial')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onEmailLogin}>
+          <form onSubmit={onEmailLogin} data-testid="login-form">
             <div className="grid gap-6">
               {/* Error message display */}
               {error && (
@@ -61,6 +61,7 @@ export function LoginForm({
                   className="w-full"
                   onClick={() => onSocialLogin('github')}
                   disabled={isLoading}
+                  data-testid="github-login-button"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -86,6 +87,7 @@ export function LoginForm({
                   className="w-full"
                   onClick={() => onSocialLogin('google')}
                   disabled={isLoading}
+                  data-testid="google-login-button"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -122,6 +124,7 @@ export function LoginForm({
                     required
                     disabled={isLoading}
                     autoComplete="email"
+                    data-testid="email-input"
                   />
                 </div>
                 <div className="grid gap-3">
@@ -142,12 +145,14 @@ export function LoginForm({
                     required
                     disabled={isLoading}
                     autoComplete="current-password"
+                    data-testid="password-input"
                   />
                 </div>
                 <Button
                   type="submit"
                   className="w-full"
                   disabled={isLoading || !formData.email || !formData.password}
+                  data-testid="login-button"
                 >
                   {isLoading ? t('loggingIn') : t('login')}
                 </Button>

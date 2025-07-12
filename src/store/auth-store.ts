@@ -153,7 +153,6 @@ export const useAuthStore = create<AuthState>()(
               });
               return { success: true };
             }
-
             set({ isLoading: false });
             return {
               success: false,
@@ -290,10 +289,7 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
 
           try {
-            if (get().isCacheValid()) {
-              set({ isLoading: false, isInitialized: true });
-              return;
-            }
+            // Always check server session to ensure consistency
             const session = await authClient.getSession();
             if (session.data) {
               const user = session.data.user;
@@ -305,6 +301,29 @@ export const useAuthStore = create<AuthState>()(
                 lastUpdated: Date.now(),
               });
             } else {
+              // Only clear auth if cache is invalid or expired
+              if (!get().isCacheValid()) {
+                set({
+                  user: null,
+                  isAuthenticated: false,
+                  isLoading: false,
+                  isInitialized: true,
+                  lastUpdated: Date.now(),
+                });
+              } else {
+                // Keep existing state if cache is valid
+                set({
+                  isLoading: false,
+                  isInitialized: true,
+                });
+              }
+            }
+          } catch (error) {
+            authErrorLogger.logError(error as Error, {
+              operation: 'initialize',
+            });
+            // On error, keep existing state if cache is valid
+            if (!get().isCacheValid()) {
               set({
                 user: null,
                 isAuthenticated: false,
@@ -312,18 +331,12 @@ export const useAuthStore = create<AuthState>()(
                 isInitialized: true,
                 lastUpdated: Date.now(),
               });
+            } else {
+              set({
+                isLoading: false,
+                isInitialized: true,
+              });
             }
-          } catch (error) {
-            authErrorLogger.logError(error as Error, {
-              operation: 'initialize',
-            });
-            set({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false,
-              isInitialized: true,
-              lastUpdated: Date.now(),
-            });
           }
         },
         clearAuth: () => {

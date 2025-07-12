@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq, and, desc, count } from 'drizzle-orm';
+import { eq, and, desc, count, like, or } from 'drizzle-orm';
 import { user, session, file } from '../../../src/server/db/schema';
 import type { User } from 'better-auth/types';
 
@@ -14,19 +14,59 @@ if (!testDatabaseUrl) {
 const testDb = drizzle(testDatabaseUrl);
 
 describe('Real Database Integration Tests', () => {
+  // Generate unique test IDs to avoid conflicts
+  const generateTestId = () => `test-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const testUserId1 = generateTestId();
+  const testUserId2 = generateTestId();
+
   // Clean up function to remove test data
   const cleanupTestData = async () => {
-    // Delete test users and related data
-    await testDb.delete(file).where(eq(file.uploadUserId, 'test-user-1'));
-    await testDb.delete(file).where(eq(file.uploadUserId, 'test-user-2'));
-    await testDb.delete(session).where(eq(session.userId, 'test-user-1'));
-    await testDb.delete(session).where(eq(session.userId, 'test-user-2'));
-    await testDb.delete(user).where(eq(user.id, 'test-user-1'));
-    await testDb.delete(user).where(eq(user.id, 'test-user-2'));
+    try {
+      // Delete test users and related data
+      await testDb.delete(file).where(eq(file.uploadUserId, testUserId1));
+      await testDb.delete(file).where(eq(file.uploadUserId, testUserId2));
+      await testDb.delete(session).where(eq(session.userId, testUserId1));
+      await testDb.delete(session).where(eq(session.userId, testUserId2));
+      await testDb.delete(user).where(eq(user.id, testUserId1));
+      await testDb.delete(user).where(eq(user.id, testUserId2));
+      
+      // Also clean up any leftover static test users
+      await testDb.delete(file).where(eq(file.uploadUserId, 'test-user-1'));
+      await testDb.delete(file).where(eq(file.uploadUserId, 'test-user-2'));
+      await testDb.delete(session).where(eq(session.userId, 'test-user-1'));
+      await testDb.delete(session).where(eq(session.userId, 'test-user-2'));
+      await testDb.delete(user).where(eq(user.id, 'test-user-1'));
+      await testDb.delete(user).where(eq(user.id, 'test-user-2'));
+    } catch (error) {
+      console.warn('Cleanup warning:', error);
+    }
   };
 
   beforeAll(async () => {
-    // Clean up any existing test data
+    // Run comprehensive cleanup before all tests
+    console.log('🧹 运行测试前清理...');
+    // 清理所有测试相关的数据
+    await testDb.delete(file).where(
+      or(
+        like(file.uploadUserId, 'test-user-%'),
+        like(file.filename, 'test-%'),
+        like(file.originalName, 'test-%')
+      )
+    );
+    await testDb.delete(session).where(like(session.userId, 'test-user-%'));
+    await testDb.delete(user).where(
+      or(
+        like(user.id, 'test-user-%'),
+        like(user.email, '%@test.com'),
+        like(user.email, '%@example.com'),
+        like(user.email, 'test@%'),
+        like(user.email, 'findme%'),
+        like(user.email, 'update%'),
+        like(user.email, 'delete%'),
+        like(user.email, 'ban%'),
+        like(user.email, 'filetest%')
+      )
+    );
     await cleanupTestData();
   });
 
@@ -43,9 +83,9 @@ describe('Real Database Integration Tests', () => {
   describe('User Operations', () => {
     it('should create a new user', async () => {
       const userData = {
-        id: 'test-user-1',
+        id: testUserId1,
         name: 'Test User',
-        email: 'test@example.com',
+        email: `test-${testUserId1}@example.com`,
         emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -63,10 +103,11 @@ describe('Real Database Integration Tests', () => {
     });
 
     it('should find user by email', async () => {
+      const testEmail = `findme-${testUserId1}@example.com`;
       const userData = {
-        id: 'test-user-1',
+        id: testUserId1,
         name: 'Test User',
-        email: 'findme@example.com',
+        email: testEmail,
         emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -78,11 +119,11 @@ describe('Real Database Integration Tests', () => {
       const foundUsers = await testDb
         .select()
         .from(user)
-        .where(eq(user.email, 'findme@example.com'));
+        .where(eq(user.email, testEmail));
 
       expect(foundUsers).toHaveLength(1);
-      expect(foundUsers[0].email).toBe('findme@example.com');
-      expect(foundUsers[0].id).toBe('test-user-1');
+      expect(foundUsers[0].email).toBe(testEmail);
+      expect(foundUsers[0].id).toBe(testUserId1);
     });
 
     it('should update user information', async () => {

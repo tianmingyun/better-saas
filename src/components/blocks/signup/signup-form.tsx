@@ -86,6 +86,11 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
     if (result.success) {
       const redirectUrl = getRedirectUrl();
       router.push(redirectUrl);
+    } else {
+      // Handle signup error
+      if (result.error) {
+        setError(result.error);
+      }
     }
   };
 
@@ -97,7 +102,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
           <CardDescription>{t('signupWithSocial')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleEmailSignup}>
+          <form onSubmit={handleEmailSignup} data-testid="signup-form">
             <div className="grid gap-6">
               {/* Error message display */}
               {error && (
@@ -182,6 +187,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
                     required
                     disabled={isLoading}
                     autoComplete="name"
+                    data-testid="name-input"
                   />
                 </div>
                 <div className="grid gap-3">
@@ -195,6 +201,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
                     required
                     disabled={isLoading}
                     autoComplete="email"
+                    data-testid="email-input"
                   />
                 </div>
                 <div className="grid gap-3">
@@ -208,6 +215,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
                     disabled={isLoading}
                     minLength={6}
                     autoComplete="new-password"
+                    data-testid="password-input"
                   />
                 </div>
                 <div className="grid gap-3">
@@ -221,12 +229,14 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'div'>)
                     disabled={isLoading}
                     minLength={6}
                     autoComplete="new-password"
+                    data-testid="confirm-password-input"
                   />
                 </div>
                 <Button
                   type="submit"
                   className="w-full"
                   disabled={isLoading || !email || !password || !name || !confirmPassword}
+                  data-testid="signup-button"
                 >
                   {isLoading ? t('signingUp') : t('signUpButton')}
                 </Button>
