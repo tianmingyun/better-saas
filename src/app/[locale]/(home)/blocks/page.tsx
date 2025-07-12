@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { categories } from '@/lib/blocks-registry';
+import { getTranslations } from 'next-intl/server';
 
-export default function BlocksPage() {
+export default async function BlocksPage() {
+  const t = await getTranslations('blocks');
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8 text-center">
-        <h1 className="mb-4 font-bold text-3xl">组件库</h1>
+        <h1 className="mb-4 font-bold text-3xl">{t('title')}</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          探索我们精心设计的组件集合，每个组件都经过优化，可直接在您的项目中使用。
+          {t('description')}
         </p>
       </div>
 
@@ -37,7 +39,7 @@ export default function BlocksPage() {
                 <CardDescription className="mb-4">{category.description}</CardDescription>
                 <Button asChild className="w-full gap-2 transition-all group-hover:gap-3">
                   <Link href={`/blocks/${category.id}`}>
-                    查看组件
+                    {t('viewComponents')}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>

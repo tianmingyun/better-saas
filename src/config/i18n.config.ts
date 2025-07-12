@@ -71,11 +71,6 @@ export const i18nConfig: I18nConfig = {
     'common',
     'auth',
     'dashboard',
-    'billing',
-    'blog',
-    'docs',
-    'error',
-    'nav',
     'toast',
     'sidebar',
     'userMenu',
@@ -83,8 +78,8 @@ export const i18nConfig: I18nConfig = {
     'profile',
     'security',
     'faq',
-    'blocks',
-    'articles',
+    'blog',
+    'blocks'
   ],
 
   // Date and time formats for each locale

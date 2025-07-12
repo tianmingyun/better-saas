@@ -3,44 +3,15 @@
     "save": "Save",
     "cancel": "Cancel",
     "loading": "Loading...",
-    "welcome": "Welcome",
-    "language": "Language",
-    "home": "Home",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "email": "Email",
-    "password": "Password",
-    "login": "Login",
-    "logout": "Logout",
-    "register": "Register",
-    "forgotPassword": "Forgot Password",
-    "rememberMe": "Remember Me",
-    "or": "or",
-    "continueWith": "Continue with",
-    "alreadyHaveAccount": "Already have an account?",
-    "dontHaveAccount": "Don't have an account?",
-    "signInHere": "Sign in here",
-    "signUpHere": "Sign up here"
+    "language": "Language"
   },
   "toast": {
     "success": {
-      "articleCreated": "Article created successfully",
-      "articleUpdated": "Article updated successfully",
-      "articleDeleted": "Article deleted successfully",
-      "operationSuccess": "Operation successful",
       "nameUpdated": "Name updated successfully",
       "avatarUpdated": "Avatar updated successfully",
       "loginSuccess": "Login successful"
     },
     "error": {
-      "titleRequired": "Please enter article title",
-      "contentRequired": "Please enter article content",
-      "slugRequired": "Please enter URL slug",
-      "operationFailed": "Operation failed",
-      "deleteFailed": "Delete failed",
-      "submitFailed": "Submit failed, please try again",
-      "retryLater": "Please try again later",
       "nameEmpty": "Name cannot be empty",
       "nameUpdateFailed": "Name update failed",
       "avatarUpdateFailed": "Avatar update failed",
@@ -52,14 +23,6 @@
       "nameNotChanged": "Name has not changed"
     }
   },
-  "nav": {
-    "home": "Home",
-    "docs": "Documentation",
-    "dashboard": "Dashboard",
-    "profile": "Profile",
-    "login": "Login",
-    "logout": "Logout"
-  },
   "auth": {
     "login": "Login",
     "logout": "Logout",
@@ -68,7 +31,6 @@
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "forgotPassword": "Forgot Password?",
-    "rememberMe": "Remember me",
     "signInToAccount": "Sign in to your account",
     "createAccount": "Create a new account",
     "enterEmail": "Enter your email address",
@@ -87,15 +49,6 @@
     "loggingIn": "Signing in...",
     "orUseEmail": "Or continue with email",
     "emailPlaceholder": "m@example.com",
-    "noAccount": "Don't have an account?",
-    "signUpLink": "Sign up",
-    "termsAndPrivacy": {
-      "prefix": "By continuing, you agree to our",
-      "middle": "and",
-      "suffix": "."
-    },
-    "termsOfService": "Terms of Service",
-    "privacyPolicy": "Privacy Policy",
     "closeError": "Close",
     "name": "Name",
     "namePlaceholder": "John Doe",
@@ -106,16 +59,11 @@
     "googleSignUp": "Sign up with Google",
     "signingUp": "Signing up...",
     "orContinueWith": "Or continue with",
-    "signUpButton": "Sign Up",
-    "alreadyHaveAccount": "Already have an account?",
-    "loginLink": "Login"
+    "signUpButton": "Sign Up"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back! Here's what's happening with your account.",
-    "overview": "Overview",
-    "analytics": "Analytics",
-    "settings": "Settings",
     "totalRevenue": "Total Revenue",
     "subscriptions": "Subscriptions",
     "sales": "Sales",
@@ -134,70 +82,7 @@
     "securityAlerts": "Security alerts",
     "productUpdates": "Product updates",
     "recentActivity": "Recent Activity",
-    "latestActivity": "Your latest account activity",
-    "articles": {
-      "title": "Article Management",
-      "description": "Manage all your article content",
-      "createArticle": "Create Article",
-      "createDescription": "Create a new article",
-      "editArticle": "Edit Article",
-      "deleteArticle": "Delete Article",
-      "viewArticle": "View Article",
-      "status": "Status",
-      "visibility": "Visibility",
-      "language": "Language",
-      "isPinned": "Pinned",
-      "actions": "Actions",
-      "search": "Search articles...",
-      "filter": "Filter",
-      "all": "All",
-      "draft": "Draft",
-      "published": "Published",
-      "archived": "Archived",
-      "public": "Public",
-      "authenticated": "Authenticated Users",
-      "premium": "Premium Users",
-      "yes": "Yes",
-      "no": "No",
-      "confirmDelete": "Confirm Delete",
-      "deleteConfirmMessage": "Are you sure you want to delete this article? This action cannot be undone.",
-      "cancel": "Cancel",
-      "delete": "Delete",
-      "form": {
-        "title": "Title",
-        "titlePlaceholder": "Enter article title",
-        "slug": "URL Slug",
-        "slugPlaceholder": "url-friendly-slug",
-        "description": "Description",
-        "descriptionPlaceholder": "Article description",
-        "content": "Content",
-        "contentPlaceholder": "Start writing your article...",
-        "coverImage": "Cover Image",
-        "selectCoverImage": "Select Cover Image",
-        "tags": "Tags",
-        "tagsPlaceholder": "Enter tags, press Enter to add",
-        "language": "Language",
-        "status": "Status",
-        "visibility": "Visibility",
-        "isPinned": "Pin Article",
-        "saveDraft": "Save Draft",
-        "publish": "Publish Article",
-        "update": "Update Article",
-        "preview": "Preview",
-        "basicInfo": "Basic Information",
-        "advancedSettings": "Advanced Settings",
-        "contentEditor": "Content Editor"
-      }
-    }
-  },
-  "docs": {
-    "title": "Documentation",
-    "search": "Search documentation...",
-    "toc": "Table of Contents",
-    "editPage": "Edit this page",
-    "lastUpdated": "Last updated",
-    "nextPage": "Next page",
-    "previousPage": "Previous page"
+    "latestActivity": "Your latest account activity"
   },
   "faq": {
     "heading": "Frequently asked questions",
@@ -236,28 +121,15 @@
       }
     ]
   },
-  "error": {
-    "notFound": {
-      "title": "Oops! Page Not Found!",
-      "description": "It seems like the page you're looking for does not exist or might have been removed.",
-      "goBack": "Go Back",
-      "backToHome": "Back to Home"
-    }
-  },
   "sidebar": {
     "dashboard": "Dashboard",
-    "home": "Home",
-    "analytics": "Analytics",
     "users": "Users",
-    "documents": "Documents",
     "files": "File Manager",
     "config": "Configuration",
-    "billing": "Billing",
-    "security": "Security",
-    "notifications": "Notifications",
     "settings": "Settings",
     "profile": "Profile",
-    "userMenu": "User Menu"
+    "billing": "Billing",
+    "security": "Security"
   },
   "userMenu": {
     "user": "User",
@@ -265,7 +137,6 @@
     "profile": "Profile",
     "billing": "Billing",
     "settings": "Settings",
-    "toggleMode": "Toggle mode",
     "logout": "Log out"
   },
   "settings": {
@@ -292,6 +163,7 @@
     "title": "Profile",
     "description": "Manage your personal information and preferences",
     "save": "Save",
+    "saving": "Saving...",
     "avatar": {
       "title": "Your Avatar",
       "description": "To change your avatar, click on the image in this block and select a file from your computer to upload."
@@ -309,42 +181,6 @@
       "title": "Your Email",
       "description": "To change your email, enter a new email and click save. You will need to confirm the new email for it to take effect.",
       "placeholder": "Enter your email address"
-    }
-  },
-  "billing": {
-    "title": "Billing Settings",
-    "description": "Manage your subscription plans and payment methods",
-    "currentPlan": "Your plan",
-    "changePlan": "Change your plan",
-    "choosePlan": "Choose a plan to subscribe to",
-    "monthly": "Monthly",
-    "yearly": "Yearly",
-    "free": "Free",
-    "pro": "Pro",
-    "lifetime": "Lifetime",
-    "enterprise": "Enterprise",
-    "active": "ACTIVE",
-    "recommended": "Recommended",
-    "bestForTeams": "Best for teams",
-    "buyOnce": "Buy once. Use forever.",
-    "customPlan": "Custom plan tailored to your requirements",
-    "features": {
-      "amazingFeature": "Another amazing feature",
-      "limitedSupport": "Limited support",
-      "fullSupport": "Full support",
-      "noRecurringCosts": "No recurring costs",
-      "extendedSupport": "Extended support",
-      "unlimitedProjects": "Unlimited projects",
-      "enterpriseSupport": "Enterprise support"
-    },
-    "pricing": {
-      "freeTrialDays": "days free trial",
-      "perMonth": "/ month",
-      "contactSales": "Contact sales"
-    },
-    "actions": {
-      "choosePlan": "Choose plan",
-      "contactSales": "Contact sales"
     }
   },
   "security": {
@@ -377,36 +213,9 @@
     "tags": "Tags"
   },
   "blocks": {
-    "title": "Components Library",
-    "description": "Explore our carefully crafted component collection to boost your development efficiency"
-  },
-  "articles": {
-    "title": "Tech Articles",
-    "description": "Explore the latest technical insights and in-depth analysis",
-    "readMore": "Read More",
-    "backToList": "Back to Article List",
-    "tags": "Tags",
-    "author": "Author",
-    "publishedAt": "Published",
-    "readingTime": "Reading Time",
-    "loginRequired": "This article requires login to view",
-    "premiumRequired": "This article is for premium users only",
-    "allTags": "All Tags",
-    "filterByTag": "Filter by Tag",
-    "noArticles": "No articles available",
-    "loadMore": "Load More",
-    "access": {
-      "loginRequired": "Login Required",
-      "premiumRequired": "Premium Content",
-      "subscriptionExpired": "Subscription Expired",
-      "loginToView": "Please login to view the full content",
-      "upgradeToView": "This content is for premium users only. Upgrade your subscription to unlock",
-      "renewToView": "Your subscription has expired. Please renew to continue accessing premium content",
-      "loginButton": "Login Now",
-      "signupButton": "Sign Up",
-      "upgradeButton": "Upgrade Subscription",
-      "renewButton": "Renew Subscription",
-      "browseFreeButton": "Browse Free Content"
-    }
+    "title": "Component Library",
+    "description": "Explore our carefully designed component collection, each optimized for direct use in your projects",
+    "viewComponents": "View components",
+    "backToBlocks": "Back to Blocks"
   }
 }

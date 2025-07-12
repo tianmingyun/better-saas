@@ -3,44 +3,15 @@
     "save": "保存",
     "cancel": "取消",
     "loading": "加载中...",
-    "welcome": "欢迎",
-    "language": "语言",
-    "home": "首页",
-    "back": "返回",
-    "next": "下一步",
-    "previous": "上一步",
-    "email": "邮箱",
-    "password": "密码",
-    "login": "登录",
-    "logout": "退出登录",
-    "register": "注册",
-    "forgotPassword": "忘记密码",
-    "rememberMe": "记住我",
-    "or": "或",
-    "continueWith": "继续使用",
-    "alreadyHaveAccount": "已有账户？",
-    "dontHaveAccount": "没有账户？",
-    "signInHere": "在此登录",
-    "signUpHere": "在此注册"
+    "language": "语言"
   },
   "toast": {
     "success": {
-      "articleCreated": "文章创建成功",
-      "articleUpdated": "文章更新成功",
-      "articleDeleted": "文章删除成功",
-      "operationSuccess": "操作成功",
       "nameUpdated": "姓名更新成功",
       "avatarUpdated": "头像更新成功",
       "loginSuccess": "登录成功"
     },
     "error": {
-      "titleRequired": "请输入文章标题",
-      "contentRequired": "请输入文章内容",
-      "slugRequired": "请输入URL别名",
-      "operationFailed": "操作失败",
-      "deleteFailed": "删除失败",
-      "submitFailed": "提交失败，请重试",
-      "retryLater": "请稍后重试",
       "nameEmpty": "姓名不能为空",
       "nameUpdateFailed": "姓名更新失败",
       "avatarUpdateFailed": "头像更新失败",
@@ -52,14 +23,6 @@
       "nameNotChanged": "姓名未发生变化"
     }
   },
-  "nav": {
-    "home": "首页",
-    "docs": "文档",
-    "dashboard": "仪表板",
-    "profile": "个人资料",
-    "login": "登录",
-    "logout": "退出"
-  },
   "auth": {
     "login": "登录",
     "logout": "退出",
@@ -68,7 +31,6 @@
     "signIn": "登录",
     "signUp": "注册",
     "forgotPassword": "忘记密码？",
-    "rememberMe": "记住我",
     "signInToAccount": "登录您的账户",
     "createAccount": "创建新账户",
     "enterEmail": "输入您的邮箱地址",
@@ -87,15 +49,6 @@
     "loggingIn": "登录中...",
     "orUseEmail": "或使用邮箱登录",
     "emailPlaceholder": "m@example.com",
-    "noAccount": "还没有账号？",
-    "signUpLink": "注册",
-    "termsAndPrivacy": {
-      "prefix": "点击继续，即表示您同意我们的",
-      "middle": "和",
-      "suffix": "。"
-    },
-    "termsOfService": "服务条款",
-    "privacyPolicy": "隐私政策",
     "closeError": "关闭",
     "name": "姓名",
     "namePlaceholder": "张三",
@@ -106,16 +59,11 @@
     "googleSignUp": "Google注册",
     "signingUp": "注册中...",
     "orContinueWith": "或继续使用",
-    "signUpButton": "注册",
-    "alreadyHaveAccount": "已有账号？",
-    "loginLink": "登录"
+    "signUpButton": "注册"
   },
   "dashboard": {
     "title": "仪表板",
     "welcome": "欢迎回来！这是您账户的最新动态。",
-    "overview": "概览",
-    "analytics": "分析",
-    "settings": "设置",
     "totalRevenue": "总收入",
     "subscriptions": "订阅数",
     "sales": "销售额",
@@ -134,70 +82,7 @@
     "securityAlerts": "安全警报",
     "productUpdates": "产品更新",
     "recentActivity": "最近活动",
-    "latestActivity": "您的最新账户活动",
-    "articles": {
-      "title": "文章管理",
-      "description": "管理您的所有文章内容",
-      "createArticle": "创建文章",
-      "createDescription": "创建一篇新的文章",
-      "editArticle": "编辑文章",
-      "deleteArticle": "删除文章",
-      "viewArticle": "查看文章",
-      "status": "状态",
-      "visibility": "访问权限",
-      "language": "语言",
-      "isPinned": "置顶",
-      "actions": "操作",
-      "search": "搜索文章...",
-      "filter": "筛选",
-      "all": "全部",
-      "draft": "草稿",
-      "published": "已发布",
-      "archived": "已归档",
-      "public": "公开",
-      "authenticated": "登录用户",
-      "premium": "付费用户",
-      "yes": "是",
-      "no": "否",
-      "confirmDelete": "确认删除",
-      "deleteConfirmMessage": "确定要删除这篇文章吗？此操作不可撤销。",
-      "cancel": "取消",
-      "delete": "删除",
-      "form": {
-        "title": "标题",
-        "titlePlaceholder": "输入文章标题",
-        "slug": "URL 别名",
-        "slugPlaceholder": "url-friendly-slug",
-        "description": "描述",
-        "descriptionPlaceholder": "文章描述",
-        "content": "内容",
-        "contentPlaceholder": "开始编写您的文章...",
-        "coverImage": "封面图",
-        "selectCoverImage": "选择封面图",
-        "tags": "标签",
-        "tagsPlaceholder": "输入标签，按回车添加",
-        "language": "语言",
-        "status": "状态",
-        "visibility": "访问权限",
-        "isPinned": "置顶文章",
-        "saveDraft": "保存草稿",
-        "publish": "发布文章",
-        "update": "更新文章",
-        "preview": "预览",
-        "basicInfo": "基本信息",
-        "advancedSettings": "高级设置",
-        "contentEditor": "内容编辑"
-      }
-    }
-  },
-  "docs": {
-    "title": "文档",
-    "search": "搜索文档...",
-    "toc": "目录",
-    "editPage": "编辑此页",
-    "lastUpdated": "最后更新",
-    "nextPage": "下一页",
-    "previousPage": "上一页"
+    "latestActivity": "您的最新账户活动"
   },
   "faq": {
     "heading": "常见问题",
@@ -236,35 +121,22 @@
       }
     ]
   },
-  "error": {
-    "notFound": {
-      "title": "页面未找到！",
-      "description": "看起来您正在寻找的页面不存在或可能已被移除。",
-      "goBack": "返回",
-      "backToHome": "回到首页"
-    }
-  },
   "sidebar": {
     "dashboard": "仪表板",
-    "home": "首页",
-    "analytics": "分析",
     "users": "用户",
-    "documents": "文档",
     "files": "文件管理",
     "config": "配置",
-    "billing": "账单",
-    "security": "安全",
-    "notifications": "通知",
     "settings": "设置",
     "profile": "个人资料",
-    "userMenu": "用户菜单"
+    "billing": "账单",
+    "security": "安全"
   },
   "userMenu": {
     "user": "用户",
     "security": "安全",
     "profile": "个人资料",
+    "billing": "账单",
     "settings": "设置",
-    "toggleMode": "切换模式",
     "logout": "退出登录"
   },
   "settings": {
@@ -291,6 +163,7 @@
     "title": "个人资料",
     "description": "管理您的个人信息和偏好设置",
     "save": "保存",
+    "saving": "保存中...",
     "avatar": {
       "title": "您的头像",
       "description": "要更改您的头像，请点击此块中的图片并从您的计算机中选择一个文件上传。"
@@ -308,42 +181,6 @@
       "title": "您的邮箱",
       "description": "要更改您的邮箱，请输入新邮箱并点击保存。您需要确认新邮箱才能生效。",
       "placeholder": "输入您的邮箱地址"
-    }
-  },
-  "billing": {
-    "title": "账单设置",
-    "description": "管理您的订阅计划和付款方式",
-    "currentPlan": "当前计划",
-    "changePlan": "更改计划",
-    "choosePlan": "选择计划",
-    "monthly": "月付",
-    "yearly": "年付",
-    "free": "免费",
-    "pro": "专业版",
-    "lifetime": "终身版",
-    "enterprise": "企业版",
-    "active": "激活",
-    "recommended": "推荐",
-    "bestForTeams": "最适合团队",
-    "buyOnce": "一次购买，永久使用",
-    "customPlan": "定制计划，满足您的需求",
-    "features": {
-      "amazingFeature": "另一个惊人功能",
-      "limitedSupport": "有限支持",
-      "fullSupport": "完整支持",
-      "noRecurringCosts": "无重复费用",
-      "extendedSupport": "扩展支持",
-      "unlimitedProjects": "无限项目",
-      "enterpriseSupport": "企业级支持"
-    },
-    "pricing": {
-      "freeTrialDays": "天免费试用",
-      "perMonth": "/ 月",
-      "contactSales": "联系销售"
-    },
-    "actions": {
-      "choosePlan": "选择计划",
-      "contactSales": "联系销售"
     }
   },
   "security": {
@@ -377,35 +214,8 @@
   },
   "blocks": {
     "title": "组件库",
-    "description": "探索精心设计的组件集合，提升您的开发效率"
-  },
-  "articles": {
-    "title": "技术文章",
-    "description": "探索最新的技术见解和深度分析",
-    "readMore": "阅读更多",
-    "backToList": "返回文章列表",
-    "tags": "标签",
-    "author": "作者",
-    "publishedAt": "发布时间",
-    "readingTime": "阅读时间",
-    "loginRequired": "此文章需要登录后查看",
-    "premiumRequired": "此文章仅限付费用户查看",
-    "allTags": "所有标签",
-    "filterByTag": "按标签筛选",
-    "noArticles": "暂无文章",
-    "loadMore": "加载更多",
-    "access": {
-      "loginRequired": "需要登录",
-      "premiumRequired": "付费内容",
-      "subscriptionExpired": "订阅已过期",
-      "loginToView": "请登录后查看完整内容",
-      "upgradeToView": "此内容仅限付费用户访问，升级您的订阅以解锁",
-      "renewToView": "您的订阅已过期，请续费以继续访问付费内容",
-      "loginButton": "立即登录",
-      "signupButton": "注册账户",
-      "upgradeButton": "升级订阅",
-      "renewButton": "续费订阅",
-      "browseFreeButton": "浏览免费内容"
-    }
+    "description": "探索我们精心设计的组件集合，每个组件都经过优化，可直接在您的项目中使用",
+    "viewComponents": "查看组件",
+    "backToBlocks": "返回组件库"
   }
 }
