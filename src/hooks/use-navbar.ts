@@ -1,28 +1,79 @@
+
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthInitialized, useAuthLoading, useIsAuthenticated } from '@/store/auth-store';
+import { useNavbarConfig } from '@/hooks/use-config';
+import { Book, Sunset, Trees, Zap } from 'lucide-react';
+import { createElement } from 'react';
+import { useTranslations } from 'next-intl';
 import type { UseNavbarReturn, LogoConfig, AuthConfig, MenuItem } from '@/types/navbar';
+import type { NavbarMenuItem } from '@/types';
+import type { JSX } from 'react';
+
+// Icon mapping function
+const getIconComponent = (iconName?: string): JSX.Element | undefined => {
+  if (!iconName) return undefined;
+
+  const iconProps = { className: "size-5 shrink-0" };
+
+  switch (iconName) {
+    case 'Book':
+      return createElement(Book, iconProps);
+    case 'Sunset':
+      return createElement(Sunset, iconProps);
+    case 'Trees':
+      return createElement(Trees, iconProps);
+    case 'Zap':
+      return createElement(Zap, iconProps);
+    default:
+      return undefined;
+  }
+};
+
+// Translation helper function
+const translateMenuItem = (item: NavbarMenuItem, t: (key: string) => string, locale: string): MenuItem => {
+  return {
+    title: t(item.title),
+    url: item.url.startsWith('#') ? item.url : `/${locale}${item.url}`,
+    description: item.description ? t(item.description) : undefined,
+    icon: getIconComponent(item.icon),
+    items: item.items?.map(subItem => translateMenuItem(subItem, t, locale)),
+    onClick: item.onClick ? () => {} : undefined, // Will be handled in component
+  };
+};
+
+
 
 export function useNavbar(): UseNavbarReturn {
   const params = useParams();
   const router = useRouter();
   const locale = (params?.locale as string) || 'en';
-  
+  const t = useTranslations('navbar');
+
   const isAuthenticated = useIsAuthenticated();
   const isLoading = useAuthLoading();
   const isInitialized = useAuthInitialized();
 
-  // Logo configuration
+  // Get navbar configuration
+  const config = useNavbarConfig();
+
+  // Logo configuration with i18n
   const logo: LogoConfig = {
-    url: '/',
-    src: '/icons/apple-touch-icon.png',
-    alt: 'logo',
-    title: 'Better SaaS',
+    url: config.logo.url,
+    src: config.logo.src,
+    alt: t(config.logo.alt),
+    title: t(config.logo.title),
   };
 
-  // Auth configuration
+  // Auth configuration with i18n and locale prefix
   const auth: AuthConfig = {
-    login: { text: 'Log in', url: '/login' },
-    signup: { text: 'Sign up', url: '/signup' },
+    login: {
+      text: t(config.auth.login.text),
+      url: `/${locale}${config.auth.login.url}`
+    },
+    signup: {
+      text: t(config.auth.signup.text),
+      url: `/${locale}${config.auth.signup.url}`
+    },
   };
 
   // Function to smooth scroll to specified element
@@ -51,49 +102,17 @@ export function useNavbar(): UseNavbarReturn {
     }
   };
 
-  // Menu configuration (icons will be created in components)
-  const menu: MenuItem[] = [
-    { title: 'Blog', url: `/${locale}/blog` },
-    {
-      title: 'Document',
-      url: `/${locale}/docs`,
-    },
-    {
-      title: 'Components',
-      url: `/${locale}/blocks`,
-    },
-    {
-      title: 'Resources',
-      url: '#',
-      items: [
-        {
-          title: 'Help Center',
-          description: 'Get all the answers you need right here',
-          url: '#',
-        },
-        {
-          title: 'Contact Us',
-          description: 'We are here to help you with any questions you have',
-          url: '#',
-        },
-        {
-          title: 'Status',
-          description: 'Check the current status of our services and APIs',
-          url: '#',
-        },
-        {
-          title: 'Terms of Service',
-          description: 'Our terms and conditions for using our services',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Pricing',
-      url: `/${locale}#pricing`,
-      onClick: handlePricingClick,
-    },
-  ];
+  // Menu configuration with i18n
+  const menu: MenuItem[] = config.menu.items.map(item => {
+    const translatedItem = translateMenuItem(item, t, locale);
+
+    // Handle special onClick handlers
+    if (item.onClick === 'handlePricingClick') {
+      translatedItem.onClick = handlePricingClick;
+    }
+
+    return translatedItem;
+  });
 
   return {
     logo,

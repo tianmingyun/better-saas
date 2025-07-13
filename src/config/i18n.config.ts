@@ -1,31 +1,4 @@
-export interface I18nConfig {
-  locales: readonly string[];
-  defaultLocale: string;
-  languages: Record<string, {
-    name: string;
-    nativeName: string;
-    flag: string;
-    dir: 'ltr' | 'rtl';
-    enabled: boolean;
-  }>;
-  routing: {
-    localePrefix: 'always' | 'as-needed' | 'never';
-    localeDetection: boolean;
-    domains?: Record<string, string>;
-  };
-  namespaces: string[];
-  fallbackLocale: string;
-  dateTimeFormats: Record<string, {
-    short: Intl.DateTimeFormatOptions;
-    medium: Intl.DateTimeFormatOptions;
-    long: Intl.DateTimeFormatOptions;
-  }>;
-  numberFormats: Record<string, {
-    currency: Intl.NumberFormatOptions;
-    decimal: Intl.NumberFormatOptions;
-    percent: Intl.NumberFormatOptions;
-  }>;
-}
+import type { I18nConfig } from "@/types";
 
 export const i18nConfig: I18nConfig = {
   // Supported languages
@@ -73,13 +46,15 @@ export const i18nConfig: I18nConfig = {
     'dashboard',
     'toast',
     'sidebar',
+    'navbar',
     'userMenu',
     'settings',
     'profile',
     'security',
     'faq',
     'blog',
-    'blocks'
+    'blocks',
+    'legal'
   ],
 
   // Date and time formats for each locale
