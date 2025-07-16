@@ -1,4 +1,12 @@
 {
   "title": "Documentation",
-  "pages": ["index", "install", "architecture"]
+  "pages": [
+    "index",
+    "quickstart", 
+    "architecture",
+    "deployment",
+    "development",
+    "features",
+    "customization"
+  ]
 }
