@@ -12,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAppConfig } from '@/hooks/use-config';
 import type { ProfileContentProps } from '@/types/profile';
 import { Camera, Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export function ProfileContent({
   user,
@@ -30,15 +32,26 @@ export function ProfileContent({
 }: ProfileContentProps) {
   const t = useTranslations('profile');
   const locale = useLocale();
+  const appConfig = useAppConfig();
   const [selectedLanguage, setSelectedLanguage] = useState(locale === 'zh' ? 'zh' : 'en');
 
   const handleAvatarUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/*';
+    input.accept = appConfig.upload.allowedTypes.join(',');
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
+        if (!appConfig.upload.allowedTypes.includes(file.type)) {
+          toast.error('仅支持 JPEG 和 PNG 格式的图片');
+          return;
+        }
+        
+        if (file.size > appConfig.upload.maxFileSize) {
+          toast.error('文件大小不能超过 10MB');
+          return;
+        }
+        
         await handleUpdateAvatar(file);
       }
     };
@@ -61,7 +74,9 @@ export function ProfileContent({
         <Card>
           <CardHeader>
             <CardTitle>{t('avatar.title')}</CardTitle>
-            <CardDescription>{t('avatar.description')}</CardDescription>
+            <CardDescription>
+              {t('avatar.description')} 仅支持 JPEG 和 PNG 格式，最大 10MB
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">

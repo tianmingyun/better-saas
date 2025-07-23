@@ -24,10 +24,12 @@ jest.mock('@/lib/logger/logger-utils', () => ({
   })),
 }));
 
-// Mock sharp to avoid dependency issues
-jest.mock('sharp', () => {
-  return jest.fn();
-});
+// Mock image-processor to avoid dependency issues
+jest.mock('@/lib/image-processor', () => ({
+  generateThumbnail: jest.fn(() => Promise.resolve(Buffer.from('thumbnail-data'))),
+  getImageMetadata: jest.fn(() => Promise.resolve({ width: 800, height: 600 })),
+  validateImageFile: jest.fn(() => ({ valid: true })),
+}));
 
 // Mock mime-types
 jest.mock('mime-types', () => ({
