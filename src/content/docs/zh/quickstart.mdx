@@ -181,6 +181,33 @@ GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
 
+### 设置管理员
+
+有两种方式设置管理员：
+
+#### 方式一：使用脚本设置（推荐）
+
+1. 确保用户已经注册账户
+2. 在 `ADMIN_EMAILS` 环境变量中添加该用户的邮箱
+3. 运行设置脚本：
+
+```bash
+# 设置单个管理员
+pnpm admin:setup admin@example.com
+```
+
+#### 方式二：直接修改数据库
+
+如果你有数据库访问权限，可以直接修改：
+
+```sql
+UPDATE "user" 
+SET role = 'admin', updated_at = NOW() 
+WHERE email = 'admin@example.com';
+```
+退出账号再重新登录，点击头像下拉框进入后台，即可看到管理员专属的导航栏。
+
+
 ## 🎯 探索您的应用程序
 
 ### 1. 身份认证系统

@@ -183,6 +183,33 @@ GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
 
+### Admin Setup
+
+There are two ways to set up administrators:
+
+#### Method 1: Using Script Setup (Recommended)
+
+1. Ensure the user has already registered an account
+2. Add the user's email to the `ADMIN_EMAILS` environment variable
+3. Run the setup script:
+
+```bash
+# Set up a single administrator
+pnpm admin:setup admin@example.com
+```
+
+#### Method 2: Direct Database Modification
+
+If you have database access, you can modify directly:
+
+```sql
+UPDATE "user" 
+SET role = 'admin', updated_at = NOW() 
+WHERE email = 'admin@example.com';
+```
+
+Log out and log back in, click on the avatar dropdown to enter the backend, and you can see the navigation bar exclusive to administrators.
+
 ## 🎯 Explore Your Application
 
 ### 1. Authentication System

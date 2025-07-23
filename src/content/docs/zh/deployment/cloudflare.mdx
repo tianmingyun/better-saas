@@ -1,0 +1,408 @@
+---
+title: Cloudflare 部署
+---
+使用 OpenNext.js 将您的 Better SaaS 应用部署到 Cloudflare Workers，获得全球边缘性能和可扩展性。本指南涵盖从设置到生产的完整部署过程。
+
+## 概述
+
+Cloudflare Workers 提供了一个无服务器平台，可以在边缘运行您的应用程序，更靠近全球用户。这种部署方式提供：
+
+- **全球边缘网络**：部署到全球 300+ 个位置
+- **零冷启动**：应用程序即时启动
+- **成本效益**：按使用量付费
+- **内置 CDN**：静态资源从边缘提供服务
+- **DDoS 防护**：包含企业级安全保护
+
+## 前置条件
+
+在部署到 Cloudflare Workers 之前，请确保您拥有：
+
+1. **Cloudflare 账户**：如果没有，请[在此注册](https://dash.cloudflare.com/sign-up)
+2. **Git 仓库**：您的项目代码在 Git 仓库中
+3. **PostgreSQL 数据库**：托管的 PostgreSQL 数据库（Neon、Supabase 或类似服务）
+4. **域名**：可选，用于自定义域名
+
+## Worker 大小限制
+
+**重要提示**：Cloudflare Workers 有大小限制：
+- **免费计划**：3 MiB 压缩后大小
+- **付费计划**：10 MiB 压缩后大小
+构建过程会显示原始大小和压缩后大小。只有压缩后的大小才重要。
+
+import { Callout } from '@/components/widget/callout';
+
+<Callout type="warning">
+  请注意，目前better-saas部署到cloudflare的worker大小为3.5MiB，需要开通付费计划才能部署到cloudflare。
+</Callout>
+```
+Total Upload: 24109.96 KiB / gzip: 3491.12 KiB
+Your Worker has access to the following bindings:
+Binding                                                      Resource
+env.NEXT_INC_CACHE_R2_BUCKET (better-saas-cache-bucket)      R2 Bucket
+env.WORKER_SELF_REFERENCE (better-saas)                      Worker
+env.STATIC_ASSETS                                            Assets
+```
+
+
+## 部署步骤
+
+### 1. 安装依赖
+
+安装 Wrangler CLI 和项目依赖：
+
+```bash
+# 进入到项目根目录下，执行安装依赖命令
+pnpm install
+
+# 进入到项目根目录下，执行登录Cloudflare命令
+pnpm wrangler login
+```
+
+### 2. 数据库设置
+
+#### PostgreSQL 数据库
+
+设置托管的 PostgreSQL 数据库：
+
+**推荐提供商：**
+- [Neon](https://neon.tech/) - 无服务器 PostgreSQL
+- [Supabase](https://supabase.com/) - 开源 Firebase 替代方案
+
+记下您的连接字符串，格式如下：
+```
+postgresql://username:password@hostname:port/database_name
+```
+
+
+### 3. R2 存储设置
+
+创建用于文件存储和缓存的 R2 存储桶：
+
+```bash
+# 为文件存储创建 R2 存储桶
+wrangler r2 bucket create better-saas-files
+
+# 为 Next.js 缓存创建 R2 存储桶
+wrangler r2 bucket create better-saas-cache-bucket
+```
+
+### 4. 环境配置
+
+#### 本地开发
+
+复制环境文件并配置：
+
+```bash
+cp env.example .env
+```
+
+配置您的 `.env` 文件：
+
+```bash
+# 应用程序
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# 数据库
+DATABASE_URL=postgresql://username:password@hostname:port/database_name
+
+# 认证
+BETTER_AUTH_SECRET=your-super-secret-key-minimum-32-chars
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# 文件存储 (Cloudflare R2)
+R2_BUCKET_NAME=better-saas-files
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_PUBLIC_URL=https://your-domain.com
+
+# 支付 (Stripe)
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# 管理员配置
+ADMIN_EMAILS=admin@yourdomain.com
+```
+
+### 5. 本地开发
+
+在本地测试您的应用程序：
+
+```bash
+# 执行该命令，生成.open-next目录，同时启动开发服务
+pnpm run cf:preview
+
+# 如果不想每次改动都进行构建，可以运行如下命令
+pnpm run cf:dev
+
+```
+
+### 6. 数据库迁移
+
+运行数据库迁移：
+
+```bash
+# 生成迁移文件
+pnpm run db:generate
+
+# 应用迁移
+pnpm run db:migrate
+
+# 可选：在浏览器中查看数据库
+pnpm run db:studio
+```
+
+### 7. Cloudflare 中的环境变量
+
+对于生产环境需要加密的环境变量，推荐通过Wrangler命令或者Cloudflare仪表板设置。
+
+#### 通过 Wrangler命令设置环境变量：
+使用以下命令将变量存储为加密的环境变量：
+```
+pnpm wrangler secret put DATABASE_URL 
+pnpm wrangler secret put BETTER_AUTH_SECRET 
+pnpm wrangler secret put GITHUB_CLIENT_ID
+pnpm wrangler secret put GITHUB_CLIENT_SECRET 
+pnpm wrangler secret put GOOGLE_CLIENT_ID 
+pnpm wrangler secret put GOOGLE_CLIENT_SECRET 
+pnpm wrangler secret put R2_BUCKET_NAME 
+pnpm wrangler secret put R2_ACCESS_KEY_ID 
+pnpm wrangler secret put R2_SECRET_ACCESS_KEY 
+pnpm wrangler secret put R2_ENDPOINT 
+pnpm wrangler secret put R2_PUBLIC_URL 
+pnpm wrangler secret put STRIPE_SECRET_KEY 
+pnpm wrangler secret put STRIPE_WEBHOOK_SECRET 
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY
+pnpm wrangler secret put ADMIN_EMAILS
+```
+**特别注意：**：上面的命令不包含`NEXT_PUBLIC_APP_URL`变量，因为`NEXT_PUBLIC_`开头的环境变量会在构建时被内联到客户端代码。所以在`package.json`的`cf:deploy`命令中，需要将`NEXT_PUBLIC_APP_URL`更改为为自己的生产环境域名。
+
+#### 通过仪表板：
+
+登录 Cloudflare 仪表板。
+选择您的账户，然后导航到 Workers & Pages > Overview。
+选择您的 Worker，点击 Settings > Environment Variables。
+添加变量或加密的秘密变量（Secrets）。
+
+
+### 8. 部署到 Cloudflare
+在命令行中，进入到项目根目录下，执行如下命令，直接从本地机器部署到Cloudflare：
+
+```bash
+pnpm run cf:deploy
+```
+需要注意的是，在执行该命令之前，需要先在命令行登录Cloudflare，并在Cloudflare中配置好环境变量。
+
+
+### 9. 自定义域名设置
+1. **登录 Cloudflare 仪表板**
+   - 访问 [Cloudflare 仪表板](https://dash.cloudflare.com/) 并登录您的账户。
+   - 选择与您的 Worker 关联的账户和区域（Zone）。
+2. **导航到 Workers & Pages**
+   - 在仪表板左侧菜单中，点击 **Workers & Pages**。
+   - 在 **Overview** 页面，选择您想要配置自定义域名的 Worker 项目。
+3. **进入域名和路由设置**
+   - 在选中的 Worker 项目页面，点击 **Settings**（设置）选项卡。
+   - 在设置页面中，找到 **Domains & Routes**（域名和路由）选项，点击 **Add**（添加）按钮，然后选择 **Custom Domain**（自定义域名）。
+4. **输入自定义域名**
+   - 在弹出的输入框中，输入您希望为 Worker 配置的域名或子域名（例如 `example.com` 或 `sub.example.com`）。
+   - 确保您已经在 Cloudflare 的 DNS 设置中添加了该域名或子域名，并且它由 Cloudflare 管理（即 DNS 记录已指向 Cloudflare 的名称服务器）。
+5. **确认并添加**
+   - 点击 **Add Custom Domain**（添加自定义域名）。
+   - Cloudflare 会自动为该域名创建必要的 DNS 记录（通常是一个 CNAME 记录）并颁发 SSL/TLS 证书。您无需手动配置 DNS 或证书。
+   - 如果您尝试添加的域名已经有一个现有的 CNAME 记录，Cloudflare 会提示您删除它，因为自定义域名不能与现有的 CNAME 记录冲突。
+6. **等待 DNS 传播**
+   - 添加自定义域名后，DNS 记录和证书的配置可能需要几分钟到 24 小时生效（通常很快）。
+   - 您可以在仪表板的 **DNS** 页面查看新创建的 DNS 记录，确认其状态为“Proxied”（橙色云图标，表示通过 Cloudflare 代理）。
+
+
+### 10. 配置Stripe的Webhook 
+
+为您的生产域名配置 Stripe webhooks：
+
+```bash
+# Webhook 端点
+https://your-domain.com/api/webhooks/stripe
+
+# 必需事件
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.payment_succeeded
+- invoice.payment_failed
+```
+
+## 配置文件
+
+### wrangler.jsonc
+
+您的项目包含预配置的 `wrangler.jsonc`：
+
+```json
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "better-saas",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public",
+    "enable_weak_ref"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "STATIC_ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "better-saas"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "better-saas-cache-bucket"
+    }
+  ]
+}
+```
+
+### open-next.config.ts
+
+Cloudflare 的 OpenNext.js 配置：
+
+```typescript
+import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
+
+export default defineCloudflareConfig({
+  incrementalCache: r2IncrementalCache,
+});
+```
+
+## 可用脚本
+
+项目包含 Cloudflare 特定的脚本：
+
+```json
+{
+  "scripts": {
+    "cf:dev": "wrangler dev --port 3000",
+    "cf:preview": "opennextjs-cloudflare build && wrangler dev --port 3000",
+    "cf:deploy": "NEXT_PUBLIC_APP_URL=https://cf.better-saas.org opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload"
+  }
+}
+```
+
+## 最佳实践
+
+### 1. 开发工作流程
+
+- **使用 `pnpm run cf:preview`** 在本地测试生产构建
+- **在部署到生产之前彻底测试**
+
+### 2. 数据库管理
+
+- **为开发和生产使用不同的数据库**
+- **首先在测试环境中运行迁移**
+- **在重大更改前备份您的数据库**
+
+### 3. 环境管理
+
+- **永远不要将环境变量提交到 Git**
+- **为开发和生产使用不同的密钥**
+- **为了安全定期轮换密钥**
+
+### 4. 性能优化
+
+- **监控包大小**以保持在 Worker 限制内
+- **使用动态导入**进行代码分割
+- **优化图像**和静态资源
+- **启用 R2 缓存**以获得更好的性能
+
+### 5. 安全性
+
+- **使用强密钥**（最少 32 个字符）
+- **为所有环境启用 HTTPS**
+- **为您的域名正确配置 CORS**
+- **监控日志**以发现可疑活动
+
+## 监控和调试
+
+### 1. Cloudflare 分析
+
+监控您的应用程序性能：
+
+- **真实用户监控**：跟踪用户体验指标
+- **性能洞察**：识别瓶颈
+- **错误跟踪**：监控应用程序错误
+
+### 2. Worker 日志
+
+启用日志记录以进行调试：
+
+1. 在 Cloudflare 控制面板中前往您的 Worker
+2. 导航到 `Logs` → `Real-time Logs`
+3. 启用日志记录以查看运行时日志
+
+### 3. 错误处理
+
+应用程序包含全面的错误处理：
+
+- **全局错误边界**捕获 React 错误
+- **API 错误处理**使用适当的状态码
+- **数据库错误处理**带有重试逻辑
+- **支付错误处理**提供用户反馈
+
+## 故障排除
+
+### 常见问题
+
+#### 1. 包大小过大
+
+**错误**：Worker 超过大小限制
+
+**解决方案**：
+- 升级到 Workers 付费计划（10 MiB 限制）
+- 使用动态导入优化包大小
+- 移除未使用的依赖
+- 使用 `pnpm run analyze` 识别大型模块
+
+#### 2. 环境变量问题
+
+**错误**：缺少环境变量
+
+**解决方案**：
+- 验证所有必需变量已设置
+- 检查变量名是否有拼写错误
+- 确保变量在 Cloudflare 控制面板中设置
+- 使用 `wrangler dev` 在本地测试
+
+#### 3. 构建失败
+
+**错误**：构建过程失败
+
+**解决方案**：
+- 检查 Node.js 版本兼容性
+- 清除构建缓存：`rm -rf .next .open-next`
+- 验证所有依赖已安装
+- 检查 TypeScript 错误
+
+#### 4. 运行时错误
+
+**错误**：应用程序在运行时崩溃
+
+**解决方案**：
+- 检查 Cloudflare 控制面板中的 Worker 日志
+- 验证 `wrangler.jsonc` 中的兼容性标志
+- 使用 `pnpm run cf:preview` 在本地测试
+- 检查不支持的 Node.js API
