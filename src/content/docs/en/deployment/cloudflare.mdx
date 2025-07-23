@@ -1,0 +1,402 @@
+---
+title: Cloudflare Deployment
+---
+Deploy your Better SaaS application to Cloudflare Workers using OpenNext.js for global edge performance and scalability. This guide covers the complete deployment process from setup to production.
+
+## Overview
+
+Cloudflare Workers provides a serverless platform that runs your application at the edge, closer to your users worldwide. This deployment method offers:
+
+- **Global Edge Network**: Deploy to 300+ locations worldwide
+- **Zero Cold Starts**: Instant application startup
+- **Cost Effective**: Pay only for what you use
+- **Built-in CDN**: Static assets served from the edge
+- **DDoS Protection**: Enterprise-grade security included
+
+## Prerequisites
+
+Before deploying to Cloudflare Workers, ensure you have:
+
+1. **Cloudflare Account**: [Sign up here](https://dash.cloudflare.com/sign-up) if you don't have one
+2. **Git Repository**: Your project code in a Git repository
+3. **PostgreSQL Database**: A hosted PostgreSQL database (Neon, Supabase, or similar)
+4. **Domain Name**: Optional, for custom domains
+
+## Worker Size Limits
+
+**Important**: Cloudflare Workers have size limitations:
+- **Free Plan**: 3 MiB compressed
+- **Paid Plan**: 10 MiB compressed
+The build process will show both original and compressed sizes. Only the compressed size matters for the limit.
+
+import { Callout } from '@/components/widget/callout';
+
+<Callout type="warning">
+  Please note that the current better-saas deployment to Cloudflare has a worker size of 3.5MiB, requiring a paid plan to deploy to Cloudflare.
+</Callout>
+```
+Total Upload: 24109.96 KiB / gzip: 3491.12 KiB
+Your Worker has access to the following bindings:
+Binding                                                      Resource
+env.NEXT_INC_CACHE_R2_BUCKET (better-saas-cache-bucket)      R2 Bucket
+env.WORKER_SELF_REFERENCE (better-saas)                      Worker
+env.STATIC_ASSETS                                            Assets
+```
+
+## Deployment Steps
+
+### 1. Install Dependencies
+
+Install Wrangler CLI and project dependencies:
+
+```bash
+# Navigate to the project root directory and install dependencies
+pnpm install
+
+# Navigate to the project root directory and login to Cloudflare
+pnpm wrangler login
+```
+
+### 2. Database Setup
+
+#### PostgreSQL Database
+
+Set up a hosted PostgreSQL database:
+
+**Recommended Providers:**
+- [Neon](https://neon.tech/) - Serverless PostgreSQL
+- [Supabase](https://supabase.com/) - Open source Firebase alternative
+
+Note your connection string in this format:
+```
+postgresql://username:password@hostname:port/database_name
+```
+
+### 3. R2 Storage Setup
+
+Create an R2 bucket for file storage and caching:
+
+```bash
+# Create R2 bucket for file storage
+wrangler r2 bucket create better-saas-files
+
+# Create R2 bucket for Next.js cache
+wrangler r2 bucket create better-saas-cache-bucket
+```
+
+### 4. Environment Configuration
+
+#### Local Development
+
+Copy environment files and configure:
+
+```bash
+cp env.example .env
+```
+
+Configure your `.env` file:
+
+```bash
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# Database
+DATABASE_URL=postgresql://username:password@hostname:port/database_name
+
+# Authentication
+BETTER_AUTH_SECRET=your-super-secret-key-minimum-32-chars
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# File Storage (Cloudflare R2)
+R2_BUCKET_NAME=better-saas-files
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_PUBLIC_URL=https://your-domain.com
+
+# Payment (Stripe)
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# Admin Configuration
+ADMIN_EMAILS=admin@yourdomain.com
+```
+
+### 5. Local Development
+
+Test your application locally:
+
+```bash
+# Execute this command to generate the .open-next directory and start the development server
+pnpm run cf:preview
+
+# If you don't want to rebuild on every change, run this command
+pnpm run cf:dev
+```
+
+### 6. Database Migration
+
+Run database migrations:
+
+```bash
+# Generate migration files
+pnpm run db:generate
+
+# Apply migrations
+pnpm run db:migrate
+
+# Optional: View database in browser
+pnpm run db:studio
+```
+
+### 7. Environment Variables in Cloudflare
+
+For production environment variables that need encryption, it's recommended to set them via Wrangler commands or the Cloudflare dashboard.
+
+#### Setting Environment Variables via Wrangler Commands:
+Use the following commands to store variables as encrypted environment variables:
+```
+pnpm wrangler secret put DATABASE_URL 
+pnpm wrangler secret put BETTER_AUTH_SECRET 
+pnpm wrangler secret put GITHUB_CLIENT_ID
+pnpm wrangler secret put GITHUB_CLIENT_SECRET 
+pnpm wrangler secret put GOOGLE_CLIENT_ID 
+pnpm wrangler secret put GOOGLE_CLIENT_SECRET 
+pnpm wrangler secret put R2_BUCKET_NAME 
+pnpm wrangler secret put R2_ACCESS_KEY_ID 
+pnpm wrangler secret put R2_SECRET_ACCESS_KEY 
+pnpm wrangler secret put R2_ENDPOINT 
+pnpm wrangler secret put R2_PUBLIC_URL 
+pnpm wrangler secret put STRIPE_SECRET_KEY 
+pnpm wrangler secret put STRIPE_WEBHOOK_SECRET 
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
+pnpm wrangler secret put NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY
+pnpm wrangler secret put ADMIN_EMAILS
+```
+**Important Note**: The above commands do not include the `NEXT_PUBLIC_APP_URL` variable because environment variables starting with `NEXT_PUBLIC_` are inlined into the client code at build time. Therefore, in the `cf:deploy` command in `package.json`, you need to change `NEXT_PUBLIC_APP_URL` to your production environment domain.
+
+#### Via Dashboard:
+
+Log in to the Cloudflare dashboard.
+Select your account, then navigate to Workers & Pages > Overview.
+Select your Worker, click Settings > Environment Variables.
+Add variables or encrypted secret variables (Secrets).
+
+### 8. Deploy to Cloudflare
+In the command line, navigate to the project root directory and execute the following command to deploy directly from your local machine to Cloudflare:
+
+```bash
+pnpm run cf:deploy
+```
+Note that before executing this command, you need to first log in to Cloudflare via command line and configure environment variables in Cloudflare.
+
+### 9. Custom Domain Setup
+1. **Log in to Cloudflare Dashboard**
+   - Visit the [Cloudflare Dashboard](https://dash.cloudflare.com/) and log in to your account.
+   - Select the account and zone associated with your Worker.
+2. **Navigate to Workers & Pages**
+   - In the left sidebar of the dashboard, click **Workers & Pages**.
+   - On the **Overview** page, select the Worker project you want to configure a custom domain for.
+3. **Access Domain and Route Settings**
+   - On the selected Worker project page, click the **Settings** tab.
+   - In the settings page, find the **Domains & Routes** option, click the **Add** button, then select **Custom Domain**.
+4. **Enter Custom Domain**
+   - In the popup input box, enter the domain or subdomain you want to configure for the Worker (e.g., `example.com` or `sub.example.com`).
+   - Ensure you've added this domain or subdomain in Cloudflare's DNS settings and it's managed by Cloudflare (i.e., DNS records point to Cloudflare's nameservers).
+5. **Confirm and Add**
+   - Click **Add Custom Domain**.
+   - Cloudflare will automatically create the necessary DNS records (usually a CNAME record) and issue an SSL/TLS certificate. You don't need to manually configure DNS or certificates.
+   - If the domain you're trying to add already has an existing CNAME record, Cloudflare will prompt you to delete it, as custom domains cannot conflict with existing CNAME records.
+6. **Wait for DNS Propagation**
+   - After adding the custom domain, DNS record and certificate configuration may take a few minutes to 24 hours to take effect (usually quick).
+   - You can check the newly created DNS records on the **DNS** page of the dashboard, confirming their status is "Proxied" (orange cloud icon, indicating proxied through Cloudflare).
+
+### 10. Configure Stripe Webhooks
+
+Configure Stripe webhooks for your production domain:
+
+```bash
+# Webhook endpoint
+https://your-domain.com/api/webhooks/stripe
+
+# Required events
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.payment_succeeded
+- invoice.payment_failed
+```
+
+## Configuration Files
+
+### wrangler.jsonc
+
+Your project includes a pre-configured `wrangler.jsonc`:
+
+```json
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "better-saas",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public",
+    "enable_weak_ref"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "STATIC_ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "better-saas"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "better-saas-cache-bucket"
+    }
+  ]
+}
+```
+
+### open-next.config.ts
+
+OpenNext.js configuration for Cloudflare:
+
+```typescript
+import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
+
+export default defineCloudflareConfig({
+  incrementalCache: r2IncrementalCache,
+});
+```
+
+## Available Scripts
+
+The project includes Cloudflare-specific scripts:
+
+```json
+{
+  "scripts": {
+    "cf:dev": "wrangler dev --port 3000",
+    "cf:preview": "opennextjs-cloudflare build && wrangler dev --port 3000",
+    "cf:deploy": "NEXT_PUBLIC_APP_URL=https://cf.better-saas.org opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload"
+  }
+}
+```
+
+## Best Practices
+
+### 1. Development Workflow
+
+- **Use `pnpm run cf:preview`** to test production builds locally
+- **Test thoroughly** before deploying to production
+
+### 2. Database Management
+
+- **Use separate databases** for development and production
+- **Run migrations** in a staging environment first
+- **Backup your database** before major changes
+
+### 3. Environment Management
+
+- **Never commit** environment variables to Git
+- **Use different secrets** for development and production
+- **Rotate secrets** regularly for security
+
+### 4. Performance Optimization
+
+- **Monitor bundle size** to stay within Worker limits
+- **Use dynamic imports** for code splitting
+- **Optimize images** and static assets
+- **Enable R2 caching** for better performance
+
+### 5. Security
+
+- **Use strong secrets** (minimum 32 characters)
+- **Enable HTTPS** for all environments
+- **Configure CORS** properly for your domain
+- **Monitor logs** for suspicious activity
+
+## Monitoring and Debugging
+
+### 1. Cloudflare Analytics
+
+Monitor your application performance:
+
+- **Real User Monitoring**: Track user experience metrics
+- **Performance Insights**: Identify bottlenecks
+- **Error Tracking**: Monitor application errors
+
+### 2. Worker Logs
+
+Enable logging for debugging:
+
+1. Go to your Worker in the Cloudflare dashboard
+2. Navigate to `Logs` → `Real-time Logs`
+3. Enable logging to see runtime logs
+
+### 3. Error Handling
+
+The application includes comprehensive error handling:
+
+- **Global error boundaries** catch React errors
+- **API error handling** with proper status codes
+- **Database error handling** with retry logic
+- **Payment error handling** with user feedback
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Bundle Size Too Large
+
+**Error**: Worker exceeds size limit
+
+**Solutions**:
+- Upgrade to Workers Paid plan (10 MiB limit)
+- Optimize bundle size with dynamic imports
+- Remove unused dependencies
+- Use `pnpm run analyze` to identify large modules
+
+#### 2. Environment Variable Issues
+
+**Error**: Missing environment variables
+
+**Solutions**:
+- Verify all required variables are set
+- Check variable names for typos
+- Ensure variables are set in Cloudflare dashboard
+- Test with `wrangler dev` locally
+
+#### 3. Build Failures
+
+**Error**: Build process fails
+
+**Solutions**:
+- Check Node.js version compatibility
+- Clear build cache: `rm -rf .next .open-next`
+- Verify all dependencies are installed
+- Check for TypeScript errors
+
+#### 4. Runtime Errors
+
+**Error**: Application crashes at runtime
+
+**Solutions**:
+- Check Worker logs in Cloudflare dashboard
+- Verify compatibility flags in `wrangler.jsonc`
+- Test locally with `pnpm run cf:preview`
+- Check for unsupported Node.js APIs

@@ -65,11 +65,11 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
                   {loading
                     ? '正在上传...'
                     : isDragActive
-                      ? '放开文件即可上传'
-                      : '拖拽图片到这里，或点击选择文件'}
+                      ? '放开图片即可上传'
+                      : '拖拽图片到这里，或点击选择图片'}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  支持 {appConfig.upload.allowedTypes.join('、')} 格式，单个文件最大 {Math.round(appConfig.upload.maxFileSize / (1024 * 1024))}MB
+                  仅支持 JPEG 和 PNG 格式的图片，单个文件最大 {Math.round(appConfig.upload.maxFileSize / (1024 * 1024))}MB
                 </p>
               </div>
 
@@ -99,7 +99,7 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
                       {errors.map((error) => (
                         <span key={error.code} className="ml-1">
                           {error.code === 'file-too-large' && '文件过大'}
-                          {error.code === 'file-invalid-type' && '文件类型不支持'}
+                          {error.code === 'file-invalid-type' && '仅支持 JPEG 和 PNG 格式的图片'}
                           {error.code === 'too-many-files' && '文件数量过多'}
                         </span>
                       ))}

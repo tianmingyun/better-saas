@@ -44,7 +44,7 @@ export const appConfig: AppConfig = {
   // File upload configuration
   upload: {
     maxFileSize: 10 * 1024 * 1024, // 10MB
-    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+    allowedTypes: ['image/jpeg', 'image/png'], // 只支持 JPEG 和 PNG 格式
     maxFiles: 10,
   },
 

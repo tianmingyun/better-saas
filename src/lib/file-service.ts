@@ -1,7 +1,7 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as createSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { lookup } from 'mime-types';
-import sharp from 'sharp';
+import { generateThumbnail, getImageMetadata, validateImageFile } from './image-processor';
 import { R2_BUCKET_NAME, R2_PUBLIC_URL, r2Client } from './r2-client';
 import { fileRepository, type CreateFileData } from '@/server/db/repositories';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
@@ -51,47 +51,7 @@ export function generateUniqueFilename(originalName: string): string {
   return `${uuid}-${timestamp}.${ext}`;
 }
 
-/**
- * Validate image file
- */
-export function validateImageFile(file: File): { valid: boolean; error?: string } {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  const maxSize = 10 * 1024 * 1024; // 10MB
-
-  if (!allowedTypes.includes(file.type)) {
-    return { valid: false, error: '仅支持 JPEG、PNG、GIF、WebP 格式的图片' };
-  }
-
-  if (file.size > maxSize) {
-    return { valid: false, error: '文件大小不能超过 10MB' };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Generate thumbnail
- */
-export async function generateThumbnail(buffer: Buffer): Promise<Buffer> {
-  return sharp(buffer)
-    .resize(300, 300, {
-      fit: 'cover',
-      position: 'center',
-    })
-    .jpeg({ quality: 80 })
-    .toBuffer();
-}
-
-/**
- * Get image metadata
- */
-export async function getImageMetadata(buffer: Buffer) {
-  const metadata = await sharp(buffer).metadata();
-  return {
-    width: metadata.width || 0,
-    height: metadata.height || 0,
-  };
-}
+// 图像处理函数现在从 image-processor.ts 导入
 
 /**
  * Upload file to R2
