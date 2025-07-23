@@ -9,6 +9,10 @@ import './src/env';
 
 const withNextIntl = createNextIntlPlugin();
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const config: NextConfig = {
   devIndicators: false,
   reactStrictMode: true,
@@ -17,10 +21,10 @@ const config: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb', // 支持最大10MB的文件上传
+      bodySizeLimit: '10mb',
     },
-  },
+  }
 };
 
 const withMDX = createMDX();
-export default withNextIntl(withMDX(config));
+export default withBundleAnalyzer(withNextIntl(withMDX(config)));
