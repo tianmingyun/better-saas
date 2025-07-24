@@ -56,6 +56,7 @@ export {
 
 // 社交媒体图标 (替代 @tabler 的社交媒体图标)
 export {
+  Github,
   Facebook,
   Instagram,
   Linkedin,

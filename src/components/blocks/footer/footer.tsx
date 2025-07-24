@@ -1,5 +1,5 @@
 import {
-  Facebook as IconBrandFacebook,
+  Github as IconBrandGithub,
   Instagram as IconBrandInstagram,
   Linkedin as IconBrandLinkedin,
   Twitter as IconBrandTwitter,
@@ -53,7 +53,7 @@ const defaultSections = [
     title: 'Resources',
     links: [
       { name: 'Help', href: '#' },
-      { name: 'Sales', href: '#' },
+      { name: 'Github', href: 'https://github.com/justnode/better-saas' },
       { name: 'Advertise', href: '#' },
       { name: 'Privacy', href: '#' },
     ],
@@ -61,8 +61,8 @@ const defaultSections = [
 ];
 
 const defaultSocialLinks = [
+  { icon: <IconBrandGithub strokeWidth={1} className="size-5" />, href: 'https://github.com/justnode/better-saas', label: 'Github' },
   { icon: <IconBrandInstagram strokeWidth={1} className="size-5" />, href: '#', label: 'Instagram' },
-  { icon: <IconBrandFacebook strokeWidth={1} className="size-5" />, href: '#', label: 'Facebook' },
   { icon: <IconBrandTwitter strokeWidth={1} className="size-5" />, href: '#', label: 'Twitter' },
   { icon: <IconBrandLinkedin strokeWidth={1} className="size-5" />, href: '#', label: 'LinkedIn' },
 ];

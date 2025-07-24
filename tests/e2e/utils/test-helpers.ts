@@ -41,7 +41,6 @@ export const TEST_DATA = {
     security: '/settings/security',
     users: '/dashboard/users',
     files: '/dashboard/files',
-    config: '/dashboard/config',
   },
 };
 

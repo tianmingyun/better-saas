@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils';
 import { Download, Eye, MoreHorizontal, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 
 interface FileTableProps {
   files: FileInfo[];
@@ -39,8 +41,8 @@ function formatFileSize(bytes: number): string {
   return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleString('zh-CN', {
+function formatDate(dateString: string, locale: string): string {
+  return new Date(dateString).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -58,6 +60,8 @@ export function FileTable({
   className,
 }: FileTableProps) {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const t = useTranslations('fileManager');
+  const locale = useLocale();
 
   const handleImageError = (fileId: string) => {
     setImageErrors((prev) => new Set(prev).add(fileId));
@@ -78,11 +82,11 @@ export function FileTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-24">Preview</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Upload User</TableHead>
-              <TableHead>Last Modified</TableHead>
+              <TableHead className="w-24">{t('preview')}</TableHead>
+              <TableHead>{t('type')}</TableHead>
+              <TableHead>{t('size')}</TableHead>
+              <TableHead>{t('uploadUser')}</TableHead>
+              <TableHead>{t('lastModified')}</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -121,8 +125,8 @@ export function FileTable({
         <div className="mb-4 rounded-full bg-muted/50 p-4">
           <Eye className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="mb-2 font-semibold text-lg text-muted-foreground">暂无图片文件</h3>
-        <p className="text-muted-foreground text-sm">上传一些图片来开始管理您的文件</p>
+        <h3 className="mb-2 font-semibold text-lg text-muted-foreground">{t('noFiles')}</h3>
+        <p className="text-muted-foreground text-sm">{t('uploadSomeFiles')}</p>
       </div>
     );
   }
@@ -132,11 +136,11 @@ export function FileTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-24">Preview</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>Upload User</TableHead>
-            <TableHead>Last Modified</TableHead>
+            <TableHead className="w-24">{t('preview')}</TableHead>
+            <TableHead>{t('type')}</TableHead>
+            <TableHead>{t('size')}</TableHead>
+            <TableHead>{t('uploadUser')}</TableHead>
+            <TableHead>{t('lastModified')}</TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
@@ -168,7 +172,7 @@ export function FileTable({
                     {file.originalName}
                   </span>
                   <Badge variant="secondary" className="mt-1 w-fit text-xs">
-                    IMAGE
+                    {t('image')}
                   </Badge>
                 </div>
               </TableCell>
@@ -179,7 +183,7 @@ export function FileTable({
                 <span className="text-muted-foreground text-sm">{file.uploadUserEmail || file.uploadUserId}</span>
               </TableCell>
               <TableCell>
-                <span className="text-muted-foreground text-sm">{formatDate(file.createdAt)}</span>
+                <span className="text-muted-foreground text-sm">{formatDate(file.createdAt, locale)}</span>
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -195,11 +199,11 @@ export function FileTable({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onPreview?.(file)}>
                       <Eye className="mr-2 h-4 w-4" />
-                      预览
+                      {t('preview')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDownload(file)}>
                       <Download className="mr-2 h-4 w-4" />
-                      下载
+                      {t('download')}
                     </DropdownMenuItem>
                     {onDelete && (
                       <DropdownMenuItem
@@ -207,7 +211,7 @@ export function FileTable({
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        删除
+                        {t('delete')}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
