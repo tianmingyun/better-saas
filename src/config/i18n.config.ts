@@ -54,7 +54,8 @@ export const i18nConfig: I18nConfig = {
     'faq',
     'blog',
     'blocks',
-    'legal'
+    'legal',
+    'fileManager'
   ],
 
   // Date and time formats for each locale

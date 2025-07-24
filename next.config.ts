@@ -24,18 +24,8 @@ const config: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  webpack: (config, { isServer }) => {
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-    };
-    
-    if (isServer) {
-      config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm';
-    }
-    
-    return config;
-  },
+  serverExternalPackages: ['@aws-sdk/client-s3'],
+  output: 'standalone',
 };
 
 const withMDX = createMDX();

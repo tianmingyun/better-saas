@@ -10,11 +10,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { FileInfo } from '@/lib/file-service';
+import type { FileInfo } from '@/lib/files/file-service';
 import { cn } from '@/lib/utils';
 import { Download, Eye, MoreHorizontal, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 
 interface FileGridProps {
   files: FileInfo[];
@@ -32,8 +34,8 @@ function formatFileSize(bytes: number): string {
   return `${Number.parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('zh-CN', {
+function formatDate(dateString: string, locale: string): string {
+  return new Date(dateString).toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -50,6 +52,8 @@ export function FileGrid({
   className,
 }: FileGridProps) {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const t = useTranslations('fileManager');
+  const locale = useLocale();
 
   const handleImageError = (fileId: string) => {
     setImageErrors((prev) => new Set(prev).add(fileId));
@@ -93,8 +97,8 @@ export function FileGrid({
         <div className="mb-4 rounded-full bg-muted/50 p-4">
           <Eye className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="mb-2 font-semibold text-lg text-muted-foreground">暂无图片文件</h3>
-        <p className="text-muted-foreground text-sm">上传一些图片来开始管理您的文件</p>
+        <h3 className="mb-2 font-semibold text-lg text-muted-foreground">{t('noFiles')}</h3>
+        <p className="text-muted-foreground text-sm">{t('uploadSomeFiles')}</p>
       </div>
     );
   }
@@ -109,7 +113,7 @@ export function FileGrid({
       {files.map((file) => (
         <Card key={file.id} className="group overflow-hidden">
           <CardContent className="p-0">
-                          {/* Image preview */}
+            {/* Image preview */}
             <div className="relative aspect-square overflow-hidden">
               {imageErrors.has(file.id) ? (
                 <div className="flex h-full items-center justify-center bg-muted">
@@ -125,7 +129,7 @@ export function FileGrid({
                 />
               )}
 
-                              {/* Hover action buttons */}
+              {/* Hover action buttons */}
               <div className="absolute inset-0 flex items-center justify-center space-x-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button size="sm" variant="secondary" onClick={() => onPreview?.(file)}>
                   <Eye className="h-4 w-4" />
@@ -136,7 +140,7 @@ export function FileGrid({
               </div>
             </div>
 
-                          {/* File info */}
+            {/* File info */}
             <div className="p-3">
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
@@ -153,10 +157,10 @@ export function FileGrid({
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-muted-foreground text-xs">{formatDate(file.createdAt)}</p>
+                  <p className="mt-1 text-muted-foreground text-xs">{formatDate(file.createdAt, locale)}</p>
                 </div>
 
-                                  {/* Action menu */}
+                {/* Action menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -166,11 +170,11 @@ export function FileGrid({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onPreview?.(file)}>
                       <Eye className="mr-2 h-4 w-4" />
-                      预览
+                      {t('preview')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDownload(file)}>
                       <Download className="mr-2 h-4 w-4" />
-                      下载
+                      {t('download')}
                     </DropdownMenuItem>
                     {onDelete && (
                       <DropdownMenuItem
@@ -178,7 +182,7 @@ export function FileGrid({
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        删除
+                        {t('delete')}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>

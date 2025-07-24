@@ -1,11 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import type { FileInfo } from '@/lib/file-service';
+import type { FileInfo } from '@/lib/files/file-service';
 import { cn } from '@/lib/utils';
 import { Download, X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ImagePreviewModalProps {
   file: FileInfo | null;
@@ -14,6 +15,8 @@ interface ImagePreviewModalProps {
 }
 
 export function ImagePreviewModal({ file, isOpen, onClose }: ImagePreviewModalProps) {
+  const t = useTranslations('fileManager');
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -81,7 +84,7 @@ export function ImagePreviewModal({ file, isOpen, onClose }: ImagePreviewModalPr
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleDownload}>
               <Download className="mr-2 h-4 w-4" />
-              下载
+              {t('download')}
             </Button>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -89,7 +92,7 @@ export function ImagePreviewModal({ file, isOpen, onClose }: ImagePreviewModalPr
           </div>
         </div>
 
-                  {/* Image content */}
+        {/* Image content */}
         <div className="flex min-h-0 flex-1 items-center justify-center p-4">
           <div className="relative max-h-full max-w-full">
             <Image

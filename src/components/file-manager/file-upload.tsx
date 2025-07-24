@@ -7,6 +7,7 @@ import { FileImage, Upload, X } from 'lucide-react';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useAppConfig } from '@/hooks/use-config';
+import { useTranslations } from 'next-intl';
 
 interface FileUploadProps {
   onUpload: (files: File[]) => void;
@@ -16,6 +17,7 @@ interface FileUploadProps {
 
 export function FileUpload({ onUpload, loading = false, className }: FileUploadProps) {
   const appConfig = useAppConfig();
+  const t = useTranslations('fileManager');
   
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -63,20 +65,20 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
               <div className="space-y-2">
                 <h3 className="font-semibold text-lg">
                   {loading
-                    ? '正在上传...'
+                    ? t('uploading')
                     : isDragActive
-                      ? '放开图片即可上传'
-                      : '拖拽图片到这里，或点击选择图片'}
+                      ? t('dragActiveText')
+                      : t('dragDropText')}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  仅支持 JPEG 和 PNG 格式的图片，单个文件最大 {Math.round(appConfig.upload.maxFileSize / (1024 * 1024))}MB
+                  {t('supportedFormats', { maxSize: Math.round(appConfig.upload.maxFileSize / (1024 * 1024)) })}
                 </p>
               </div>
 
               {!loading && (
                 <Button variant="outline" size="sm">
                   <FileImage className="mr-2 h-4 w-4" />
-                  选择图片
+                  {t('selectImages')}
                 </Button>
               )}
             </div>
@@ -91,16 +93,16 @@ export function FileUpload({ onUpload, loading = false, className }: FileUploadP
             <div className="flex items-start space-x-3">
               <X className="mt-0.5 h-5 w-5 text-destructive" />
               <div className="space-y-1">
-                <h4 className="font-medium text-destructive text-sm">文件上传失败</h4>
+                <h4 className="font-medium text-destructive text-sm">{t('uploadFailed')}</h4>
                 <ul className="space-y-1">
                   {fileRejections.map(({ file, errors }) => (
                     <li key={file.name} className="text-destructive/80 text-sm">
                       <span className="font-medium">{file.name}</span>:
                       {errors.map((error) => (
                         <span key={error.code} className="ml-1">
-                          {error.code === 'file-too-large' && '文件过大'}
-                          {error.code === 'file-invalid-type' && '仅支持 JPEG 和 PNG 格式的图片'}
-                          {error.code === 'too-many-files' && '文件数量过多'}
+                          {error.code === 'file-too-large' && t('fileTooLarge')}
+                          {error.code === 'file-invalid-type' && t('invalidFileType')}
+                          {error.code === 'too-many-files' && t('tooManyFiles')}
                         </span>
                       ))}
                     </li>

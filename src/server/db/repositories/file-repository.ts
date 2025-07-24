@@ -1,5 +1,5 @@
 import { and, desc, eq, ilike, sql } from 'drizzle-orm';
-import type { FileInfo } from '@/lib/file-service';
+import type { FileInfo } from '@/lib/files/file-service';
 import db from '../index';
 import { file, user } from '../schema';
 

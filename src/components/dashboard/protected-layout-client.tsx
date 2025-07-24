@@ -42,11 +42,6 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
             href: '/dashboard/files',
             icon: Files,
           },
-          {
-            title: t('config'),
-            href: '/dashboard/config',
-            icon: Settings,
-          },
         ],
       });
     }

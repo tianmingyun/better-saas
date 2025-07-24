@@ -68,7 +68,6 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        {/* fix Cloudflare Workers _name error */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
