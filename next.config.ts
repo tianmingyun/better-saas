@@ -24,18 +24,6 @@ const config: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  webpack: (config, { isServer }) => {
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-    };
-    
-    if (isServer) {
-      config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm';
-    }
-    
-    return config;
-  },
 };
 
 const withMDX = createMDX();
