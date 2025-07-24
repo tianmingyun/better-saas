@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth/auth';
 import { headers } from 'next/headers';
 import { getErrorMessage } from './error-messages';
-import { uploadFile } from '@/lib/file-service';
+import { uploadFile } from '@/lib/files/file-service';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
 import type { User } from 'better-auth/types';
 

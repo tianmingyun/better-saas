@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PaginationControls } from '@/components/ui/pagination';
 import { useFiles } from '@/hooks/use-files';
-import type { FileInfo } from '@/lib/file-service';
+import type { FileInfo } from '@/lib/files/file-service';
 import { Search, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { FileTable } from './file-table';

@@ -24,6 +24,8 @@ const config: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  serverExternalPackages: ['@aws-sdk/client-s3'],
+  output: 'standalone',
 };
 
 const withMDX = createMDX();

@@ -1,6 +1,6 @@
 'use client';
 
-import type { FileInfo } from '@/lib/file-service';
+import type { FileInfo } from '@/lib/files/file-service';
 import { 
   uploadFileAction, 
   deleteFileAction, 

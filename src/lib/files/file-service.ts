@@ -1,6 +1,5 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as createSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { lookup } from 'mime-types';
 import { generateThumbnail, getImageMetadata, validateImageFile } from './image-processor';
 import { R2_BUCKET_NAME, R2_PUBLIC_URL, r2Client } from './r2-client';
 import { fileRepository, type CreateFileData } from '@/server/db/repositories';

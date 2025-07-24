@@ -8,7 +8,7 @@ import {
   getFileList,
   getFileInfo,
   type FileInfo,
-} from '@/lib/file-service';
+} from '@/lib/files/file-service';
 import { headers } from 'next/headers';
 import { getErrorMessage } from './error-messages';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
