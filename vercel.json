@@ -4,19 +4,5 @@
       "main": true,
       "*": false
     }
-  },
-  "functions": {
-    "src/app/api/auth/[...all]/route.ts": {
-      "runtime": "edge"
-    },
-    "src/app/api/health/route.ts": {
-      "runtime": "edge"
-    },
-    "src/app/api/webhooks/stripe/route.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    }
-  },
-  "regions": ["sin1", "hnd1", "iad1"],
-  "framework": "nextjs"
+  }
 }
