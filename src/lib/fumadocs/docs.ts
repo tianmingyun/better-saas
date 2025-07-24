@@ -1,8 +1,6 @@
 import { docs } from '@/.source';
 import { loader } from 'fumadocs-core/source';
 import type { InferMetaType, InferPageType } from 'fumadocs-core/source';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 export const docsSource = loader({
   baseUrl: '/docs',
@@ -35,13 +33,28 @@ export interface DocsTreeItem {
   defaultOpen?: boolean;
 }
 
-function getMetaConfig(locale: string, folderPath = ''): MetaConfig | null {
+// Cloudflare Workers compatible meta config getter
+function getMetaConfigFromSource(locale: string, folderPath = ''): MetaConfig | null {
   try {
-    const metaPath = join(process.cwd(), 'src/content/docs', locale, folderPath, 'meta.json');
-    const metaContent = readFileSync(metaPath, 'utf-8');
-    const config = JSON.parse(metaContent) as MetaConfig;
-    return config;
+    // Access the compiled meta data from .source/index.ts
+    const sourceData = docs.toFumadocsSource();
+    
+    // Build the expected meta path
+    const metaPath = folderPath ? `${locale}/${folderPath}/meta.json` : `${locale}/meta.json`;
+    
+    // Find the meta file in the source data
+    const metaFiles = Array.isArray(sourceData.files) ? sourceData.files : sourceData.files();
+    const metaFile = metaFiles.find(file => 
+      file.path === metaPath && file.type === 'meta'
+    );
+    
+    if (metaFile?.data) {
+      return metaFile.data as MetaConfig;
+    }
+    
+    return null;
   } catch (error) {
+    console.warn(`Failed to get meta config for ${locale}/${folderPath}:`, error);
     return null;
   }
 }
@@ -56,7 +69,7 @@ export function getDocsPages(locale = 'en'): DocsPage[] {
   });
 
   // Get meta configuration for ordering
-  const metaConfig = getMetaConfig(locale);
+  const metaConfig = getMetaConfigFromSource(locale);
   
   if (metaConfig?.pages) {
     // Create a map for quick lookup
@@ -114,7 +127,7 @@ export function getDocsPageTree(locale = 'en') {
   return pages;
 }
 
-// New function to build nested folder structure
+// Cloudflare Workers compatible docs tree builder
 export function buildDocsTree(locale = 'en'): DocsTreeItem[] {
   const allPages = docsSource.getPages();
   
@@ -125,7 +138,7 @@ export function buildDocsTree(locale = 'en'): DocsTreeItem[] {
   });
 
   // Get root meta configuration
-  const rootMetaConfig = getMetaConfig(locale);
+  const rootMetaConfig = getMetaConfigFromSource(locale);
   const tree: DocsTreeItem[] = [];
 
   if (rootMetaConfig?.pages) {
@@ -139,7 +152,7 @@ export function buildDocsTree(locale = 'en'): DocsTreeItem[] {
       
       if (folderPages.length > 0) {
         // This is a folder
-        const folderMetaConfig = getMetaConfig(locale, pageSlug);
+        const folderMetaConfig = getMetaConfigFromSource(locale, pageSlug);
         const folderItem: DocsTreeItem = {
           type: 'folder',
           name: folderMetaConfig?.title || pageSlug,
@@ -154,13 +167,11 @@ export function buildDocsTree(locale = 'en'): DocsTreeItem[] {
               page.slugs[page.slugs.length - 1] === subPageSlug
             );
             if (subPage) {
-              if (folderItem.children) {
-                folderItem.children.push({
-                  type: 'page',
-                  name: subPage.data.title || subPageSlug,
-                  url: `/docs/${pageSlug}/${subPageSlug}`
-                });
-              }
+              folderItem.children?.push({
+                type: 'page',
+                name: subPage.data.title || subPageSlug,
+                url: `/docs/${pageSlug}/${subPageSlug}`
+              });
             }
           }
         }
