@@ -1,6 +1,7 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as createSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { generateThumbnail, getImageMetadata, validateImageFile } from './image-processor';
+// 导入 r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL，它们的类型现在是 S3Client | undefined 和 string | undefined
 import { R2_BUCKET_NAME, R2_PUBLIC_URL, r2Client } from './r2-client';
 import { fileRepository, type CreateFileData } from '@/server/db/repositories';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
@@ -56,13 +57,24 @@ export function generateUniqueFilename(originalName: string): string {
  * Upload file to R2
  */
 export async function uploadToR2(key: string, buffer: Buffer, mimeType: string): Promise<void> {
+  // --- 重点修改：在调用 R2 客户端前进行检查 ---
+  if (!r2Client || !R2_BUCKET_NAME) {
+    fileServiceErrorLogger.logError(new Error('R2 client or bucket name is not configured.'), {
+      operation: 'uploadToR2',
+      key,
+    });
+    // 可以选择抛出错误，或者返回一个 Promise.reject，取决于你希望如何处理文件上传失败
+    throw new Error('文件存储服务（R2）未配置，无法上传文件。');
+  }
+
   const command = new PutObjectCommand({
-    Bucket: R2_BUCKET_NAME,
+    Bucket: R2_BUCKET_NAME, // TypeScript 现在知道 R2_BUCKET_NAME 是 string
     Key: key,
     Body: buffer,
     ContentType: mimeType,
   });
 
+  // TypeScript 现在知道 r2Client 是 S3Client
   await r2Client.send(command);
 }
 
@@ -70,11 +82,22 @@ export async function uploadToR2(key: string, buffer: Buffer, mimeType: string):
  * Delete file from R2
  */
 export async function deleteFromR2(key: string): Promise<void> {
+  // --- 重点修改：在调用 R2 客户端前进行检查 ---
+  if (!r2Client || !R2_BUCKET_NAME) {
+    fileServiceErrorLogger.logError(new Error('R2 client or bucket name is not configured.'), {
+      operation: 'deleteFromR2',
+      key,
+    });
+    // 可以选择抛出错误，或者静默返回，取决于你希望如何处理文件删除失败
+    return; // 这里选择静默返回，因为删除失败可能不会影响核心功能
+  }
+
   const command = new DeleteObjectCommand({
-    Bucket: R2_BUCKET_NAME,
+    Bucket: R2_BUCKET_NAME, // TypeScript 现在知道 R2_BUCKET_NAME 是 string
     Key: key,
   });
 
+  // TypeScript 现在知道 r2Client 是 S3Client
   await r2Client.send(command);
 }
 
@@ -82,6 +105,15 @@ export async function deleteFromR2(key: string): Promise<void> {
  * Generate file access URL
  */
 export function getFileUrl(r2Key: string): string {
+  // --- 重点修改：在使用 R2_PUBLIC_URL 前进行检查 ---
+  if (!R2_PUBLIC_URL) {
+    fileServiceErrorLogger.logError(new Error('R2 public URL is not configured.'), {
+      operation: 'getFileUrl',
+      r2Key,
+    });
+    // 返回一个占位符 URL 或抛出错误，取决于你希望如何处理公共 URL 不可用的情况
+    return `/path/to/default-placeholder.png`; // 例如，返回一个默认图片占位符
+  }
   return `${R2_PUBLIC_URL}/${r2Key}`;
 }
 
@@ -89,11 +121,21 @@ export function getFileUrl(r2Key: string): string {
  * Generate presigned URL (for private access)
  */
 export async function getSignedUrl(r2Key: string, expiresIn = 3600): Promise<string> {
+  // --- 重点修改：在调用 R2 客户端前进行检查 ---
+  if (!r2Client || !R2_BUCKET_NAME) {
+    fileServiceErrorLogger.logError(new Error('R2 client or bucket name is not configured.'), {
+      operation: 'getSignedUrl',
+      r2Key,
+    });
+    throw new Error('文件存储服务（R2）未配置，无法生成预签名 URL。');
+  }
+
   const command = new GetObjectCommand({
-    Bucket: R2_BUCKET_NAME,
+    Bucket: R2_BUCKET_NAME, // TypeScript 现在知道 R2_BUCKET_NAME 是 string
     Key: r2Key,
   });
 
+  // TypeScript 现在知道 r2Client 是 S3Client
   return createSignedUrl(r2Client, command, { expiresIn });
 }
 
@@ -101,32 +143,32 @@ export async function getSignedUrl(r2Key: string, expiresIn = 3600): Promise<str
  * Complete file upload process (including database operations)
  */
 export async function uploadFile(file: File, userId: string): Promise<FileInfo> {
-      // Validate file
-    const validation = validateImageFile(file);
+  // Validate file
+  const validation = validateImageFile(file);
   if (!validation.valid) {
     throw new Error(validation.error);
   }
 
-      // Read file content
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+  // Read file content
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
 
-      // Get image metadata
-    const { width, height } = await getImageMetadata(buffer);
+  // Get image metadata
+  const { width, height } = await getImageMetadata(buffer);
 
-      // Generate filename and path
-    const filename = generateUniqueFilename(file.name);
-    const r2Key = generateR2Key(filename);
-    const thumbnailKey = generateR2Key(filename, 'thumbnail');
+  // Generate filename and path
+  const filename = generateUniqueFilename(file.name);
+  const r2Key = generateR2Key(filename);
+  const thumbnailKey = generateR2Key(filename, 'thumbnail');
 
-      // Generate thumbnail
-    const thumbnailBuffer = await generateThumbnail(buffer);
+  // Generate thumbnail
+  const thumbnailBuffer = await generateThumbnail(buffer);
 
-      // Upload original image to R2
-    await uploadToR2(r2Key, buffer, file.type);
-
-      // Upload thumbnail to R2
-    await uploadToR2(thumbnailKey, thumbnailBuffer, 'image/jpeg');
+  // --- 重点修改：在调用 uploadToR2 前检查 R2 服务是否可用 ---
+  // 这里可以再次检查 r2Client 是否存在，或者依赖 uploadToR2 内部的检查。
+  // 最佳实践是，让低层函数负责检查，高层函数只处理其抛出的错误。
+  await uploadToR2(r2Key, buffer, file.type);
+  await uploadToR2(thumbnailKey, thumbnailBuffer, 'image/jpeg');
 
   // Save file info to database
   const fileData: CreateFileData = {
@@ -148,7 +190,7 @@ export async function uploadFile(file: File, userId: string): Promise<FileInfo> 
   return {
     ...fileInfo,
     url: getFileUrl(r2Key),
-    thumbnailUrl: getFileUrl(thumbnailKey),
+    thumbnailUrl: thumbnailKey ? getFileUrl(thumbnailKey) : undefined,
   };
 }
 
@@ -168,16 +210,17 @@ export async function deleteFile(fileId: string, userId?: string): Promise<boole
   }
 
   try {
-    // Delete file from R2
+    // --- 重点修改：在调用 deleteFromR2 前检查 R2 服务是否可用 ---
+    // 同样，这里可以再次检查 r2Client 是否存在，或者依赖 deleteFromR2 内部的检查。
     await deleteFromR2(fileInfo.r2Key);
-    
+
     // Delete thumbnail
     if (fileInfo.thumbnailKey) {
       await deleteFromR2(fileInfo.thumbnailKey);
     }
 
     // Delete record from database
-    const deleted = userId 
+    const deleted = userId
       ? await fileRepository.deleteByUserId(userId, fileId)
       : await fileRepository.delete(fileId);
 
@@ -219,7 +262,7 @@ export async function getFileList(options: {
       },
     };
   }
-  
+
   const result = await fileRepository.findAll(listOptions);
   return {
     files: result.files.map(file => ({
