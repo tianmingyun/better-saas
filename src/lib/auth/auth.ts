@@ -13,14 +13,22 @@ export const auth = betterAuth({
     enabled: true,
   },
   socialProviders: {
-    github: {
-      clientId: env.GITHUB_CLIENT_ID,
-      clientSecret: env.GITHUB_CLIENT_SECRET,
-    },
-    google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    },
+    // 只有当 GITHUB_CLIENT_ID 和 GITHUB_CLIENT_SECRET 都存在时，才启用 GitHub 登录
+    github:
+      env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+        ? {
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
+          }
+        : undefined, // 如果条件不满足，设置为 undefined
+    // 只有当 GOOGLE_CLIENT_ID 和 GOOGLE_CLIENT_SECRET 都存在时，才启用 Google 登录
+    google:
+      env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+        ? {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          }
+        : undefined, // 如果条件不满足，设置为 undefined
   },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
