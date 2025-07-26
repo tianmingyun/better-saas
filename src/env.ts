@@ -20,8 +20,8 @@ export const env = createEnv({
     R2_ENDPOINT: z.string(),
     R2_PUBLIC_URL: z.string(),
     // Stripe
-    STRIPE_SECRET_KEY: z.string(),
-    STRIPE_WEBHOOK_SECRET: z.string(),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
     // Admin Configuration
     ADMIN_EMAILS: z.string().optional().default(''),
   },
