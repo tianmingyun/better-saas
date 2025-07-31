@@ -1,8 +1,22 @@
 export const DIFY_CONFIG = {
     BASE_URL: process.env.DIFY_BASE_URL || 'https://api.dify.ai/v1',
-    API_KEY: process.env.DIFY_API_KEY || 'app-AwzafXTA0PV8bGj0G9uGKu5F',
-    APP_ID: '1c9d59b7-3766-4a61-95e1-13c0600fede7',
+    API_KEY: process.env.DIFY_API_KEY || '',
+    APP_ID: process.env.DIFY_APP_ID || '',
+    TIMEOUT: 30000,
   } as const;
+
+// 验证环境变量配置
+export const validateDifyConfig = (): boolean => {
+  if (!DIFY_CONFIG.API_KEY) {
+    console.warn('⚠️ DIFY_API_KEY 环境变量未设置');
+    return false;
+  }
+  if (!DIFY_CONFIG.BASE_URL) {
+    console.warn('⚠️ DIFY_BASE_URL 环境变量未设置');
+    return false;
+  }
+  return true;
+};
 
   export const DIFY_ENDPOINTS = {
     COMPLETIONS: '/completions',

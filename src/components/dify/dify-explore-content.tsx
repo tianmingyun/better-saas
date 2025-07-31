@@ -10,7 +10,7 @@
   import { Label } from '@/components/ui/label';
   import { ExternalLink } from 'lucide-react';
   import { difyAPI } from '@/lib/dify/api';
-  import { DifyApp } from '@/lib/dify/config';
+  import { DifyApp, validateDifyConfig } from '@/lib/dify/config';
   import { DifyAppModal } from './dify-app-modal';
   import { useI18n } from '@/i18n/routing';
 
@@ -19,6 +19,7 @@
     const [selectedApp, setSelectedApp] = useState<DifyApp | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const t = useI18n();
+    const isDifyEnabled = validateDifyConfig();
 
     const { data: apps, isLoading, error } = useQuery({
       queryKey: ['dify-apps', installedOnly],
@@ -35,12 +36,31 @@
       setIsModalOpen(true);
     };
 
+    if (!isDifyEnabled) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="text-center max-w-md space-y-4">
+            <h3 className="text-lg font-semibold">Dify AI 集成未配置</h3>
+            <p className="text-muted-foreground">
+              请在Vercel环境变量中设置 <code className="bg-muted px-1 py-0.5 rounded">DIFY_API_KEY</code>，
+              或联系系统管理员进行配置。
+            </p>
+            <p className="text-sm text-muted-foreground">
+              确保添加 <code className="bg-muted px-1 py-0.5 rounded">DIFY_BASE_URL=https://api.dify.ai/v1</code> 以获得最佳体验。
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (error) {
       return (
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground">
-            Failed to load Dify applications. Please try again later.
-          </p>
+          <div className="text-center max-w-md space-y-4">
+            <p className="text-muted-foreground">
+              加载Dify应用时出错，请检查网络连接或稍后重试。
+            </p>
+          </div>
         </div>
       );
     }
