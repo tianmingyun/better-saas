@@ -4,5 +4,8 @@
       "main": true,
       "*": false
     }
-  }
+  },
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["icn1"]
 }
