@@ -5,7 +5,8 @@
       "*": false
     }
   },
-  "installCommand": "npm install",
+  "installCommand": "npm install --no-frozen-lockfile",
   "framework": "nextjs",
-  "regions": ["icn1"]
+  "regions": ["icn1"],
+  "buildCommand": "npm run db:migrate && npm run build"
 }
