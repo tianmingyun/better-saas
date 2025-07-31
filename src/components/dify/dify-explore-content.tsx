@@ -12,7 +12,7 @@
   import { difyAPI } from '@/lib/dify/api';
   import { DifyApp, validateDifyConfig } from '@/lib/dify/config';
   import { DifyAppModal } from './dify-app-modal';
-  import { useI18n } from '@/i18n/routing';
+  import { useTranslations } from 'next-intl';
 
   export function DifyExploreContent() {
     const [installedOnly, setInstalledOnly] = useState(false);

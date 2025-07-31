@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getI18n } from '@/i18n/request';
+import { getTranslations } from 'next-intl/server';
 import { DashboardContent } from '@/components/dashboard/dashboard-content';
 import { DifyExploreContent } from '@/components/dify/dify-explore-content';
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DifyExplorePage() {
-  const t = await getI18n();
+  const t = await getTranslations();
 
   return (
     <DashboardContent

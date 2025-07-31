@@ -12,11 +12,11 @@
   import { Textarea } from '@/components/ui/textarea';
   import { Card } from '@/components/ui/card';
   import { Badge } from '@/components/ui/badge';
-  import { useToast } from '@/hooks/use-toast-messages';
+  import { toast } from 'sonner';
   import { difyAPI } from '@/lib/dify/api';
   import { DifyApp } from '@/lib/dify/config';
   import { Send, Loader2 } from 'lucide-react';
-  import { useI18n } from '@/i18n/routing';
+  import { useTranslations } from 'next-intl';
 
   interface DifyAppModalProps {
     app: DifyApp;
