@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { DashboardContent } from '@/components/dashboard/dashboard-content';
 import { DifyExploreContent } from '@/components/dify/dify-explore-content';
