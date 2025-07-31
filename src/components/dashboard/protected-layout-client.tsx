@@ -42,9 +42,27 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
             href: '/dashboard/files',
             icon: Files,
           },
+          {
+            title: t('dify'),
+            href: '/dashboard/dify-explore',
+            icon: Sparkles,
+          },
         ],
       });
     }
+
+    // non-admin users see simplified dashboard
+    groups.push({
+      title: t('dashboard'),
+      defaultOpen: true,
+      items: [
+        {
+          title: t('dify'),
+          href: '/dashboard/dify-explore',
+          icon: Sparkles,
+        },
+      ],
+    });
 
     // all users can see Settings menu
     groups.push({
