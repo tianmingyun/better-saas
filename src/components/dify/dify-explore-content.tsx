@@ -19,7 +19,7 @@ import type { DifyApp } from '@/lib/dify/config';
     const [installedOnly, setInstalledOnly] = useState(false);
     const [selectedApp, setSelectedApp] = useState<DifyApp | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const t = useI18n();
+    const t = useTranslations();
     const isDifyEnabled = validateDifyConfig();
 
     const { data: apps, isLoading, error } = useQuery({

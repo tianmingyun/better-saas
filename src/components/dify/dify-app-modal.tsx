@@ -36,8 +36,7 @@
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [conversationId, setConversationId] = useState<string>();
-    const { toast } = useToast();
-    const t = useI18n();
+    const t = useTranslations();
 
     const handleSubmit = async () => {
       if (!input.trim() || isLoading) return;
@@ -72,10 +71,7 @@
 
         setMessages((prev) => [...prev, aiMessage]);
       } catch (error) {
-        toast.error({
-          title: 'Error',
-          description: error instanceof Error ? error.message : 'Unknown error',
-        });
+        toast.error(error instanceof Error ? error.message : '发生错误');
       } finally {
         setIsLoading(false);
       }
