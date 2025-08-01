@@ -10,6 +10,7 @@ import {
   Settings,
   Shield,
   Users,
+  Sparkles,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
