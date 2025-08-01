@@ -14,7 +14,7 @@
   import { Badge } from '@/components/ui/badge';
   import { toast } from 'sonner';
   import { difyAPI } from '@/lib/dify/api';
-  import { DifyApp } from '@/lib/dify/config';
+  import type { DifyApp } from '@/lib/dify/config';
   import { Send, Loader2 } from 'lucide-react';
   import { useTranslations } from 'next-intl';
 

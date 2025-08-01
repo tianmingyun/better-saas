@@ -10,7 +10,8 @@
   import { Label } from '@/components/ui/label';
   import { ExternalLink } from 'lucide-react';
   import { difyAPI } from '@/lib/dify/api';
-  import { DifyApp, validateDifyConfig } from '@/lib/dify/config';
+  import { validateDifyConfig } from '@/lib/dify/config';
+import type { DifyApp } from '@/lib/dify/config';
   import { DifyAppModal } from './dify-app-modal';
   import { useTranslations } from 'next-intl';
 

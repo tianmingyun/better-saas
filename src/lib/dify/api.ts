@@ -1,4 +1,5 @@
-  import { DIFY_CONFIG, DIFY_ENDPOINTS, validateDifyConfig, DifyApp, DifyCompletionRequest, DifyCompletionResponse } from './config';
+  import { DIFY_CONFIG, DIFY_ENDPOINTS, validateDifyConfig } from './config';
+import type { DifyApp, DifyCompletionRequest, DifyCompletionResponse } from './config';
 
   class DifyAPI {
     private baseUrl: string;
