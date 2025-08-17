@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useTransition } from 'react';
 import { ErrorLogger } from '@/lib/logger/logger-utils';
 import { usePaymentPlans } from '@/hooks/use-config';
+import { Badge } from '@/components/ui/badge';
 import { PurchaseConfirmationDialog } from '@/components/payment/purchase-confirmation-dialog';
 
 const pricingErrorLogger = new ErrorLogger('pricing');
@@ -38,6 +39,12 @@ interface PricingPlan {
   button: {
     text: string;
     url?: string; // Optional, for fallback
+  };
+  credits?: {
+    monthly?: number;
+    yearly?: number;
+    onSubscribe?: number;
+    onSignup?: number;
   };
 }
 
@@ -82,6 +89,7 @@ const Pricing = ({
         ? t('getStartedText')
         : t('purchaseText'),
     },
+    credits: plan.credits, // Pass through credits configuration
   }));
 
   const handlePurchaseClick = (plan: PricingPlan) => {
@@ -168,6 +176,29 @@ const Pricing = ({
                     <p>{plan.name}</p>
                   </CardTitle>
                   <p className="text-muted-foreground text-sm">{plan.description}</p>
+                  
+                  {/* Credits Badge */}
+                  {plan.credits && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {plan.credits.monthly && (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          💎 {isYearly ? plan.credits.yearly || plan.credits.monthly * 12 : plan.credits.monthly} Credits
+                          {isYearly ? '/year' : '/month'}
+                        </Badge>
+                      )}
+                      {plan.credits.onSubscribe && (
+                        <Badge variant="outline" className="border-green-200 text-green-700 dark:border-green-800 dark:text-green-300">
+                          🎁 +{plan.credits.onSubscribe} Bonus
+                        </Badge>
+                      )}
+                      {plan.credits.onSignup && (
+                        <Badge variant="outline" className="border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-300">
+                          ✨ {plan.credits.onSignup} Free Credits
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  
                   <span className="font-bold text-4xl">
                     {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>

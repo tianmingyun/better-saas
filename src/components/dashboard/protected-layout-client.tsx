@@ -3,14 +3,7 @@
 import { ProtectedContainer } from '@/components/dashboard/protected-container';
 import { useIsAdmin } from '@/components/auth/permission-provider';
 import type { SidebarGroup } from '@/types';
-import {
-  Bell,
-  CreditCard,
-  Files,
-  Settings,
-  Shield,
-  Users,
-} from 'lucide-react';
+import { Coins, History, CreditCard, Files, Shield, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
@@ -45,6 +38,24 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
         ],
       });
     }
+
+    // all users can see Credits menu
+    groups.push({
+      title: t('credits'),
+      defaultOpen: true,
+      items: [
+        {
+          title: t('balance'),
+          href: '/credits/balance',
+          icon: Coins,
+        },
+        {
+          title: t('history'),
+          href: '/credits/history',
+          icon: History,
+        },
+      ],
+    });
 
     // all users can see Settings menu
     groups.push({

@@ -7,11 +7,142 @@ import type { SubscriptionWithPeriod, InvoiceWithSubscription } from '@/types/st
 import type { PaymentStatus } from '@/payment/types';
 import { ErrorLogger, logUtils } from '@/lib/logger/logger-utils';
 import { createChildLogger } from '@/lib/logger/logger';
+import { creditService } from '@/lib/credits';
+import { paymentConfig } from '@/config/payment.config';
 
 const webhookErrorLogger = new ErrorLogger('stripe-webhook');
 const webhookLogger = createChildLogger('stripe-webhook');
 
 const stripeProvider = new StripeProvider();
+
+/**
+ * Helper function to find payment plan by price ID
+ */
+function findPlanByPriceId(priceId: string) {
+  return paymentConfig.plans.find(plan => 
+    plan.stripePriceIds?.monthly === priceId || 
+    plan.stripePriceIds?.yearly === priceId
+  );
+}
+
+/**
+ * Grant credits for subscription
+ */
+async function grantSubscriptionCredits(userId: string, priceId: string, subscriptionId: string, isYearly: boolean) {
+  try {
+    const plan = findPlanByPriceId(priceId);
+    if (!plan?.credits) {
+      webhookLogger.info({
+        userId,
+        priceId,
+        planId: plan?.id,
+        status: 'no_credits_config',
+      }, `No credits configuration found for plan: ${plan?.id || 'unknown'}`);
+      return;
+    }
+
+    // Calculate credits to grant
+    const creditsToGrant = plan.credits.onSubscribe || 
+      (isYearly ? plan.credits.yearly : plan.credits.monthly);
+
+    if (!creditsToGrant || creditsToGrant <= 0) {
+      webhookLogger.info({
+        userId,
+        priceId,
+        planId: plan.id,
+        isYearly,
+        status: 'no_credits_to_grant',
+      }, `No credits to grant for plan: ${plan.id}`);
+      return;
+    }
+
+    // Grant credits
+    await creditService.earnCredits({
+      userId,
+      amount: creditsToGrant,
+      source: 'subscription',
+      description: `${plan.name} subscription credits`,
+      referenceId: subscriptionId,
+      metadata: {
+        planId: plan.id,
+        priceId,
+        isYearly,
+        subscriptionId,
+      },
+    });
+
+    webhookLogger.info({
+      userId,
+      priceId,
+      planId: plan.id,
+      creditsGranted: creditsToGrant,
+      subscriptionId,
+      status: 'credits_granted',
+    }, `Granted ${creditsToGrant} credits to user ${userId} for ${plan.name} subscription`);
+  } catch (error) {
+    webhookErrorLogger.logError(error as Error, {
+      operation: 'grantSubscriptionCredits',
+      userId,
+      priceId,
+      subscriptionId,
+      isYearly,
+    });
+    // Don't throw error to avoid webhook failure
+  }
+}
+
+/**
+ * Grant monthly credits for recurring subscription payments
+ */
+async function grantMonthlyCredits(userId: string, priceId: string, subscriptionId: string, invoiceId: string) {
+  try {
+    const plan = findPlanByPriceId(priceId);
+    if (!plan?.credits?.monthly) {
+      webhookLogger.info({
+        userId,
+        priceId,
+        planId: plan?.id,
+        status: 'no_monthly_credits_config',
+      }, `No monthly credits configuration found for plan: ${plan?.id || 'unknown'}`);
+      return;
+    }
+
+    // Grant monthly credits
+    await creditService.earnCredits({
+      userId,
+      amount: plan.credits.monthly,
+      source: 'subscription',
+      description: `Monthly ${plan.name} credits`,
+      referenceId: `${subscriptionId}_${invoiceId}`,
+      metadata: {
+        planId: plan.id,
+        priceId,
+        subscriptionId,
+        invoiceId,
+        type: 'monthly_renewal',
+      },
+    });
+
+    webhookLogger.info({
+      userId,
+      priceId,
+      planId: plan.id,
+      creditsGranted: plan.credits.monthly,
+      subscriptionId,
+      invoiceId,
+      status: 'monthly_credits_granted',
+    }, `Granted monthly ${plan.credits.monthly} credits to user ${userId} for ${plan.name} subscription`);
+  } catch (error) {
+    webhookErrorLogger.logError(error as Error, {
+      operation: 'grantMonthlyCredits',
+      userId,
+      priceId,
+      subscriptionId,
+      invoiceId,
+    });
+    // Don't throw error to avoid webhook failure
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -205,6 +336,10 @@ async function handleCheckoutSessionCompleted(event: StripeTypes.Event) {
         stripeEventId: event.id,
         eventData: JSON.stringify(session),
       });
+
+      // Grant subscription credits
+      const isYearly = price.recurring?.interval === 'year';
+      await grantSubscriptionCredits(userId, priceId, subscriptionId, isYearly);
 
       webhookLogger.info({
         eventId: event.id,
@@ -531,11 +666,24 @@ async function handleInvoicePaid(event: StripeTypes.Event) {
           eventData: JSON.stringify(invoice),
         });
 
+        // Grant monthly credits (skip first payment as it's handled in checkout.session.completed)
+        const isFirstPayment = invoice.billing_reason === 'subscription_create';
+        if (!isFirstPayment && paymentRecord.userId) {
+          await grantMonthlyCredits(
+            paymentRecord.userId, 
+            paymentRecord.priceId, 
+            subscriptionId, 
+            invoice.id || 'unknown'
+          );
+        }
+
         webhookLogger.info({
           eventId: event.id,
           subscriptionId,
           paymentId: paymentRecord.id,
           invoiceId: invoice.id,
+          billingReason: invoice.billing_reason,
+          isFirstPayment,
           status: 'paid',
         }, `Invoice paid for subscription: ${subscriptionId}`);
       }

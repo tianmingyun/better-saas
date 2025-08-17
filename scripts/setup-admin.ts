@@ -52,7 +52,7 @@ async function setupAdmin(email: string) {
     if (!isAdminEmail(email)) {
       setupAdminLogger.error('❌ error: this email is not in the admin list');
       setupAdminLogger.info('please add this email to the ADMIN_EMAILS environment variable');
-      setupAdminLogger.info('current admin emails:', getAdminEmails());
+      setupAdminLogger.info('current admin emails:', getAdminEmails().join(', '));
       process.exit(1);
     }
 

@@ -8,6 +8,7 @@ A modern, full-stack SaaS application built with Next.js 15, featuring authentic
 
 - **🔐 Authentication**: Email/password and social login (GitHub, Google) with Better Auth
 - **💳 Payments**: Stripe integration with subscription management and billing dashboard
+- **🪙 Credits System**: Flexible quota management for API usage and storage with automated billing
 - **📁 File Management**: Upload, preview, and manage files with AWS S3/R2 storage
 - **🌍 Internationalization**: Multi-language support (English/Chinese) with next-intl
 - **📱 Responsive Design**: Modern UI with Radix UI and Tailwind CSS v4
@@ -64,6 +65,7 @@ The online documentation includes:
 - 🚀 Deployment guide and production setup
 - 🌍 Internationalization implementation
 - 💳 Payment integration and subscription management
+- 🪙 Credits system configuration and usage patterns
 
 > 💡 **Tip**: The online documentation is continuously updated. We recommend bookmarking it for the latest information.
 
@@ -116,7 +118,13 @@ The online documentation includes:
    pnpm db:push
    ```
 
-5. **Start the development server**
+5. **Configure credits system (optional)**
+
+   Customize credits allocation and pricing in:
+   - `/src/config/credits.config.ts` - API costs and quotas
+   - `/src/config/payment.config.ts` - Subscription plan credits
+
+6. **Start the development server**
 
    ```bash
    pnpm dev

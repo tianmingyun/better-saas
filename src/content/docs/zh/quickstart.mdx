@@ -100,7 +100,67 @@ pnpm db:push
 # - 初始化数据库结构
 ```
 
-### 步骤 5：启动开发服务器
+### 步骤 5：积分系统配置
+
+应用程序包含灵活的积分系统，用于管理用户配额和 API 使用。根据您的商业模式进行配置：
+
+#### 配置积分设置
+
+编辑 `/src/config/credits.config.ts` 进行自定义：
+
+```typescript
+// 启用/禁用积分系统
+export const CREDITS_CONFIG = {
+  enabled: true, // 设置为 false 禁用积分系统
+  currency: 'USD',
+  
+  // API 调用成本
+  apiCosts: {
+    costPerCall: 1, // 每次 API 调用消耗的积分
+    freeQuotaForPaidUsers: 1000, // 付费用户的免费调用次数
+  },
+  
+  // 存储成本
+  storageCosts: {
+    costPerGB: 100, // 每 GB 消耗的积分
+    freeQuotaForPaidUsers: 10, // 付费用户的免费存储空间（GB）
+  },
+  
+  // 免费用户配额
+  freeUserQuotas: {
+    apiCalls: 100, // 免费 API 调用次数
+    storage: 1, // 免费存储空间（GB）
+  },
+};
+```
+
+#### 配置订阅计划
+
+编辑 `/src/config/payment.config.ts` 设置积分分配：
+
+```typescript
+export const SUBSCRIPTION_PLANS = {
+  free: {
+    monthlyCredits: 1000, // 免费用户每月积分
+    signupBonusCredits: 500, // 注册奖励积分
+    // ... 其他设置
+  },
+  pro: {
+    monthlyCredits: 10000, // 专业版用户每月积分
+    signupBonusCredits: 2000,
+    subscriptionImmediateCredits: 5000, // 订阅时立即获得的积分
+    // ... 其他设置
+  },
+  enterprise: {
+    monthlyCredits: 50000,
+    signupBonusCredits: 5000,
+    subscriptionImmediateCredits: 20000,
+    // ... 其他设置
+  },
+};
+```
+
+### 步骤 6：启动开发服务器
 
 ```bash
 # 启动开发服务器

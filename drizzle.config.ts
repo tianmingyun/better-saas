@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ['better-saas_*'],
+  out: './drizzle',
 } satisfies Config;

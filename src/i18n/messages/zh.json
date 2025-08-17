@@ -197,7 +197,10 @@
     "settings": "设置",
     "profile": "个人资料",
     "billing": "账单",
-    "security": "安全"
+    "security": "安全",
+    "credits": "积分",
+    "balance": "余款",
+    "history": "历史"
   },
   "navbar": {
     "logo": {
@@ -230,7 +233,8 @@
     "profile": "个人资料",
     "billing": "账单",
     "settings": "设置",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "creditBalance": "积分"
   },
   "settings": {
     "title": "设置",
