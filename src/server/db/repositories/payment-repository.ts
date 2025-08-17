@@ -21,6 +21,7 @@ export interface CreatePaymentData {
 }
 
 export interface UpdatePaymentData {
+  priceId?: string;
   status?: PaymentStatus;
   subscriptionId?: string;
   periodStart?: Date;
@@ -47,7 +48,7 @@ export class PaymentRepository {
     const [result] = await db
       .insert(payment)
       .values({
-        id: paymentId,
+        id: data.id || uuidv4(),
         priceId: data.priceId,
         type: data.type,
         interval: data.interval || null,
@@ -62,6 +63,10 @@ export class PaymentRepository {
         trialEnd: data.trialEnd || null,
       })
       .returning();
+
+    if (!result) {
+      throw new Error('Failed to create payment record');
+    }
 
     return this.mapToPaymentRecord(result);
   }
@@ -142,10 +147,11 @@ export class PaymentRepository {
    * 更新支付记录
    */
   async update(id: string, data: UpdatePaymentData): Promise<PaymentRecord | null> {
-    const updateData: any = {
+    const updateData: Partial<typeof payment.$inferInsert> = {
       updatedAt: new Date(),
     };
 
+    if (data.priceId !== undefined) updateData.priceId = data.priceId;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.subscriptionId !== undefined) updateData.subscriptionId = data.subscriptionId;
     if (data.periodStart !== undefined) updateData.periodStart = data.periodStart;
@@ -203,7 +209,7 @@ export class PaymentRepository {
   /**
    * 映射数据库记录到 PaymentRecord
    */
-  private mapToPaymentRecord(record: any): PaymentRecord {
+  private mapToPaymentRecord(record: typeof payment.$inferSelect): PaymentRecord {
     return {
       id: record.id,
       priceId: record.priceId,
@@ -211,13 +217,13 @@ export class PaymentRepository {
       interval: record.interval as PaymentInterval,
       userId: record.userId,
       customerId: record.customerId,
-      subscriptionId: record.subscriptionId,
+      subscriptionId: record.subscriptionId || undefined,
       status: record.status as PaymentStatus,
-      periodStart: record.periodStart,
-      periodEnd: record.periodEnd,
-      cancelAtPeriodEnd: record.cancelAtPeriodEnd,
-      trialStart: record.trialStart,
-      trialEnd: record.trialEnd,
+      periodStart: record.periodStart || undefined,
+      periodEnd: record.periodEnd || undefined,
+      cancelAtPeriodEnd: record.cancelAtPeriodEnd || undefined,
+      trialStart: record.trialStart || undefined,
+      trialEnd: record.trialEnd || undefined,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
@@ -225,4 +231,4 @@ export class PaymentRepository {
 }
 
 // Export singleton instance
-export const paymentRepository = new PaymentRepository(); 
+export const paymentRepository = new PaymentRepository();
