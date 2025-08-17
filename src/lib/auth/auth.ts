@@ -6,6 +6,7 @@ import { admin } from 'better-auth/plugins';
 import { createAuthMiddleware } from 'better-auth/api';
 import { creditService } from '@/lib/credits';
 import { paymentConfig } from '@/config/payment.config';
+import { quotaService } from '@/lib/quota/quota-service';
 
 // Handle user creation - initialize credit account and grant signup bonus
 async function handleUserCreated(user: { id: string; email: string }) {
@@ -34,6 +35,10 @@ async function handleUserCreated(user: { id: string; email: string }) {
       
       console.log(`✅ Granted ${signupCredits} signup bonus credits to user ${user.email}`);
     }
+    
+    // Initialize quota usage for new user
+    await quotaService.initializeForUser(user.id);
+    console.log(`✅ Initialized quota usage records for user ${user.email}`);
     
     console.log(`🎉 Successfully initialized credit account for user ${user.email}`);
   } catch (error) {

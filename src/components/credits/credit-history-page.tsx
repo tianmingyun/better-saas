@@ -20,22 +20,18 @@ export function CreditHistoryPage() {
   };
 
   return (
-    <div className='container mx-auto space-y-6 p-6'>
+    <div className="container mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2">
-            <ArrowLeft className='h-4 w-4' />
-            Back
-          </Button>
           <div>
-            <h1 className='font-bold text-3xl'>Credit History</h1>
+            <h1 className="font-bold text-3xl">Credit History</h1>
             <p className="text-muted-foreground">
               Complete history of all your credit transactions
             </p>
           </div>
         </div>
         <Button variant="outline" onClick={handleExport} disabled={isExporting} className="gap-2">
-          <Download className='h-4 w-4' />
+          <Download className="h-4 w-4" />
           {isExporting ? 'Exporting...' : 'Export'}
         </Button>
       </div>

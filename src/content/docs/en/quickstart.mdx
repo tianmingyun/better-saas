@@ -101,7 +101,67 @@ pnpm db:push
 # - Initialize the database structure
 ```
 
-### Step 5: Start the Development Server
+### Step 5: Credits System Configuration
+
+The application includes a flexible credits system for managing user quotas and API usage. Configure it according to your business model:
+
+#### Configure Credits Settings
+
+Edit `/src/config/credits.config.ts` to customize:
+
+```typescript
+// Enable/disable credits system
+export const CREDITS_CONFIG = {
+  enabled: true, // Set to false to disable credits
+  currency: 'USD',
+  
+  // API call costs
+  apiCosts: {
+    costPerCall: 1, // Credits per API call
+    freeQuotaForPaidUsers: 1000, // Free calls for subscribers
+  },
+  
+  // Storage costs
+  storageCosts: {
+    costPerGB: 100, // Credits per GB
+    freeQuotaForPaidUsers: 10, // Free GB for subscribers
+  },
+  
+  // Free user quotas
+  freeUserQuotas: {
+    apiCalls: 100, // Free API calls
+    storage: 1, // Free storage in GB
+  },
+};
+```
+
+#### Configure Subscription Plans
+
+Edit `/src/config/payment.config.ts` to set credits allocation:
+
+```typescript
+export const SUBSCRIPTION_PLANS = {
+  free: {
+    monthlyCredits: 1000, // Monthly credits for free users
+    signupBonusCredits: 500, // Bonus credits on registration
+    // ... other settings
+  },
+  pro: {
+    monthlyCredits: 10000, // Monthly credits for pro users
+    signupBonusCredits: 2000,
+    subscriptionImmediateCredits: 5000, // Immediate credits on subscription
+    // ... other settings
+  },
+  enterprise: {
+    monthlyCredits: 50000,
+    signupBonusCredits: 5000,
+    subscriptionImmediateCredits: 20000,
+    // ... other settings
+  },
+};
+```
+
+### Step 6: Start the Development Server
 
 ```bash
 # Start the development server

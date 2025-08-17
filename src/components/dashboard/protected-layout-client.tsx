@@ -3,15 +3,7 @@
 import { ProtectedContainer } from '@/components/dashboard/protected-container';
 import { useIsAdmin } from '@/components/auth/permission-provider';
 import type { SidebarGroup } from '@/types';
-import {
-  Bell,
-  Coins,
-  CreditCard,
-  Files,
-  Settings,
-  Shield,
-  Users,
-} from 'lucide-react';
+import { Coins, History, CreditCard, Files, Shield, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
@@ -49,18 +41,18 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
 
     // all users can see Credits menu
     groups.push({
-      title: 'Credits',
+      title: t('credits'),
       defaultOpen: true,
       items: [
         {
-          title: 'Balance',
-          href: '/credits',
+          title: t('balance'),
+          href: '/credits/balance',
           icon: Coins,
         },
         {
-          title: 'History',
+          title: t('history'),
           href: '/credits/history',
-          icon: Bell,
+          icon: History,
         },
       ],
     });

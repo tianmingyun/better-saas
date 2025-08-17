@@ -197,7 +197,10 @@
     "settings": "Settings",
     "profile": "Profile",
     "billing": "Billing",
-    "security": "Security"
+    "security": "Security",
+    "credits": "credits",
+    "balance": "balance",
+    "history": "history"
   },
   "navbar": {
     "logo": {
@@ -230,7 +233,8 @@
     "profile": "Profile",
     "billing": "Billing",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "creditBalance": "Credit"
   },
   "settings": {
     "title": "Settings",

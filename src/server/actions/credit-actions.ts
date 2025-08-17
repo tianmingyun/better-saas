@@ -7,6 +7,10 @@ import { paymentRepository } from '@/server/db/repositories/payment-repository';
 import type { ActionResult } from '@/payment/types';
 import type { UserCreditAccount, CreditTransaction } from '@/lib/credits';
 import { creditsConfig } from '@/config/credits.config';
+import db from '@/server/db';
+import { userQuotaUsage } from '@/server/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { quotaService, updateQuotaUsage, type QuotaService } from '@/lib/quota/quota-service';
 
 export interface GetCreditBalanceResponse extends UserCreditAccount {
   availableBalance: number;
@@ -118,22 +122,38 @@ export async function getQuotaUsage(): Promise<ActionResult<GetQuotaUsageRespons
       };
     }
 
+    // Get current period (YYYY-MM format)
+    const currentDate = new Date();
+    const currentPeriod = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
     // Get user's current subscription to determine limits
     const subscription = await paymentRepository.findActiveSubscriptionByUserId(session.user.id);
     
-    // For now, return mock data based on subscription tier
-    // In a real implementation, you would query actual usage from your services
+    // Get actual usage from database
+    const usageRecords = await db.select({
+      service: userQuotaUsage.service,
+      usedAmount: userQuotaUsage.usedAmount,
+    }).from(userQuotaUsage)
+    .where(and(
+      eq(userQuotaUsage.userId, session.user.id),
+      eq(userQuotaUsage.period, currentPeriod)
+    ));
+
+    // Extract usage data
+    const apiCallUsage = usageRecords.find(record => record.service === 'api_call')?.usedAmount || 0;
+    const storageUsage = usageRecords.find(record => record.service === 'storage')?.usedAmount || 0;
+    
+    // Determine limits based on subscription
     const baseApiCallLimit = creditsConfig.freeUser.apiCall.freeQuotaCalls;
     const baseStorageLimit = creditsConfig.freeUser.storage.freeQuotaGB * 1024 * 1024 * 1024; // Convert GB to bytes
     
     let apiCallLimit = baseApiCallLimit;
     let storageLimit = baseStorageLimit;
-    let isApiUnlimited = false;
+    const isApiUnlimited = false;
     let isStorageUnlimited = false;
 
     if (subscription) {
       // User has an active subscription, get limits from payment config
-      // This would typically come from the subscription plan configuration
       switch (subscription.priceId) {
         case process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY:
         case process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY:
@@ -147,21 +167,17 @@ export async function getQuotaUsage(): Promise<ActionResult<GetQuotaUsageRespons
           break;
       }
     }
-
-    // Mock current usage - in real implementation, query from your analytics/usage tracking
-    const mockApiUsage = Math.floor(Math.random() * (apiCallLimit * 0.8));
-    const mockStorageUsage = Math.floor(Math.random() * (storageLimit * 0.6));
     
     return {
       success: true,
       data: {
         apiCalls: {
-          used: mockApiUsage,
+          used: apiCallUsage,
           limit: apiCallLimit,
           isUnlimited: isApiUnlimited,
         },
         storage: {
-          used: mockStorageUsage,
+          used: storageUsage,
           limit: storageLimit,
           isUnlimited: isStorageUnlimited,
         },
@@ -300,6 +316,80 @@ export async function spendCredits(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to spend credits',
+    };
+  }
+}
+
+/**
+ * Update user quota usage for a specific service
+ */
+export async function updateUserQuotaUsage(
+  service: QuotaService,
+  amount: number
+): Promise<ActionResult<{ used: number; service: QuotaService }>> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return {
+        success: false,
+        error: 'Unauthorized',
+      };
+    }
+
+    const updatedRecord = await updateQuotaUsage({
+      userId: session.user.id,
+      service,
+      amount,
+    });
+
+    return {
+      success: true,
+      data: {
+        used: updatedRecord.usedAmount,
+        service: updatedRecord.service,
+      },
+    };
+  } catch (error) {
+    console.error('Error updating quota usage:', error);
+    return {
+      success: false,
+      error: 'Failed to update quota usage',
+    };
+  }
+}
+
+/**
+ * Initialize quota usage for current user (useful for new users)
+ */
+export async function initializeUserQuotaUsage(): Promise<ActionResult<{ message: string }>> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return {
+        success: false,
+        error: 'Unauthorized',
+      };
+    }
+
+    await quotaService.initializeForUser(session.user.id);
+
+    return {
+      success: true,
+      data: {
+        message: 'Quota usage initialized successfully',
+      },
+    };
+  } catch (error) {
+    console.error('Error initializing quota usage:', error);
+    return {
+      success: false,
+      error: 'Failed to initialize quota usage',
     };
   }
 }

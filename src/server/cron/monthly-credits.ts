@@ -3,13 +3,15 @@ import db from '@/server/db';
 import { user, payment } from '@/server/db/schema';
 import { creditService } from '@/lib/credits';
 import { paymentConfig } from '@/config/payment.config';
+import { quotaService } from '@/lib/quota/quota-service';
 
 /**
  * Grant monthly free credits to users without active subscriptions
+ * and update quota usage records for all users
  * This should be run on the 1st of each month
  */
 export async function grantMonthlyFreeCredits() {
-  console.log('🎁 Starting monthly free credits distribution...');
+  console.log('🎁 Starting monthly free credits distribution and quota update...');
   
   try {
     // Get all users who don't have active subscriptions (free users)
@@ -72,10 +74,37 @@ export async function grantMonthlyFreeCredits() {
       }
     }
 
-    console.log(`🎯 Monthly free credits distribution completed:`);
+    console.log('🎯 Monthly free credits distribution completed:');
     console.log(`   ✅ Success: ${successCount} users`);
     console.log(`   ❌ Errors: ${errorCount} users`);
     console.log(`   💰 Total credits distributed: ${successCount * freeCredits}`);
+    
+    // Update quota usage records for all users (reset monthly usage)
+    console.log('📊 Updating quota usage records for all users...');
+    let quotaUpdateSuccessCount = 0;
+    let quotaUpdateErrorCount = 0;
+    const quotaErrors: Array<{ userId: string; error: string }> = [];
+    
+    // Get all users for quota update
+    const allUsers = await db.select({ id: user.id, email: user.email }).from(user);
+    console.log(`Found ${allUsers.length} users for quota update`);
+    
+    for (const userData of allUsers) {
+      try {
+        await quotaService.initializeForUser(userData.id);
+        quotaUpdateSuccessCount++;
+        console.log(`✅ Updated quota records for ${userData.email} (${userData.id})`);
+      } catch (error) {
+        quotaUpdateErrorCount++;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        quotaErrors.push({ userId: userData.id, error: errorMessage });
+        console.error(`❌ Failed to update quota for ${userData.email} (${userData.id}):`, errorMessage);
+      }
+    }
+    
+    console.log('📊 Quota update completed:');
+    console.log(`   ✅ Success: ${quotaUpdateSuccessCount} users`);
+    console.log(`   ❌ Errors: ${quotaUpdateErrorCount} users`);
 
     return {
       success: true,
@@ -84,7 +113,10 @@ export async function grantMonthlyFreeCredits() {
       errorCount,
       creditsPerUser: freeCredits,
       totalCreditsDistributed: successCount * freeCredits,
+      quotaUpdateSuccessCount,
+      quotaUpdateErrorCount,
       errors: errors.length > 0 ? errors : undefined,
+      quotaErrors: quotaErrors.length > 0 ? quotaErrors : undefined,
     };
   } catch (error) {
     console.error('💥 Fatal error in monthly credits distribution:', error);

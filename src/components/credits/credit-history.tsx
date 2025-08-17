@@ -14,7 +14,7 @@ interface CreditHistoryProps {
   showViewAll?: boolean;
 }
 
-export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistoryProps) {
+export function CreditHistory({ limit = 5, showViewAll = false }: CreditHistoryProps) {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -43,13 +43,13 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
     switch (type) {
       case 'earn':
       case 'refund':
-        return <Plus className='h-4 w-4 text-green-500' />;
+        return <Plus className="h-4 w-4 text-green-500" />;
       case 'spend':
-        return <Minus className='h-4 w-4 text-red-500' />;
+        return <Minus className="h-4 w-4 text-red-500" />;
       case 'admin_adjust':
-        return <RefreshCw className='h-4 w-4 text-blue-500' />;
+        return <RefreshCw className="h-4 w-4 text-blue-500" />;
       default:
-        return <History className='h-4 w-4 text-muted-foreground' />;
+        return <History className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -89,18 +89,18 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
         {Array.from({ length: limit }).map((_, i) => (
           <div
             key={`skeleton-${i}`}
-            className='flex animate-pulse items-center justify-between rounded-lg border p-3'
+            className="flex animate-pulse items-center justify-between rounded-lg border p-3"
           >
             <div className="flex items-center gap-3">
-              <div className='h-8 w-8 rounded-full bg-muted' />
+              <div className="h-8 w-8 rounded-full bg-muted" />
               <div className="space-y-1">
-                <div className='h-4 w-32 rounded bg-muted' />
-                <div className='h-3 w-24 rounded bg-muted' />
+                <div className="h-4 w-32 rounded bg-muted" />
+                <div className="h-3 w-24 rounded bg-muted" />
               </div>
             </div>
-            <div className='space-y-1 text-right'>
-              <div className='h-4 w-16 rounded bg-muted' />
-              <div className='h-3 w-12 rounded bg-muted' />
+            <div className="space-y-1 text-right">
+              <div className="h-4 w-16 rounded bg-muted" />
+              <div className="h-3 w-12 rounded bg-muted" />
             </div>
           </div>
         ))}
@@ -110,10 +110,10 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
 
   if (transactions.length === 0) {
     return (
-      <div className='py-8 text-center'>
-        <History className='mx-auto mb-4 h-12 w-12 text-muted-foreground' />
-        <h3 className='mb-2 font-medium text-lg'>No transactions yet</h3>
-        <p className='mb-4 text-muted-foreground'>
+      <div className="py-8 text-center">
+        <History className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h3 className="mb-2 font-medium text-lg">No transactions yet</h3>
+        <p className="mb-4 text-muted-foreground">
           Your credit transactions will appear here once you start using the platform.
         </p>
       </div>
@@ -125,7 +125,7 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
       {transactions.map((transaction) => (
         <div
           key={transaction.id}
-          className='flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50'
+          className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
         >
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">{getTransactionIcon(transaction.type)}</div>
@@ -133,7 +133,7 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
               <div className="font-medium">
                 {transaction.description || `${transaction.type} credits`}
               </div>
-              <div className='flex items-center gap-2 text-muted-foreground text-sm'>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 {getSourceBadge(transaction.source)}
                 <span>•</span>
                 <span>{new Date(transaction.createdAt).toLocaleDateString()}</span>
@@ -145,7 +145,7 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
               {transaction.type === 'spend' ? '-' : '+'}
               {transaction.amount.toLocaleString()}
             </div>
-            <div className='text-muted-foreground text-sm'>
+            <div className="text-muted-foreground text-sm">
               Balance: {transaction.balanceAfter.toLocaleString()}
             </div>
           </div>
@@ -153,14 +153,14 @@ export function CreditHistory({ limit = 10, showViewAll = false }: CreditHistory
       ))}
 
       {showViewAll && (
-        <div className='border-t pt-4'>
+        <div className="border-t pt-4">
           <Button
             variant="outline"
             className="w-full"
             onClick={() => router.push('/credits/history')}
           >
             View All Transactions
-            <ArrowRight className='ml-2 h-4 w-4' />
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       )}

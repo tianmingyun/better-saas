@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import { eq } from 'drizzle-orm';
+import { count, eq, sum } from 'drizzle-orm';
 import { env } from '../src/env';
 import { user, userCredits, creditTransactions } from '../src/server/db/schema';
 
@@ -87,28 +87,28 @@ async function checkUsersCreditStatus() {
     }
 
     // 2. 获取总体统计
-    const totalUsersQuery = sql`SELECT COUNT(*) as count FROM "user"`;
-    const totalCreditAccountsQuery = sql`SELECT COUNT(*) as count FROM user_credits`;
-    const totalTransactionsQuery = sql`SELECT COUNT(*) as count FROM credit_transactions`;
-    const totalCreditsSumQuery = sql`SELECT COALESCE(SUM(balance), 0) as sum FROM user_credits`;
-    
-    const totalUsersResult = await db.execute(totalUsersQuery);
-    const totalCreditAccountsResult = await db.execute(totalCreditAccountsQuery);
-    const totalTransactionsResult = await db.execute(totalTransactionsQuery);
-    const totalCreditsSumResult = await db.execute(totalCreditsSumQuery);
+    const totalUsersResult = await db.select({ count: count() }).from(user);
+    const totalCreditAccountsResult = await db.select({ count: count() }).from(userCredits);
+    const totalTransactionsResult = await db.select({ count: count() }).from(creditTransactions);
+    const totalCreditsSumResult = await db.select({ sum: sum(userCredits.balance) }).from(userCredits);
+
+    const totalUsers = totalUsersResult[0].count;
+    const totalCreditAccounts = totalCreditAccountsResult[0].count;
+    const totalTransactions = totalTransactionsResult[0].count;
+    const totalCredits = Number(totalCreditsSumResult[0].sum) || 0;
 
     console.log('🎯 Overall Statistics:');
     console.log('='.repeat(50));
-    console.log(`Total Users: ${totalUsersResult.rows[0].count}`);
-    console.log(`Total Credit Accounts: ${totalCreditAccountsResult.rows[0].count}`);
-    console.log(`Total Transactions: ${totalTransactionsResult.rows[0].count}`);
-    console.log(`Total Credits in System: ${totalCreditsSumResult.rows[0].sum || 0}`);
-    console.log(`Coverage: ${Math.round((Number(totalCreditAccountsResult.rows[0].count) / Number(totalUsersResult.rows[0].count)) * 100)}%`);
+    console.log(`Total Users: ${totalUsers}`);
+    console.log(`Total Credit Accounts: ${totalCreditAccounts}`);
+    console.log(`Total Transactions: ${totalTransactions}`);
+    console.log(`Total Credits in System: ${totalCredits}`);
+    console.log(`Coverage: ${Math.round((totalCreditAccounts / totalUsers) * 100)}%`);
 
     // 3. 检查是否需要为现有用户补发积分
-    if (Number(totalCreditAccountsResult.rows[0].count) < Number(totalUsersResult.rows[0].count)) {
-      console.log(`\n⚠️  ${Number(totalUsersResult.rows[0].count) - Number(totalCreditAccountsResult.rows[0].count)} users still need credit accounts!`);
-    } else if (Number(totalCreditsSumResult.rows[0].sum) === 0) {
+    if (totalCreditAccounts < totalUsers) {
+      console.log(`\n⚠️  ${totalUsers - totalCreditAccounts} users still need credit accounts!`);
+    } else if (totalCredits === 0) {
       console.log('\n⚠️  All users have credit accounts but no credits! Consider running signup bonus script.');
     } else {
       console.log('\n✅ All users have credit accounts with credits!');
@@ -116,10 +116,10 @@ async function checkUsersCreditStatus() {
 
     return {
       success: true,
-      totalUsers: Number(totalUsersResult.rows[0].count),
-      totalCreditAccounts: Number(totalCreditAccountsResult.rows[0].count),
-      totalTransactions: Number(totalTransactionsResult.rows[0].count),
-      totalCredits: Number(totalCreditsSumResult.rows[0].sum),
+      totalUsers,
+      totalCreditAccounts,
+      totalTransactions,
+      totalCredits,
     };
 
   } catch (error) {
