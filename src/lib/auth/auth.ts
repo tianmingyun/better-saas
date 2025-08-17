@@ -13,34 +13,42 @@ async function handleUserCreated(user: { id: string; email: string }) {
   try {
     console.log(`🎯 Initializing credit account for new user: ${user.email}`);
     
-    // Create credit account for new user
-    await creditService.createCreditAccount(user.id);
+    // Use getOrCreateCreditAccount instead of createCreditAccount to handle duplicates
+    const creditAccount = await creditService.getOrCreateCreditAccount(user.id);
     
-    // Grant signup bonus credits for free plan
-    const freePlan = paymentConfig.plans.find(p => p.id === 'free');
-    const signupCredits = freePlan?.credits?.onSignup;
+    // Check if this is a newly created account (no previous transactions)
+    const existingTransactions = await creditService.getTransactionHistory(user.id, 1);
+    const isNewAccount = existingTransactions.length === 0;
     
-    if (signupCredits && signupCredits > 0) {
-      await creditService.earnCredits({
-        userId: user.id,
-        amount: signupCredits,
-        source: 'bonus',
-        description: 'Welcome bonus credits',
-        referenceId: `signup_${user.id}`,
-        metadata: {
-          type: 'signup_bonus',
-          planId: 'free',
-        },
-      });
+    if (isNewAccount) {
+      // Grant signup bonus credits for free plan (only for new accounts)
+      const freePlan = paymentConfig.plans.find(p => p.id === 'free');
+      const signupCredits = freePlan?.credits?.onSignup;
       
-      console.log(`✅ Granted ${signupCredits} signup bonus credits to user ${user.email}`);
+      if (signupCredits && signupCredits > 0) {
+        await creditService.earnCredits({
+          userId: user.id,
+          amount: signupCredits,
+          source: 'bonus',
+          description: 'Welcome bonus credits',
+          referenceId: `signup_${user.id}`,
+          metadata: {
+            type: 'signup_bonus',
+            planId: 'free',
+          },
+        });
+        
+        console.log(`✅ Granted ${signupCredits} signup bonus credits to user ${user.email}`);
+      }
+      
+      // Initialize quota usage for new user
+      await quotaService.initializeForUser(user.id);
+      console.log(`✅ Initialized quota usage records for user ${user.email}`);
+      
+      console.log(`🎉 Successfully initialized credit account for user ${user.email}`);
+    } else {
+      console.log(`ℹ️ Credit account already exists for user ${user.email}, skipping initialization`);
     }
-    
-    // Initialize quota usage for new user
-    await quotaService.initializeForUser(user.id);
-    console.log(`✅ Initialized quota usage records for user ${user.email}`);
-    
-    console.log(`🎉 Successfully initialized credit account for user ${user.email}`);
   } catch (error) {
     console.error(`❌ Failed to initialize credit account for user ${user.email}:`, error);
     // Don't throw error to avoid blocking the registration flow
