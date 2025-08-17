@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { grantMonthlyFreeCredits } from '@/server/cron/monthly-credits';
 import { createChildLogger } from '@/lib/logger/logger';
+import { validateCronRequest } from '@/lib/cron/auth';
 
 const cronLogger = createChildLogger('monthly-credits-cron');
 
@@ -8,15 +9,19 @@ export async function GET(request: Request) {
   const executionStart = new Date();
   
   try {
+    // 安全验证
+    const authError = validateCronRequest(request);
+    if (authError) {
+      return authError;
+    }
+    
     // 获取请求信息
     const userAgent = request.headers.get('user-agent');
-    const isVercelCron = userAgent?.includes('Vercel-Cron');
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip');
     
     cronLogger.info({
       timestamp: executionStart.toISOString(),
       userAgent,
-      isVercelCron,
       ip,
     }, 'Starting monthly credits cron job');
     
@@ -31,7 +36,6 @@ export async function GET(request: Request) {
         errorCount: result.errorCount,
         totalCreditsDistributed: result.totalCreditsDistributed,
         executionTime: `${executionTime}ms`,
-        isScheduledExecution: isVercelCron,
       }, 'Monthly credits distribution completed successfully');
       
       return NextResponse.json({
@@ -41,7 +45,6 @@ export async function GET(request: Request) {
           ...result,
           executionTime: `${executionTime}ms`,
           executedAt: executionEnd.toISOString(),
-          isScheduledExecution: isVercelCron,
         },
       });
     }

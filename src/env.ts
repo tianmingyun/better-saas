@@ -24,6 +24,8 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET: z.string(),
     // Admin Configuration
     ADMIN_EMAILS: z.string().optional().default(''),
+    // Cron Security
+    CRON_SECRET: z.string().optional(),
   },
 
   /**
@@ -59,6 +61,8 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     // Admin Configuration
     ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+    // Cron Security
+    CRON_SECRET: process.env.CRON_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
