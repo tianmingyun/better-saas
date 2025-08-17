@@ -8,10 +8,7 @@
   "crons": [
     {
       "path": "/api/cron/monthly-credits",
-      "schedule": "0 2 1 * *",
-      "headers": {
-        "Authorization": "Bearer $CRON_SECRET"
-      }
+      "schedule": "0 2 1 * *"
     }
   ]
 }

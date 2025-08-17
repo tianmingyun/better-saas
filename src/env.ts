@@ -25,7 +25,7 @@ export const env = createEnv({
     // Admin Configuration
     ADMIN_EMAILS: z.string().optional().default(''),
     // Cron Security
-    CRON_SECRET: z.string().optional(),
+    CRON_SECRET: z.string(),
   },
 
   /**
