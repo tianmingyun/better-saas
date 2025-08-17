@@ -157,7 +157,14 @@ export const creditTransactions = pgTable('credit_transactions', {
   createdAt: timestamp('created_at')
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+}, (table) => ({
+  // Ensure idempotency: prevent duplicate non-null referenceId per user
+  userReferenceUnique: {
+    name: 'credit_user_reference_unique',
+    columns: [table.userId, table.referenceId],
+    unique: true,
+  },
+}));
 
 export const userQuotaUsage = pgTable('user_quota_usage', {
   id: text('id').primaryKey(),

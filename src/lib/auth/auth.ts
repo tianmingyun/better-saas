@@ -3,57 +3,8 @@ import db from '@/server/db';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
-import { createAuthMiddleware } from 'better-auth/api';
-import { creditService } from '@/lib/credits';
-import { paymentConfig } from '@/config/payment.config';
-import { quotaService } from '@/lib/quota/quota-service';
 
-// Handle user creation - initialize credit account and grant signup bonus
-async function handleUserCreated(user: { id: string; email: string }) {
-  try {
-    console.log(`🎯 Initializing credit account for new user: ${user.email}`);
-    
-    // Use getOrCreateCreditAccount instead of createCreditAccount to handle duplicates
-    const creditAccount = await creditService.getOrCreateCreditAccount(user.id);
-    
-    // Check if this is a newly created account (no previous transactions)
-    const existingTransactions = await creditService.getTransactionHistory(user.id, 1);
-    const isNewAccount = existingTransactions.length === 0;
-    
-    if (isNewAccount) {
-      // Grant signup bonus credits for free plan (only for new accounts)
-      const freePlan = paymentConfig.plans.find(p => p.id === 'free');
-      const signupCredits = freePlan?.credits?.onSignup;
-      
-      if (signupCredits && signupCredits > 0) {
-        await creditService.earnCredits({
-          userId: user.id,
-          amount: signupCredits,
-          source: 'bonus',
-          description: 'Welcome bonus credits',
-          referenceId: `signup_${user.id}`,
-          metadata: {
-            type: 'signup_bonus',
-            planId: 'free',
-          },
-        });
-        
-        console.log(`✅ Granted ${signupCredits} signup bonus credits to user ${user.email}`);
-      }
-      
-      // Initialize quota usage for new user
-      await quotaService.initializeForUser(user.id);
-      console.log(`✅ Initialized quota usage records for user ${user.email}`);
-      
-      console.log(`🎉 Successfully initialized credit account for user ${user.email}`);
-    } else {
-      console.log(`ℹ️ Credit account already exists for user ${user.email}, skipping initialization`);
-    }
-  } catch (error) {
-    console.error(`❌ Failed to initialize credit account for user ${user.email}:`, error);
-    // Don't throw error to avoid blocking the registration flow
-  }
-}
+
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -81,17 +32,5 @@ export const auth = betterAuth({
       maxAge: 60 * 60 
     },
   },
-  plugins: [admin()],
-  hooks: {
-    after: createAuthMiddleware(async (ctx) => {
-      const newSession = ctx.context.newSession;
-      if (newSession) {
-        // Trigger user initialization in the background
-        // Don't await to avoid blocking the registration flow
-        handleUserCreated(newSession.user).catch(error => {
-          console.error('Failed to initialize user business data:', error);
-        });
-      }
-    })
-  }
+  plugins: [admin()]
 });

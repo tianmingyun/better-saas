@@ -6,6 +6,28 @@ import { ErrorLogger } from '@/lib/logger/logger-utils';
 
 const authErrorLogger = new ErrorLogger('auth-store');
 
+// Helper function to initialize user credits
+const initializeUserCredits = async (userId: string): Promise<void> => {
+  try {
+    const response = await fetch('/api/credits/initialize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to initialize user credits:', await response.text());
+    } else {
+      const result = await response.json();
+      console.log('Credit initialization result:', result);
+    }
+  } catch (error) {
+    console.warn('Error initializing user credits:', error);
+  }
+};
+
 interface AuthState {
   // Persistent state
   user: User | null;
@@ -151,6 +173,10 @@ export const useAuthStore = create<AuthState>()(
                 isLoading: false,
                 lastUpdated: Date.now(),
               });
+
+              // Initialize user credits after successful registration
+              await initializeUserCredits(user.id);
+
               return { success: true };
             }
             set({ isLoading: false });
@@ -287,12 +313,15 @@ export const useAuthStore = create<AuthState>()(
           if (get().isInitialized) return;
 
           set({ isLoading: true });
+          const previousUser = get().user;
 
           try {
             // Always check server session to ensure consistency
             const session = await authClient.getSession();
             if (session.data) {
               const user = session.data.user;
+              const isNewUser = !previousUser || previousUser.id !== user.id;
+              
               set({
                 user,
                 isAuthenticated: true,
@@ -300,6 +329,12 @@ export const useAuthStore = create<AuthState>()(
                 isInitialized: true,
                 lastUpdated: Date.now(),
               });
+
+              // Initialize credits for new users (e.g., from social login)
+              // The API will handle idempotency and prevent duplicate grants
+              if (isNewUser) {
+                await initializeUserCredits(user.id);
+              }
             } else {
               // Only clear auth if cache is invalid or expired
               if (!get().isCacheValid()) {
