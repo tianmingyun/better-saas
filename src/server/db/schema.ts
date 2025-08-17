@@ -118,3 +118,68 @@ export const paymentEvent = pgTable('payment_event', {
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+// Credit system tables
+export const userCredits = pgTable('user_credits', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  balance: integer('balance').notNull().default(0),
+  totalEarned: integer('total_earned').notNull().default(0),
+  totalSpent: integer('total_spent').notNull().default(0),
+  frozenBalance: integer('frozen_balance').notNull().default(0),
+  createdAt: timestamp('created_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp('updated_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const creditTransactions = pgTable('credit_transactions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  type: text('type', { 
+    enum: ['earn', 'spend', 'refund', 'admin_adjust', 'freeze', 'unfreeze'] 
+  }).notNull(),
+  amount: integer('amount').notNull(),
+  balanceAfter: integer('balance_after').notNull(),
+  source: text('source', { 
+    enum: ['subscription', 'api_call', 'admin', 'storage', 'bonus'] 
+  }).notNull(),
+  description: text('description'),
+  referenceId: text('reference_id'),
+  metadata: text('metadata'), // JSON string
+  createdAt: timestamp('created_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const userQuotaUsage = pgTable('user_quota_usage', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  service: text('service', { 
+    enum: ['api_call', 'storage', 'custom'] 
+  }).notNull(),
+  period: text('period').notNull(), // Format: YYYY-MM
+  usedAmount: integer('used_amount').notNull().default(0),
+  createdAt: timestamp('created_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp('updated_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+}, (table) => ({
+  // Unique constraint for user + service + period
+  userServicePeriodIdx: { 
+    name: 'user_service_period_idx', 
+    columns: [table.userId, table.service, table.period], 
+    unique: true 
+  },
+}));

@@ -241,6 +241,13 @@ export interface PaymentPlan {
     projects?: number;
     apiCalls?: number;
   };
+  // Credits configuration for subscription-based credit system
+  credits?: {
+    monthly?: number;      // Credits granted per month
+    yearly?: number;       // Credits granted per year (for yearly subscriptions)
+    onSubscribe?: number;  // Credits granted immediately on subscription
+    onSignup?: number;     // Credits granted on user signup (for free plans)
+  };
 }
 
 export interface PaymentConfig {

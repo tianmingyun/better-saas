@@ -22,19 +22,23 @@ export const paymentConfig: PaymentConfig = {
       description: 'Perfect for getting started',
       price: 0,
       interval: null,
+      credits: {
+        monthly: 50,    // 每月免费积分
+        onSignup: 50,   // 注册赠送积分
+      },
       features: [
-        'Up to 3 projects',
-        '5GB storage',
+        '50 credits per month',
+        'Basic API access',
+        '1GB storage',
         'Basic support',
         'Community access',
-        'Basic analytics',
       ],
       popular: false,
       limits: {
-        storage: 5,
+        storage: 1,
         users: 1,
         projects: 3,
-        apiCalls: 1000,
+        apiCalls: 50,
       },
     },
     {
@@ -48,50 +52,60 @@ export const paymentConfig: PaymentConfig = {
         monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
         yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly',
       },
+      credits: {
+        monthly: 1000,     // 每月积分
+        yearly: 12000,     // 年付积分（多送2个月）
+        onSubscribe: 1000, // 订阅时立即获得
+      },
       features: [
-        'Unlimited projects',
-        '100GB storage',
+        '1,000 credits per month',
+        'Advanced API access',
+        '10GB storage',
         'Priority support',
         'Advanced analytics',
         'Custom integrations',
         'Team collaboration',
-        'API access',
       ],
       popular: true,
       limits: {
-        storage: 100,
+        storage: 10,
         users: 5,
         projects: -1, // unlimited
-        apiCalls: 50000,
+        apiCalls: 10000,
       },
     },
     {
       id: 'enterprise',
       name: 'Enterprise',
       description: 'For large organizations',
-      price: 99,
-      yearlyPrice: 999, // $99 * 10 months (2 months free)
+      price: 199,
+      yearlyPrice: 1999, // Updated pricing to match design document
       interval: 'month',
       stripePriceIds: {
         monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY || 'price_enterprise_monthly',
         yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY || 'price_enterprise_yearly',
       },
+      credits: {
+        monthly: 5000,     // 每月积分
+        yearly: 60000,     // 年付积分
+        onSubscribe: 5000, // 订阅时立即获得
+      },
       features: [
-        'Unlimited everything',
-        '1TB storage',
+        '5,000 credits per month',
+        'Enterprise API access',
+        'Unlimited storage',
         '24/7 dedicated support',
         'Custom integrations',
         'Advanced security',
         'SLA guarantee',
         'On-premise deployment',
-        'Custom training',
       ],
       popular: false,
       limits: {
-        storage: 1000,
+        storage: -1, // unlimited
         users: -1, // unlimited
         projects: -1, // unlimited
-        apiCalls: -1, // unlimited
+        apiCalls: 100000,
       },
     },
   ],

@@ -5,6 +5,7 @@ import { useIsAdmin } from '@/components/auth/permission-provider';
 import type { SidebarGroup } from '@/types';
 import {
   Bell,
+  Coins,
   CreditCard,
   Files,
   Settings,
@@ -45,6 +46,24 @@ export function ProtectedLayoutClient({ children }: ProtectedLayoutClientProps) 
         ],
       });
     }
+
+    // all users can see Credits menu
+    groups.push({
+      title: 'Credits',
+      defaultOpen: true,
+      items: [
+        {
+          title: 'Balance',
+          href: '/credits',
+          icon: Coins,
+        },
+        {
+          title: 'History',
+          href: '/credits/history',
+          icon: Bell,
+        },
+      ],
+    });
 
     // all users can see Settings menu
     groups.push({
