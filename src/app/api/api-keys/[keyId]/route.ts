@@ -7,7 +7,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 // DELETE /api/api-keys/[keyId] - 删除指定的API Key
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { keyId: string } }
+  { params }: { params: Promise<{ keyId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -21,7 +21,7 @@ export async function DELETE(
       );
     }
 
-    const { keyId } = params;
+    const { keyId } = await params;
 
     if (!keyId) {
       return NextResponse.json(
@@ -61,7 +61,7 @@ export async function DELETE(
 // GET /api/api-keys/[keyId] - 获取指定API Key的详细信息
 export async function GET(
   request: NextRequest,
-  { params }: { params: { keyId: string } }
+  { params }: { params: Promise<{ keyId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -75,7 +75,7 @@ export async function GET(
       );
     }
 
-    const { keyId } = params;
+    const { keyId } = await params;
 
     if (!keyId) {
       return NextResponse.json(
