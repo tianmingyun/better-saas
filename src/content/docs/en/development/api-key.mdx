@@ -1,0 +1,707 @@
+---
+title: API Key System Guide
+description: Complete guide for implementing and managing API keys in Better SaaS
+---
+
+The API Key system in Better SaaS provides secure authentication for external API access. This guide covers the implementation details, security considerations, and usage patterns.
+
+## Architecture Overview
+
+The API Key system consists of several key components:
+
+- **API Key Management**: Creation, validation, and revocation
+- **Authentication Middleware**: Request validation and user identification
+- **Database Schema**: Secure key storage and metadata
+- **Management Interface**: User-facing key management UI
+- **Rate Limiting**: Request throttling and quota management
+
+## Database Schema
+
+The API Key system uses the following database table:
+
+### API Keys Table
+
+```sql
+CREATE TABLE api_key (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user(id),
+  key_value TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  last_used_at TIMESTAMP,
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_api_key_value ON api_key(key_value);
+CREATE INDEX idx_api_key_user_id ON api_key(user_id);
+```
+
+## Core Services
+
+### API Key Service
+
+The main API Key service handles all key operations:
+
+```typescript
+// src/lib/api-keys/api-key-service.ts
+import { db } from '@/server/db'
+import { apiKey, user } from '@/server/db/schema'
+import { eq, and } from 'drizzle-orm'
+import { v4 as uuidv4 } from 'uuid'
+import crypto from 'crypto'
+
+export class ApiKeyService {
+  static generateKeyValue(): string {
+    const prefix = 'bs_'
+    const randomPart = uuidv4().replace(/-/g, '')
+    return `${prefix}${randomPart}`
+  }
+
+  static async createApiKey(
+    userId: string,
+    name: string,
+    expiresAt?: Date
+  ) {
+    const keyValue = this.generateKeyValue()
+    const keyId = uuidv4()
+
+    const [newKey] = await db
+      .insert(apiKey)
+      .values({
+        id: keyId,
+        userId,
+        keyValue,
+        name,
+        expiresAt,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning()
+
+    return newKey
+  }
+
+  static async validateApiKey(keyValue: string) {
+    const [key] = await db
+      .select({
+        id: apiKey.id,
+        userId: apiKey.userId,
+        name: apiKey.name,
+        expiresAt: apiKey.expiresAt,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          banned: user.banned
+        }
+      })
+      .from(apiKey)
+      .innerJoin(user, eq(apiKey.userId, user.id))
+      .where(
+        and(
+          eq(apiKey.keyValue, keyValue),
+          eq(user.banned, false)
+        )
+      )
+      .limit(1)
+
+    if (!key) {
+      return null
+    }
+
+    // Check if key is expired
+    if (key.expiresAt && new Date() > key.expiresAt) {
+      return null
+    }
+
+    // Update last used timestamp
+    await db
+      .update(apiKey)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(apiKey.id, key.id))
+
+    return key
+  }
+
+  static async getUserApiKeys(userId: string) {
+    return await db
+      .select({
+        id: apiKey.id,
+        name: apiKey.name,
+        keyValue: apiKey.keyValue,
+        lastUsedAt: apiKey.lastUsedAt,
+        expiresAt: apiKey.expiresAt,
+        createdAt: apiKey.createdAt
+      })
+      .from(apiKey)
+      .where(eq(apiKey.userId, userId))
+      .orderBy(apiKey.createdAt)
+  }
+
+  static async deleteApiKey(keyId: string, userId: string) {
+    const [deleted] = await db
+      .delete(apiKey)
+      .where(
+        and(
+          eq(apiKey.id, keyId),
+          eq(apiKey.userId, userId)
+        )
+      )
+      .returning()
+
+    return deleted
+  }
+
+  static async revokeApiKey(keyId: string, userId: string) {
+    return await this.deleteApiKey(keyId, userId)
+  }
+}
+```
+
+### Authentication Middleware
+
+Middleware for API key authentication:
+
+```typescript
+// src/middleware/api-auth.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { ApiKeyService } from '@/lib/api-keys/api-key-service'
+
+export async function apiKeyAuth(request: NextRequest) {
+  const apiKey = request.headers.get('x-api-key') || 
+                 request.headers.get('authorization')?.replace('Bearer ', '')
+
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: 'API key required' },
+      { status: 401 }
+    )
+  }
+
+  const keyData = await ApiKeyService.validateApiKey(apiKey)
+
+  if (!keyData) {
+    return NextResponse.json(
+      { error: 'Invalid or expired API key' },
+      { status: 401 }
+    )
+  }
+
+  // Add user data to request headers for downstream use
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-user-id', keyData.userId)
+  requestHeaders.set('x-user-email', keyData.user.email)
+  requestHeaders.set('x-api-key-id', keyData.id)
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders
+    }
+  })
+}
+
+export function withApiKeyAuth(handler: Function) {
+  return async (request: NextRequest) => {
+    const authResult = await apiKeyAuth(request)
+    
+    if (authResult.status !== 200) {
+      return authResult
+    }
+    
+    return handler(request)
+  }
+}
+```
+
+## API Endpoints
+
+### API Key Management Routes
+
+```typescript
+// src/app/api/api-keys/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/server/auth'
+import { ApiKeyService } from '@/lib/api-keys/api-key-service'
+
+// Get user's API keys
+export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const apiKeys = await ApiKeyService.getUserApiKeys(session.user.id)
+  
+  // Don't return the actual key values for security
+  const safeApiKeys = apiKeys.map(key => ({
+    ...key,
+    keyValue: `${key.keyValue.substring(0, 8)}...${key.keyValue.slice(-4)}`
+  }))
+
+  return NextResponse.json({ apiKeys: safeApiKeys })
+}
+
+// Create new API key
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { name, expiresAt } = await request.json()
+
+  if (!name || name.trim().length === 0) {
+    return NextResponse.json(
+      { error: 'API key name is required' },
+      { status: 400 }
+    )
+  }
+
+  const expirationDate = expiresAt ? new Date(expiresAt) : undefined
+
+  const newKey = await ApiKeyService.createApiKey(
+    session.user.id,
+    name.trim(),
+    expirationDate
+  )
+
+  return NextResponse.json({
+    id: newKey.id,
+    name: newKey.name,
+    keyValue: newKey.keyValue, // Only return full key on creation
+    expiresAt: newKey.expiresAt,
+    createdAt: newKey.createdAt
+  })
+}
+```
+
+### Delete API Key Route
+
+```typescript
+// src/app/api/api-keys/[keyId]/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/server/auth'
+import { ApiKeyService } from '@/lib/api-keys/api-key-service'
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { keyId: string } }
+) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const deleted = await ApiKeyService.deleteApiKey(
+    params.keyId,
+    session.user.id
+  )
+
+  if (!deleted) {
+    return NextResponse.json(
+      { error: 'API key not found' },
+      { status: 404 }
+    )
+  }
+
+  return NextResponse.json({ success: true })
+}
+```
+
+### External API Route Example
+
+```typescript
+// src/app/api/external/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { ApiKeyService } from '@/lib/api-keys/api-key-service'
+import { QuotaService } from '@/lib/quota/quota-service'
+
+export async function POST(request: NextRequest) {
+  // Validate API key
+  const apiKey = request.headers.get('x-api-key')
+  
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: 'API key required' },
+      { status: 401 }
+    )
+  }
+
+  const keyData = await ApiKeyService.validateApiKey(apiKey)
+  
+  if (!keyData) {
+    return NextResponse.json(
+      { error: 'Invalid API key' },
+      { status: 401 }
+    )
+  }
+
+  // Check quota
+  const quota = await QuotaService.checkQuota(
+    keyData.userId,
+    'api_call'
+  )
+  
+  if (!quota.allowed) {
+    return NextResponse.json(
+      { 
+        error: 'Quota exceeded',
+        required: quota.cost,
+        available: quota.available
+      },
+      { status: 402 }
+    )
+  }
+
+  try {
+    const { message } = await request.json()
+    
+    // Process the chat request
+    const response = await processChatMessage(message)
+    
+    // Consume quota after successful processing
+    await QuotaService.consumeQuota(keyData.userId, 'api_call')
+    
+    return NextResponse.json({
+      response,
+      usage: {
+        credits_used: quota.cost,
+        credits_remaining: quota.available - quota.cost
+      }
+    })
+  } catch (error) {
+    console.error('Chat API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+## React Components
+
+### API Key Management Component
+
+```typescript
+// src/components/api-keys/api-key-manager.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Trash2, Copy, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+
+interface ApiKey {
+  id: string
+  name: string
+  keyValue: string
+  lastUsedAt: string | null
+  expiresAt: string | null
+  createdAt: string
+}
+
+export function ApiKeyManager() {
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [newKeyName, setNewKeyName] = useState('')
+  const [showCreateForm, setShowCreateForm] = useState(false)
+
+  useEffect(() => {
+    fetchApiKeys()
+  }, [])
+
+  const fetchApiKeys = async () => {
+    try {
+      const response = await fetch('/api/api-keys')
+      const data = await response.json()
+      setApiKeys(data.apiKeys)
+    } catch (error) {
+      toast.error('Failed to fetch API keys')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createApiKey = async () => {
+    if (!newKeyName.trim()) {
+      toast.error('Please enter a name for the API key')
+      return
+    }
+
+    setCreating(true)
+    try {
+      const response = await fetch('/api/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKeyName.trim() })
+      })
+
+      if (response.ok) {
+        const newKey = await response.json()
+        toast.success('API key created successfully')
+        setNewKeyName('')
+        setShowCreateForm(false)
+        
+        // Show the full key value only once
+        navigator.clipboard.writeText(newKey.keyValue)
+        toast.info('API key copied to clipboard')
+        
+        fetchApiKeys()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to create API key')
+      }
+    } catch (error) {
+      toast.error('Failed to create API key')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const deleteApiKey = async (keyId: string) => {
+    if (!confirm('Are you sure you want to delete this API key?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/api-keys/${keyId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('API key deleted')
+        fetchApiKeys()
+      } else {
+        toast.error('Failed to delete API key')
+      }
+    } catch (error) {
+      toast.error('Failed to delete API key')
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard')
+  }
+
+  if (loading) {
+    return <div>Loading API keys...</div>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">API Keys</h2>
+        <Button
+          onClick={() => setShowCreateForm(true)}
+          disabled={showCreateForm}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create API Key
+        </Button>
+      </div>
+
+      {showCreateForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New API Key</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              placeholder="Enter API key name"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && createApiKey()}
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={createApiKey}
+                disabled={creating || !newKeyName.trim()}
+              >
+                {creating ? 'Creating...' : 'Create'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCreateForm(false)
+                  setNewKeyName('')
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {apiKeys.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">
+                No API keys found. Create your first API key to get started.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          apiKeys.map((key) => (
+            <Card key={key.id}>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">{key.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <code className="bg-muted px-2 py-1 rounded text-sm">
+                        {key.keyValue}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(key.keyValue)}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p>Created: {new Date(key.createdAt).toLocaleDateString()}</p>
+                      {key.lastUsedAt && (
+                        <p>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</p>
+                      )}
+                      {key.expiresAt && (
+                        <p>Expires: {new Date(key.expiresAt).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteApiKey(key.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+```
+
+## Security Best Practices
+
+1. **Key Generation**: Use cryptographically secure random generation
+2. **Storage**: Never store plain text keys; use hashing if needed
+3. **Transmission**: Always use HTTPS for API key transmission
+4. **Expiration**: Implement key expiration and rotation
+5. **Rate Limiting**: Implement per-key rate limiting
+6. **Logging**: Log API key usage for security monitoring
+7. **Revocation**: Provide immediate key revocation capabilities
+
+## Usage Examples
+
+### Client-side API Usage
+
+```javascript
+// Example API client
+const apiClient = {
+  baseURL: 'https://your-app.com/api/external',
+  apiKey: 'bs_your_api_key_here',
+  
+  async request(endpoint, options = {}) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': this.apiKey,
+        ...options.headers
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`)
+    }
+    
+    return response.json()
+  },
+  
+  async chat(message) {
+    return this.request('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    })
+  }
+}
+
+// Usage
+try {
+  const result = await apiClient.chat('Hello, how are you?')
+  console.log(result.response)
+} catch (error) {
+  console.error('API call failed:', error)
+}
+```
+
+### cURL Examples
+
+```bash
+# Create API key
+curl -X POST https://your-app.com/api/api-keys \
+  -H "Content-Type: application/json" \
+  -H "Cookie: your-session-cookie" \
+  -d '{"name": "My API Key"}'
+
+# Use API key for external API
+curl -X POST https://your-app.com/api/external/chat \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: bs_your_api_key_here" \
+  -d '{"message": "Hello, world!"}'
+
+# Delete API key
+curl -X DELETE https://your-app.com/api/api-keys/key-id \
+  -H "Cookie: your-session-cookie"
+```
+
+## Testing
+
+```typescript
+// tests/unit/api-key-service.test.ts
+import { ApiKeyService } from '@/lib/api-keys/api-key-service'
+
+describe('ApiKeyService', () => {
+  it('should generate valid API keys', () => {
+    const key = ApiKeyService.generateKeyValue()
+    expect(key).toMatch(/^bs_[a-f0-9]{32}$/)
+  })
+  
+  it('should create and validate API keys', async () => {
+    const userId = 'test-user'
+    const keyName = 'Test Key'
+    
+    const newKey = await ApiKeyService.createApiKey(userId, keyName)
+    expect(newKey.name).toBe(keyName)
+    expect(newKey.userId).toBe(userId)
+    
+    const validation = await ApiKeyService.validateApiKey(newKey.keyValue)
+    expect(validation).toBeTruthy()
+    expect(validation?.userId).toBe(userId)
+  })
+  
+  it('should reject invalid API keys', async () => {
+    const validation = await ApiKeyService.validateApiKey('invalid-key')
+    expect(validation).toBeNull()
+  })
+})
+```
+
+This API Key system provides secure, scalable authentication for external API access while maintaining proper security practices and user management capabilities.

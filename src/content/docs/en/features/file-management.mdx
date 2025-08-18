@@ -153,7 +153,7 @@ import { db } from '@/server/db'
 import { files, folders } from '@/server/db/schema'
 import { eq, and } from 'drizzle-orm'
 import sharp from 'sharp'
-import { nanoid } from 'nanoid'
+import { v4 as uuidv4 } from 'uuid'
 
 export class FileService {
   private static instance: FileService
@@ -186,7 +186,7 @@ export class FileService {
 
     // Generate unique key
     const fileExtension = file.name.split('.').pop()
-    const key = `${userId}/${nanoid()}.${fileExtension}`
+    const key = `${userId}/${uuidv4()}.${fileExtension}`
 
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer())
@@ -201,7 +201,7 @@ export class FileService {
     }
 
     // Save to database
-    const fileId = nanoid()
+    const fileId = uuidv4()
     await db.insert(files).values({
       id: fileId,
       userId,
@@ -284,7 +284,7 @@ export class FileService {
   }
 
   async createFolder(name: string, userId: string, parentId?: string) {
-    const folderId = nanoid()
+    const folderId = uuidv4()
     await db.insert(folders).values({
       id: folderId,
       name,
@@ -783,7 +783,7 @@ import { headers } from "next/headers"
 import { db } from "@/server/db"
 import { fileShares, files } from "@/server/db/schema"
 import { eq, and } from "drizzle-orm"
-import { nanoid } from "nanoid"
+import { v4 as uuidv4 } from "uuid"
 
 export async function shareFile(
   fileId: string,
@@ -808,8 +808,8 @@ export async function shareFile(
     throw new Error("File not found")
   }
 
-  const shareToken = nanoid(32)
-  const shareId = nanoid()
+  const shareToken = uuidv4().replace(/-/g, '')
+  const shareId = uuidv4()
 
   await db.insert(fileShares).values({
     id: shareId,

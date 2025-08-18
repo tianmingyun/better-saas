@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Plus, Minus, RefreshCw, History } from 'lucide-react';
+import { ArrowRight, Plus, Minus, RefreshCw, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCreditHistory } from '@/server/actions/credit-actions';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
@@ -12,18 +12,37 @@ import type { CreditTransaction } from '@/lib/credits';
 interface CreditHistoryProps {
   limit?: number;
   showViewAll?: boolean;
+  enablePagination?: boolean;
 }
 
-export function CreditHistory({ limit = 5, showViewAll = false }: CreditHistoryProps) {
+export function CreditHistory({ 
+  limit = 5, 
+  showViewAll = false, 
+  enablePagination = false 
+}: CreditHistoryProps) {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreData, setHasMoreData] = useState(false);
   const router = useRouter();
 
-  const fetchTransactions = useCallback(async () => {
+  const itemsPerPage = enablePagination ? 10 : limit;
+
+  const fetchTransactions = useCallback(async (page = 1) => {
     try {
-      const result = await getCreditHistory({ limit });
+      setIsLoading(true);
+      const offset = (page - 1) * itemsPerPage;
+      const result = await getCreditHistory({ 
+        limit: itemsPerPage + 1, // Request one extra to check if there's more data
+        offset 
+      });
+      
       if (result.success && result.data) {
-        setTransactions(result.data);
+        const hasMore = result.data.length > itemsPerPage;
+        const displayData = hasMore ? result.data.slice(0, itemsPerPage) : result.data;
+        
+        setTransactions(displayData);
+        setHasMoreData(hasMore);
       } else {
         toast.error(result.error || 'Failed to load credit history');
       }
@@ -33,11 +52,15 @@ export function CreditHistory({ limit = 5, showViewAll = false }: CreditHistoryP
     } finally {
       setIsLoading(false);
     }
-  }, [limit]);
+  }, [itemsPerPage]);
 
   useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    fetchTransactions(currentPage);
+  }, [fetchTransactions, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -161,6 +184,36 @@ export function CreditHistory({ limit = 5, showViewAll = false }: CreditHistoryP
           >
             View All Transactions
             <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {enablePagination && (
+        <div className="flex items-center justify-between border-t pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || isLoading}
+            className="gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          
+          <span className="text-muted-foreground text-sm">
+            Page {currentPage}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={!hasMoreData || isLoading}
+            className="gap-2"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}

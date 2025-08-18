@@ -183,10 +183,27 @@ export const userQuotaUsage = pgTable('user_quota_usage', {
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
 }, (table) => ({
-  // Unique constraint for user + service + period
+  // Composite unique index for user, service, and period
   userServicePeriodIdx: { 
     name: 'user_service_period_idx', 
     columns: [table.userId, table.service, table.period], 
     unique: true 
   },
 }));
+
+export const apiKey = pgTable('api_key', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  hashedKey: text('hashed_key').notNull().unique(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at'),
+  lastUsedAt: timestamp('last_used_at'),
+  createdAt: timestamp('created_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp('updated_at')
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
