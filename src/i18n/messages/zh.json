@@ -200,7 +200,8 @@
     "security": "安全",
     "credits": "积分",
     "balance": "余款",
-    "history": "历史"
+    "history": "历史",
+    "apiKeys": "API密钥"
   },
   "navbar": {
     "logo": {
@@ -254,6 +255,10 @@
     "billing": {
       "title": "账单",
       "description": "管理您的订阅和付款"
+    },
+    "apiKeys": {
+      "title": "API密钥",
+      "description": "管理您的API密钥和访问权限"
     }
   },
   "profile": {

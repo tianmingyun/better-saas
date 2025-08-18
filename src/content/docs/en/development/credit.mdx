@@ -1,0 +1,390 @@
+---
+title: Credit System Guide
+description: Complete guide for implementing and managing the credit system in Better SaaS
+---
+The credit system in Better SaaS provides a flexible way to manage user quotas and track resource consumption. This guide covers the implementation details and usage patterns.
+
+## Architecture Overview
+
+The credit system consists of several key components:
+
+- **Credit Management**: Core logic for credit operations
+- **Quota Service**: Resource consumption tracking
+- **Database Schema**: Credit storage and history
+- **API Endpoints**: Credit management interfaces
+- **Cron Jobs**: Automated credit renewal
+
+## Database Schema
+
+The credit system uses the following database tables:
+
+### User Credits Table
+
+```sql
+CREATE TABLE user_credits (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user(id),
+  credits INTEGER NOT NULL DEFAULT 0,
+  monthly_credits INTEGER NOT NULL DEFAULT 0,
+  last_reset_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Credit Transactions Table
+
+```sql
+CREATE TABLE credit_transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user(id),
+  amount INTEGER NOT NULL,
+  type TEXT NOT NULL, -- 'earn', 'spend', 'refund', 'grant'
+  description TEXT,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## Core Services
+
+### Credit Service
+
+The main credit service handles all credit operations:
+
+```typescript
+// src/lib/credits/credit-service.ts
+import { db } from '@/server/db'
+import { userCredits, creditTransactions } from '@/server/db/schema'
+import { eq } from 'drizzle-orm'
+import { v4 as uuidv4 } from 'uuid'
+
+export class CreditService {
+  static async getUserCredits(userId: string) {
+    const [credits] = await db
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.userId, userId))
+      .limit(1)
+
+    return credits || null
+  }
+
+  static async addCredits(
+    userId: string,
+    amount: number,
+    type: 'earn' | 'grant' | 'refund',
+    description?: string,
+    metadata?: Record<string, any>
+  ) {
+    return await db.transaction(async (tx) => {
+      // Update user credits
+      await tx
+        .update(userCredits)
+        .set({
+          credits: sql`credits + ${amount}`,
+          updatedAt: new Date()
+        })
+        .where(eq(userCredits.userId, userId))
+
+      // Record transaction
+      await tx.insert(creditTransactions).values({
+        id: uuidv4(),
+        userId,
+        amount,
+        type,
+        description,
+        metadata
+      })
+    })
+  }
+
+  static async spendCredits(
+    userId: string,
+    amount: number,
+    description?: string,
+    metadata?: Record<string, any>
+  ) {
+    const userCredit = await this.getUserCredits(userId)
+    
+    if (!userCredit || userCredit.credits < amount) {
+      throw new Error('Insufficient credits')
+    }
+
+    return await db.transaction(async (tx) => {
+      // Deduct credits
+      await tx
+        .update(userCredits)
+        .set({
+          credits: sql`credits - ${amount}`,
+          updatedAt: new Date()
+        })
+        .where(eq(userCredits.userId, userId))
+
+      // Record transaction
+      await tx.insert(creditTransactions).values({
+        id: uuidv4(),
+        userId,
+        amount: -amount,
+        type: 'spend',
+        description,
+        metadata
+      })
+    })
+  }
+}
+```
+
+### Quota Service
+
+The quota service manages resource consumption:
+
+```typescript
+// src/lib/quota/quota-service.ts
+import { CreditService } from '@/lib/credits/credit-service'
+import { CREDIT_COSTS } from '@/config/credits.config'
+
+export class QuotaService {
+  static async checkQuota(userId: string, resource: string, amount = 1) {
+    const cost = CREDIT_COSTS[resource] * amount
+    const userCredits = await CreditService.getUserCredits(userId)
+    
+    if (!userCredits || userCredits.credits < cost) {
+      return { allowed: false, cost, available: userCredits?.credits || 0 }
+    }
+    
+    return { allowed: true, cost, available: userCredits.credits }
+  }
+
+  static async consumeQuota(
+    userId: string,
+    resource: string,
+    amount = 1,
+    metadata?: Record<string, any>
+  ) {
+    const cost = CREDIT_COSTS[resource] * amount
+    
+    await CreditService.spendCredits(
+      userId,
+      cost,
+      `Used ${amount} ${resource}`,
+      { resource, amount, ...metadata }
+    )
+    
+    return { cost, remaining: await this.getRemainingCredits(userId) }
+  }
+
+  static async getRemainingCredits(userId: string) {
+    const userCredits = await CreditService.getUserCredits(userId)
+    return userCredits?.credits || 0
+  }
+}
+```
+
+## Configuration
+
+Credit costs are configured in the credits config file:
+
+```typescript
+// src/config/credits.config.ts
+export const CREDIT_COSTS = {
+  'ai_chat_message': 1,
+  'file_upload': 2,
+  'api_call': 1,
+  'premium_feature': 5
+} as const
+
+export const CREDIT_LIMITS = {
+  FREE_TIER: 100,
+  PRO_TIER: 1000,
+  ENTERPRISE_TIER: 10000
+} as const
+
+export const MONTHLY_CREDIT_GRANTS = {
+  FREE_TIER: 100,
+  PRO_TIER: 1000,
+  ENTERPRISE_TIER: 10000
+} as const
+```
+
+## API Endpoints
+
+### Get User Credits
+
+```typescript
+// src/app/api/credits/route.ts
+export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const credits = await CreditService.getUserCredits(session.user.id)
+  const transactions = await CreditService.getTransactionHistory(
+    session.user.id,
+    10
+  )
+
+  return NextResponse.json({ credits, transactions })
+}
+```
+
+### Grant Credits (Admin)
+
+```typescript
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user?.role === 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { userId, amount, description } = await request.json()
+
+  await CreditService.addCredits(userId, amount, 'grant', description)
+
+  return NextResponse.json({ success: true })
+}
+```
+
+## Middleware Integration
+
+Integrate credit checking into your API middleware:
+
+```typescript
+// src/middleware/credit-check.ts
+import { QuotaService } from '@/lib/quota/quota-service'
+
+export async function creditCheckMiddleware(
+  userId: string,
+  resource: string,
+  amount = 1
+) {
+  const quota = await QuotaService.checkQuota(userId, resource, amount)
+  
+  if (!quota.allowed) {
+    throw new Error(`Insufficient credits. Required: ${quota.cost}, Available: ${quota.available}`)
+  }
+  
+  return quota
+}
+```
+
+## Cron Jobs
+
+Automatic monthly credit renewal:
+
+```typescript
+// src/server/cron/credit-renewal.ts
+import { CreditService } from '@/lib/credits/credit-service'
+import { MONTHLY_CREDIT_GRANTS } from '@/config/credits.config'
+
+export async function renewMonthlyCredits() {
+  const users = await db.select().from(user).where(eq(user.banned, false))
+  
+  for (const user of users) {
+    const grantAmount = MONTHLY_CREDIT_GRANTS[user.tier] || MONTHLY_CREDIT_GRANTS.FREE_TIER
+    
+    await CreditService.addCredits(
+      user.id,
+      grantAmount,
+      'grant',
+      'Monthly credit renewal'
+    )
+  }
+}
+```
+
+## Usage Examples
+
+### In API Routes
+
+```typescript
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  // Check quota before processing
+  const quota = await QuotaService.checkQuota(session.user.id, 'ai_chat_message')
+  if (!quota.allowed) {
+    return NextResponse.json(
+      { error: 'Insufficient credits', required: quota.cost },
+      { status: 402 }
+    )
+  }
+  
+  // Process the request
+  const result = await processAIChat(request)
+  
+  // Consume credits after successful processing
+  await QuotaService.consumeQuota(session.user.id, 'ai_chat_message')
+  
+  return NextResponse.json(result)
+}
+```
+
+### In React Components
+
+```typescript
+// src/hooks/use-credits.ts
+export function useCredits() {
+  const [credits, setCredits] = useState(null)
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    fetchCredits()
+  }, [])
+  
+  const fetchCredits = async () => {
+    try {
+      const response = await fetch('/api/credits')
+      const data = await response.json()
+      setCredits(data.credits)
+    } catch (error) {
+      console.error('Failed to fetch credits:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  return { credits, loading, refetch: fetchCredits }
+}
+```
+
+## Best Practices
+
+1. **Transaction Safety**: Always use database transactions for credit operations
+2. **Error Handling**: Implement proper error handling for insufficient credits
+3. **Audit Trail**: Keep detailed transaction records for debugging
+4. **Rate Limiting**: Combine with rate limiting for additional protection
+5. **Monitoring**: Set up alerts for unusual credit consumption patterns
+6. **Testing**: Write comprehensive tests for credit operations
+
+## Testing
+
+```typescript
+// tests/unit/credit-service.test.ts
+import { CreditService } from '@/lib/credits/credit-service'
+
+describe('CreditService', () => {
+  it('should add credits correctly', async () => {
+    const userId = 'test-user'
+    const initialCredits = await CreditService.getUserCredits(userId)
+    
+    await CreditService.addCredits(userId, 100, 'grant', 'Test grant')
+    
+    const updatedCredits = await CreditService.getUserCredits(userId)
+    expect(updatedCredits.credits).toBe(initialCredits.credits + 100)
+  })
+  
+  it('should prevent spending more credits than available', async () => {
+    const userId = 'test-user'
+    
+    await expect(
+      CreditService.spendCredits(userId, 999999, 'Test spend')
+    ).rejects.toThrow('Insufficient credits')
+  })
+})
+```
+
+This credit system provides a robust foundation for managing user quotas and resource consumption in your SaaS application.

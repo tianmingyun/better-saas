@@ -193,14 +193,15 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "users": "Users",
-    "files": "File Manager",
+    "files": "File Management",
     "settings": "Settings",
     "profile": "Profile",
     "billing": "Billing",
     "security": "Security",
-    "credits": "credits",
-    "balance": "balance",
-    "history": "history"
+    "credits": "Credits",
+    "balance": "Balance",
+    "history": "History",
+    "apiKeys": "API Keys"
   },
   "navbar": {
     "logo": {
@@ -254,6 +255,10 @@
     "billing": {
       "title": "Billing",
       "description": "Manage your subscription and payments"
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "description": "Manage your API keys and access permissions"
     }
   },
   "profile": {

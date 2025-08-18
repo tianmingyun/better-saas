@@ -44,7 +44,7 @@ export function CreditHistoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CreditHistory limit={50} showViewAll={false} />
+          <CreditHistory limit={10} showViewAll={false} enablePagination={true} />
         </CardContent>
       </Card>
     </div>

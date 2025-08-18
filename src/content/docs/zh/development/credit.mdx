@@ -1,0 +1,387 @@
+---
+title: 积分系统开发指南
+---
+## 架构概述
+
+积分系统由几个关键组件组成：
+
+- **积分管理**：积分操作的核心逻辑
+- **配额服务**：资源消耗跟踪
+- **数据库架构**：积分存储和历史记录
+- **API 端点**：积分管理接口
+- **定时任务**：自动积分续期
+
+## 数据库架构
+
+积分系统使用以下数据库表：
+
+### 用户积分表
+
+```sql
+CREATE TABLE user_credits (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user(id),
+  credits INTEGER NOT NULL DEFAULT 0,
+  monthly_credits INTEGER NOT NULL DEFAULT 0,
+  last_reset_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 积分交易表
+
+```sql
+CREATE TABLE credit_transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user(id),
+  amount INTEGER NOT NULL,
+  type TEXT NOT NULL, -- 'earn', 'spend', 'refund', 'grant'
+  description TEXT,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 核心服务
+
+### 积分服务
+
+主要的积分服务处理所有积分操作：
+
+```typescript
+// src/lib/credits/credit-service.ts
+import { db } from '@/server/db'
+import { userCredits, creditTransactions } from '@/server/db/schema'
+import { eq } from 'drizzle-orm'
+import { v4 as uuidv4 } from 'uuid'
+
+export class CreditService {
+  static async getUserCredits(userId: string) {
+    const [credits] = await db
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.userId, userId))
+      .limit(1)
+
+    return credits || null
+  }
+
+  static async addCredits(
+    userId: string,
+    amount: number,
+    type: 'earn' | 'grant' | 'refund',
+    description?: string,
+    metadata?: Record<string, any>
+  ) {
+    return await db.transaction(async (tx) => {
+      // 更新用户积分
+      await tx
+        .update(userCredits)
+        .set({
+          credits: sql`credits + ${amount}`,
+          updatedAt: new Date()
+        })
+        .where(eq(userCredits.userId, userId))
+
+      // 记录交易
+      await tx.insert(creditTransactions).values({
+        id: uuidv4(),
+        userId,
+        amount,
+        type,
+        description,
+        metadata
+      })
+    })
+  }
+
+  static async spendCredits(
+    userId: string,
+    amount: number,
+    description?: string,
+    metadata?: Record<string, any>
+  ) {
+    const userCredit = await this.getUserCredits(userId)
+    
+    if (!userCredit || userCredit.credits < amount) {
+      throw new Error('积分不足')
+    }
+
+    return await db.transaction(async (tx) => {
+      // 扣除积分
+      await tx
+        .update(userCredits)
+        .set({
+          credits: sql`credits - ${amount}`,
+          updatedAt: new Date()
+        })
+        .where(eq(userCredits.userId, userId))
+
+      // 记录交易
+      await tx.insert(creditTransactions).values({
+        id: uuidv4(),
+        userId,
+        amount: -amount,
+        type: 'spend',
+        description,
+        metadata
+      })
+    })
+  }
+}
+```
+
+### 配额服务
+
+配额服务管理资源消耗：
+
+```typescript
+// src/lib/quota/quota-service.ts
+import { CreditService } from '@/lib/credits/credit-service'
+import { CREDIT_COSTS } from '@/config/credits.config'
+
+export class QuotaService {
+  static async checkQuota(userId: string, resource: string, amount = 1) {
+    const cost = CREDIT_COSTS[resource] * amount
+    const userCredits = await CreditService.getUserCredits(userId)
+    
+    if (!userCredits || userCredits.credits < cost) {
+      return { allowed: false, cost, available: userCredits?.credits || 0 }
+    }
+    
+    return { allowed: true, cost, available: userCredits.credits }
+  }
+
+  static async consumeQuota(
+    userId: string,
+    resource: string,
+    amount = 1,
+    metadata?: Record<string, any>
+  ) {
+    const cost = CREDIT_COSTS[resource] * amount
+    
+    await CreditService.spendCredits(
+      userId,
+      cost,
+      `使用了 ${amount} 个 ${resource}`,
+      { resource, amount, ...metadata }
+    )
+    
+    return { cost, remaining: await this.getRemainingCredits(userId) }
+  }
+
+  static async getRemainingCredits(userId: string) {
+    const userCredits = await CreditService.getUserCredits(userId)
+    return userCredits?.credits || 0
+  }
+}
+```
+
+## 配置
+
+积分成本在积分配置文件中配置：
+
+```typescript
+// src/config/credits.config.ts
+export const CREDIT_COSTS = {
+  'ai_chat_message': 1,
+  'file_upload': 2,
+  'api_call': 1,
+  'premium_feature': 5
+} as const
+
+export const CREDIT_LIMITS = {
+  FREE_TIER: 100,
+  PRO_TIER: 1000,
+  ENTERPRISE_TIER: 10000
+} as const
+
+export const MONTHLY_CREDIT_GRANTS = {
+  FREE_TIER: 100,
+  PRO_TIER: 1000,
+  ENTERPRISE_TIER: 10000
+} as const
+```
+
+## API 端点
+
+### 获取用户积分
+
+```typescript
+// src/app/api/credits/route.ts
+export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 })
+  }
+
+  const credits = await CreditService.getUserCredits(session.user.id)
+  const transactions = await CreditService.getTransactionHistory(
+    session.user.id,
+    10
+  )
+
+  return NextResponse.json({ credits, transactions })
+}
+```
+
+### 授予积分（管理员）
+
+```typescript
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  if (!session?.user?.role === 'admin') {
+    return NextResponse.json({ error: '禁止访问' }, { status: 403 })
+  }
+
+  const { userId, amount, description } = await request.json()
+
+  await CreditService.addCredits(userId, amount, 'grant', description)
+
+  return NextResponse.json({ success: true })
+}
+```
+
+## 中间件集成
+
+将积分检查集成到您的 API 中间件中：
+
+```typescript
+// src/middleware/credit-check.ts
+import { QuotaService } from '@/lib/quota/quota-service'
+
+export async function creditCheckMiddleware(
+  userId: string,
+  resource: string,
+  amount = 1
+) {
+  const quota = await QuotaService.checkQuota(userId, resource, amount)
+  
+  if (!quota.allowed) {
+    throw new Error(`积分不足。需要：${quota.cost}，可用：${quota.available}`)
+  }
+  
+  return quota
+}
+```
+
+## 定时任务
+
+自动月度积分续期：
+
+```typescript
+// src/server/cron/credit-renewal.ts
+import { CreditService } from '@/lib/credits/credit-service'
+import { MONTHLY_CREDIT_GRANTS } from '@/config/credits.config'
+
+export async function renewMonthlyCredits() {
+  const users = await db.select().from(user).where(eq(user.banned, false))
+  
+  for (const user of users) {
+    const grantAmount = MONTHLY_CREDIT_GRANTS[user.tier] || MONTHLY_CREDIT_GRANTS.FREE_TIER
+    
+    await CreditService.addCredits(
+      user.id,
+      grantAmount,
+      'grant',
+      '月度积分续期'
+    )
+  }
+}
+```
+
+## 使用示例
+
+### 在 API 路由中
+
+```typescript
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  
+  // 处理前检查配额
+  const quota = await QuotaService.checkQuota(session.user.id, 'ai_chat_message')
+  if (!quota.allowed) {
+    return NextResponse.json(
+      { error: '积分不足', required: quota.cost },
+      { status: 402 }
+    )
+  }
+  
+  // 处理请求
+  const result = await processAIChat(request)
+  
+  // 成功处理后消耗积分
+  await QuotaService.consumeQuota(session.user.id, 'ai_chat_message')
+  
+  return NextResponse.json(result)
+}
+```
+
+### 在 React 组件中
+
+```typescript
+// src/hooks/use-credits.ts
+export function useCredits() {
+  const [credits, setCredits] = useState(null)
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    fetchCredits()
+  }, [])
+  
+  const fetchCredits = async () => {
+    try {
+      const response = await fetch('/api/credits')
+      const data = await response.json()
+      setCredits(data.credits)
+    } catch (error) {
+      console.error('获取积分失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  return { credits, loading, refetch: fetchCredits }
+}
+```
+
+## 最佳实践
+
+1. **事务安全**：始终对积分操作使用数据库事务
+2. **错误处理**：为积分不足实现适当的错误处理
+3. **审计跟踪**：保留详细的交易记录以便调试
+4. **速率限制**：结合速率限制以获得额外保护
+5. **监控**：为异常积分消耗模式设置警报
+6. **测试**：为积分操作编写全面的测试
+
+## 测试
+
+```typescript
+// tests/unit/credit-service.test.ts
+import { CreditService } from '@/lib/credits/credit-service'
+
+describe('CreditService', () => {
+  it('应该正确添加积分', async () => {
+    const userId = 'test-user'
+    const initialCredits = await CreditService.getUserCredits(userId)
+    
+    await CreditService.addCredits(userId, 100, 'grant', '测试授予')
+    
+    const updatedCredits = await CreditService.getUserCredits(userId)
+    expect(updatedCredits.credits).toBe(initialCredits.credits + 100)
+  })
+  
+  it('应该防止花费超过可用积分', async () => {
+    const userId = 'test-user'
+    
+    await expect(
+      CreditService.spendCredits(userId, 999999, '测试花费')
+    ).rejects.toThrow('积分不足')
+  })
+})
+```
+
+这个积分系统为您的 SaaS 应用程序中管理用户配额和资源消耗提供了强大的基础。
