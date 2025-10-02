@@ -123,8 +123,8 @@
     "image": "IMAGE"
   },
   "hero": {
-    "heading": "The Ultimate Scalable Next.js SaaS Boilerplate",
-    "description": "Start your SaaS journey with our production-ready Next.js boilerplate. Slash development time and deliver value to your customers faster. Build, launch, and scale with unmatched speed and confidence.",
+    "heading": "Transform any personal portrait into suit photo",
+    "description": "Transform any personal portrait into elegant American corporate-style suit photo, ideal for professionals seeking high-quality headshots for career advancement and business profiles.",
     "buttonText": "Get Started",
     "buttonUrl": "/docs",
     "reviewsText": "from {count}+ reviews",
@@ -150,8 +150,8 @@
     }
   },
   "techstack": {
-    "heading": "Build With Modern Stack",
-    "description": "Build your SaaS application with the latest technology stack"
+    "heading": "Transform any personal portrait into suit photo",
+    "description": "Transform any personal portrait into elegant American corporate-style suit photo, ideal for professionals seeking high-quality headshots for career advancement and business profiles."
   },
   "faq": {
     "heading": "Frequently asked questions",
@@ -197,6 +197,7 @@
     "settings": "Settings",
     "profile": "Profile",
     "billing": "Billing",
+    "services": "Services",
     "security": "Security",
     "credits": "Credits",
     "balance": "Balance",
@@ -205,7 +206,7 @@
   },
   "navbar": {
     "logo": {
-      "title": "Better SaaS",
+      "title": "Suit Photo",
       "alt": "logo"
     },
     "menu": {
@@ -285,6 +286,36 @@
       "placeholder": "Enter your email address"
     }
   },
+  "billing":{
+    "title":"Billing",
+    "description":"Manage your subscription and payments history",
+    "current_plan":"Current Plan",
+    "current_no_plan":"No Plan",
+    "goto_plan":"You can select the suitable subscription plan on the pricing page",
+    "current_payment":"payment history",
+    "all_payment_history":"All your payment records",
+    "no_payment_history":"There is no payment record for the moment",
+    "get_billing_info_failed":"Get billing info failed",
+    "no_subscription_info":"No subscription info found",
+    "sync_subscription_success":"Subscription info sync success",
+    "sync_subscription_failed":"Subscription info sync failed",
+    "payment_success_active":"Payment successful! Your subscription has been activated.",
+    "payment_success_canceled":"Payment canceled. You can subscribe again at any time.",
+    "unknow":"Unknown",
+    "active":"Active",
+    "trial":"Trial",
+    "past_due":"Past Due",
+    "canceled":"Canceled",
+    "incomplete":"Incomplete",
+    "syncing":"同步中...",
+    "sync_subscription_info":"Sync subscription info",
+    "subscription":"Subscription",
+    "one_time_payment":"One Time Payment",
+    "month_payment":"Month Payment",
+    "year_payment":"Year Payment",
+    "billing_cycle":"Billing Cycle",
+    "price_id":"Price ID"
+  },
   "security": {
     "title": "Security",
     "description": "Manage your security settings",
@@ -345,7 +376,7 @@
       },
       "contact": {
         "title": "Contact Information",
-        "content": "If you have any questions about these Terms of Service, please contact us."
+        "content": "If you have any questions about these Terms of Service, please contact us. support@suitphoto.com"
       }
     },
     "privacy": {
@@ -382,7 +413,7 @@
       },
       "contact": {
         "title": "Contact Information",
-        "content": "If you have any questions about this Privacy Policy, please contact us."
+        "content": "If you have any questions about this Privacy Policy, please contact us. support@suitphoto.com"
       }
     }
   },
